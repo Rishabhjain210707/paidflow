@@ -93,19 +93,25 @@ export const ProposalCreator: React.FC<ProposalCreatorProps> = ({
     }
   };
 
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : getAppBaseUrl();
-  const proposalShareUrl = `${baseUrl}/p/${proposal.id}`;
+  const getShareUrl = () => {
+    const origin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : getAppBaseUrl();
+    return `${origin}/p/${proposal.id}`;
+  };
+
+  const proposalShareUrl = getShareUrl();
 
   const handleCopyLink = () => {
+    const currentUrl = getShareUrl();
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(proposalShareUrl);
+      navigator.clipboard.writeText(currentUrl);
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2000);
     }
   };
 
   const handleSendWhatsApp = () => {
-    const text = `Hi ${proposal.clientName}, Arjun has shared the verified project scope and milestone proposal "${proposal.title}" for review & e-sign: ${proposalShareUrl}`;
+    const currentUrl = getShareUrl();
+    const text = `Hi ${proposal.clientName}, Arjun has shared the verified project scope and milestone proposal "${proposal.title}" for review & e-sign: ${currentUrl}`;
     const url = generateWhatsAppShareUrl(proposal.clientPhone, text);
     if (typeof window !== 'undefined') {
       window.open(url, '_blank');

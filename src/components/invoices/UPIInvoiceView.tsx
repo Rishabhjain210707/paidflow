@@ -66,7 +66,10 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
       percentage: 100,
       amount: invoice?.totalPayable || 141600,
       dueDate: invoice?.dueDate || '2026-11-04',
-      shortUrl: invoice?.shortUrl || 'https://pflow.in/pay/inv_1042',
+      shortUrl:
+        invoice?.shortUrl?.startsWith('http')
+          ? invoice.shortUrl
+          : `${typeof window !== 'undefined' ? window.location.origin : getAppBaseUrl()}${invoice?.shortUrl?.startsWith('/') ? '' : '/'}${invoice?.shortUrl || 'pay/inv_1042'}`,
       upiIntentUrl: invoice?.upiIntentUrl || '',
       status: invoice?.status === 'Paid' ? 'Paid' : 'Pending',
     };
@@ -309,8 +312,16 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
     recalculateInvoice(invoice.items, invoice.gstEnabled, val);
   };
 
+  const getFullUrl = (url?: string) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    const origin = typeof window !== 'undefined' ? window.location.origin : getAppBaseUrl();
+    return `${origin}${url.startsWith('/') ? '' : '/'}${url}`;
+  };
+
   const handleCopyLink = (urlToCopy?: string) => {
-    const text = urlToCopy || activeTranche.shortUrl || invoice.shortUrl;
+    const raw = urlToCopy || activeTranche.shortUrl || invoice.shortUrl;
+    const text = getFullUrl(raw);
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       navigator.clipboard.writeText(text);
       setCopiedLink(true);
@@ -320,7 +331,8 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
 
   const handleCopyTrancheLink = (tranche: InvoiceTranche) => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(tranche.shortUrl);
+      const fullUrl = getFullUrl(tranche.shortUrl);
+      navigator.clipboard.writeText(fullUrl);
       setCopiedTrancheId(tranche.id);
       setTimeout(() => setCopiedTrancheId(null), 2000);
     }
@@ -336,17 +348,20 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
 
   const handleSendWhatsApp = () => {
     const isSingle = invoice.paymentStructure === 'full';
+    const invoiceLink = getFullUrl(invoice.shortUrl);
+    const trancheLink = getFullUrl(activeTranche.shortUrl);
+
     const message = isSingle
       ? `Hello ${invoice.clientName},\n\nHere is your verified UPI payment invoice ${invoice.invoiceNumber} for ${formatINR(
           invoice.totalPayable
-        )}.\n\nPay securely with zero platform fee via UPI:\n${invoice.shortUrl}\n\nFreelancer: ${
+        )}.\n\nPay securely with zero platform fee via UPI:\n${invoiceLink}\n\nFreelancer: ${
           mockFreelancerProfile.name
         } (UPI: ${invoice.freelancerVpa})`
       : `Hello ${invoice.clientName},\n\nHere is your verified UPI payment link for ${
           activeTranche.label
         } (${formatINR(activeTranche.amount)}) on invoice ${
           invoice.invoiceNumber
-        }.\n\nPay securely with 0% fee via UPI:\n${activeTranche.shortUrl}\n\nFreelancer: ${
+        }.\n\nPay securely with 0% fee via UPI:\n${trancheLink}\n\nFreelancer: ${
           mockFreelancerProfile.name
         } (UPI: ${invoice.freelancerVpa})`;
 

@@ -441,7 +441,7 @@
                     </td>
                     <td class="py-4 px-5 text-right whitespace-nowrap">
                       <div class="inline-flex items-center gap-1">
-                        <button onclick="copyToClipboard('https://pflow.in/pay/inv_091', 'UPI link copied!')" class="px-2 py-1 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">Copy Link</button>
+                        <button onclick="copyToClipboard(window.location.origin + '/pay/inv_091', 'UPI link copied!')" class="px-2 py-1 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">Copy Link</button>
                         <button onclick="triggerToast('WhatsApp reminder sent to Vikramaditya!')" class="px-2 py-1 text-xs font-semibold rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-colors">Remind</button>
                       </div>
                     </td>
@@ -509,7 +509,7 @@
             </div>
 
             <div class="flex items-center gap-2">
-              <button onclick="copyToClipboard('https://paidflow.me/p/prop_2026_01', 'Proposal client link copied!')" class="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors flex items-center gap-1.5">
+              <button onclick="copyToClipboard(window.location.origin + '/p/proj_cred_video', 'Proposal client link copied!')" class="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors flex items-center gap-1.5">
                 <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"/></svg>
                 <span>Copy Client Link</span>
               </button>
@@ -942,8 +942,8 @@
                 <div class="space-y-1.5">
                   <label class="text-xs font-semibold text-slate-700 block">Razorpay / PaidFlow Short Link</label>
                   <div class="flex items-center gap-2">
-                    <input readonly value="https://pflow.in/pay/inv_1042" class="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-800 select-all">
-                    <button onclick="copyToClipboard('https://pflow.in/pay/inv_1042', 'UPI payment link copied!')" class="px-3.5 py-2 rounded-lg bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 text-xs font-bold transition-colors shrink-0">
+                    <input id="inv-shortlink-input" readonly value="" class="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-800 select-all">
+                    <button onclick="copyToClipboard(document.getElementById('inv-shortlink-input').value, 'UPI payment link copied!')" class="px-3.5 py-2 rounded-lg bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 text-xs font-bold transition-colors shrink-0">
                       Copy Link
                     </button>
                   </div>
@@ -1306,7 +1306,7 @@
         </div>
 
         <div class="pt-2 flex justify-between items-center">
-          <button onclick="copyToClipboard('https://pflow.in/pay/inv_fast', 'UPI link copied!')" class="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50">Copy Link</button>
+          <button onclick="copyToClipboard(window.location.origin + '/pay/inv_fast', 'UPI link copied!')" class="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50">Copy Link</button>
           <div class="flex gap-2">
             <button onclick="closeModal('quick-invoice-modal')" class="px-3 py-1.5 font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
             <button onclick="saveQuickInvoice()" class="px-4 py-1.5 font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-sm">Issue Invoice</button>
@@ -1351,8 +1351,8 @@
         <div>
           <label class="block font-semibold text-slate-700 mb-1">Your Verified Profile URL</label>
           <div class="flex gap-2">
-            <input readonly value="https://paidflow.me/arjunverma" class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono text-slate-800">
-            <button onclick="copyToClipboard('https://paidflow.me/arjunverma', 'Profile URL copied!')" class="px-3.5 py-2 font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg">Copy</button>
+            <input id="profile-share-url-input" readonly value="" class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono text-slate-800">
+            <button onclick="copyToClipboard(document.getElementById('profile-share-url-input').value, 'Profile URL copied!')" class="px-3.5 py-2 font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg">Copy</button>
           </div>
         </div>
 
@@ -1565,7 +1565,8 @@
 
     function shareProposalWhatsApp() {
       const client = document.getElementById('prop-input-client')?.value || 'there';
-      const text = `Hi ${client}, please find the verified PaidFlow project scope & milestone proposal here for your e-signature: https://paidflow.me/p/prop_2026_01`;
+      const origin = window.location.origin || 'http://localhost:3000';
+      const text = `Hi ${client}, Arjun has shared the verified project scope and milestone proposal for review & e-sign: ${origin}/p/proj_cred_video`;
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
     }
 
@@ -1623,7 +1624,8 @@
     }
 
     function sendInvoiceWhatsApp() {
-      const msg = `Hi Siddharth, here is your verified UPI invoice INV-2026-1042 for ₹1,41,600 from Arjun Verma: https://pflow.in/pay/inv_1042. Zero fees via UPI!`;
+      const origin = window.location.origin || 'http://localhost:3000';
+      const msg = `Hi Siddharth, here is your verified UPI invoice INV-2026-1042 for ₹1,41,600 from Arjun Verma: ${origin}/pay/inv_1042_t2. Zero fees via UPI!`;
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
     }
 
@@ -1748,7 +1750,7 @@
           </span>
         </td>
         <td class="py-4 px-5 text-right whitespace-nowrap">
-          <button onclick="copyToClipboard('https://pflow.in/pay/inv_092', 'UPI payment link copied!')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">Copy Link</button>
+          <button onclick="copyToClipboard(window.location.origin + '/pay/inv_092', 'UPI payment link copied!')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">Copy Link</button>
         </td>
       `;
       tbody.prepend(tr);
@@ -1760,6 +1762,14 @@
       switchTab('overview');
       triggerToast('✓ Fast UPI Invoice issued successfully!');
     }
+
+    // Initialize dynamic links on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      const pInput = document.getElementById('profile-share-url-input');
+      if (pInput) pInput.value = window.location.origin + '/#trust';
+      const invInput = document.getElementById('inv-shortlink-input');
+      if (invInput) invInput.value = window.location.origin + '/pay/inv_1042_t2';
+    });
   </script>
 </body>
 </html>

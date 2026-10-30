@@ -18,8 +18,9 @@ export const ShareReputationModal: React.FC<ShareReputationModalProps> = ({
 
   if (!isOpen) return null;
 
-  const profileUrl = mockFreelancerProfile.reputationUrl;
-  const badgeEmbedCode = `<a href="${profileUrl}" target="_blank"><img src="https://paidflow.me/badge/verified-${mockFreelancerProfile.name.toLowerCase().replace(' ', '')}.svg" alt="PaidFlow Verified Freelancer 4.9★" /></a>`;
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+  const profileUrl = `${origin}/#trust`;
+  const badgeEmbedCode = `<a href="${profileUrl}" target="_blank"><img src="${origin}/favicon.ico" alt="PaidFlow Verified Freelancer 4.9★" /></a>`;
 
   const handleCopyLink = () => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
