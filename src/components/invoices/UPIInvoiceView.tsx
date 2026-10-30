@@ -87,6 +87,7 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
     const invClean = invoiceNumber.toLowerCase().replace(/[^a-z0-9]/g, '_');
 
     if (structure === 'full') {
+      const cleanTotal = Math.max(1, Math.round(totalAmount));
       const isAlreadyPaid = existingTranches?.every((t) => t.status === 'Paid');
       const label = '100% Full Payment';
       return [
@@ -94,13 +95,13 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
           id: 'tranche_full',
           label,
           percentage: 100,
-          amount: totalAmount,
+          amount: cleanTotal,
           dueDate: dueDate,
-          shortUrl: `${origin}/pay/${invClean}?amount=${totalAmount}&title=${encodeURIComponent(label)}&inv=${encodeURIComponent(invoiceNumber)}`,
+          shortUrl: `${origin}/pay/${invClean}?amount=${cleanTotal}&title=${encodeURIComponent(label)}&inv=${encodeURIComponent(invoiceNumber)}`,
           upiIntentUrl: generateUPILink({
             vpa: freelancerVpa,
             name: mockFreelancerProfile.name,
-            amount: totalAmount,
+            amount: cleanTotal,
             note: `Invoice ${invoiceNumber}`,
           }),
           status: isAlreadyPaid ? 'Paid' : 'Pending',
@@ -111,8 +112,8 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
     }
 
     if (structure === 'advance_delivery') {
-      const advanceAmount = Math.round(totalAmount * 0.5);
-      const deliveryAmount = totalAmount - advanceAmount;
+      const advanceAmount = Math.max(1, Math.round(totalAmount * 0.5));
+      const deliveryAmount = Math.max(1, Math.round(totalAmount - advanceAmount));
 
       const existingT1 = existingTranches?.find((t) => t.percentage === 50 || t.id.includes('1'));
       const existingT2 = existingTranches?.find((t) => t.id.includes('2'));
@@ -159,9 +160,9 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
     }
 
     // Milestones (30% - 40% - 30%)
-    const t1Amount = Math.round(totalAmount * 0.3);
-    const t2Amount = Math.round(totalAmount * 0.4);
-    const t3Amount = totalAmount - t1Amount - t2Amount;
+    const t1Amount = Math.max(1, Math.round(totalAmount * 0.3));
+    const t2Amount = Math.max(1, Math.round(totalAmount * 0.4));
+    const t3Amount = Math.max(1, Math.round(totalAmount - t1Amount - t2Amount));
 
     const m1Label = 'Tranche 1: 30% Advance & Scoping';
     const m2Label = 'Tranche 2: 40% Mid-Sprint Alpha Approval';

@@ -18,16 +18,29 @@ function ClientUPIPaymentCheckoutContent() {
   const queryInv = searchParams?.get('inv');
   const queryClient = searchParams?.get('client');
 
+  // Helper to safely decode strings without throwing URIError on standalone '%' signs
+  const safeDecode = (val?: string | null): string => {
+    if (!val) return '';
+    try {
+      if (/%[0-9a-fA-F]{2}/.test(val)) {
+        return decodeURIComponent(val);
+      }
+      return val;
+    } catch {
+      return val;
+    }
+  };
+
   // Initial calculation based on query params or invoiceId
   const getInitialData = () => {
     let amount = 70800;
     let label = 'Tranche 2: 50% on Final Delivery';
-    let invNum = queryInv || mockInitialInvoice.invoiceNumber;
-    let clientName = queryClient || 'CRED Technologies Pvt Ltd';
+    let invNum = queryInv ? safeDecode(queryInv) : mockInitialInvoice.invoiceNumber;
+    let clientName = queryClient ? safeDecode(queryClient) : 'CRED Technologies Pvt Ltd';
 
-    // 1. If explicit amount query param passed (e.g. ?amount=1)
+    // 1. If explicit amount query param passed (e.g. ?amount=1 or ?amount=1.36)
     if (queryAmountStr !== null && queryAmountStr !== undefined && !isNaN(Number(queryAmountStr))) {
-      amount = Math.max(0, Number(queryAmountStr));
+      amount = Math.max(0, Math.round(Number(queryAmountStr)));
     } else {
       // 2. Fallback based on specific tranche suffixes
       const lower = invoiceId.toLowerCase();
@@ -53,7 +66,7 @@ function ClientUPIPaymentCheckoutContent() {
     }
 
     if (queryTitle) {
-      label = decodeURIComponent(queryTitle);
+      label = safeDecode(queryTitle);
     }
 
     return { amount, label, invNum, clientName };
@@ -71,10 +84,10 @@ function ClientUPIPaymentCheckoutContent() {
       try {
         // If query param is explicitly provided, keep query param
         if (queryAmountStr !== null && queryAmountStr !== undefined && !isNaN(Number(queryAmountStr))) {
-          setTrancheAmount(Number(queryAmountStr));
-          if (queryTitle) setTrancheLabel(decodeURIComponent(queryTitle));
-          if (queryInv) setInvoiceNumber(queryInv);
-          if (queryClient) setClientCompany(decodeURIComponent(queryClient));
+          setTrancheAmount(Math.max(0, Math.round(Number(queryAmountStr))));
+          if (queryTitle) setTrancheLabel(safeDecode(queryTitle));
+          if (queryInv) setInvoiceNumber(safeDecode(queryInv));
+          if (queryClient) setClientCompany(safeDecode(queryClient));
           return;
         }
 
@@ -85,8 +98,8 @@ function ClientUPIPaymentCheckoutContent() {
         if (cached) {
           const parsed = JSON.parse(cached);
           if (parsed && typeof parsed.amount === 'number') {
-            setTrancheAmount(parsed.amount);
-            if (parsed.label) setTrancheLabel(parsed.label);
+            setTrancheAmount(Math.max(0, Math.round(parsed.amount)));
+            if (parsed.label) setTrancheLabel(safeDecode(parsed.label));
           }
         }
       } catch (e) {}
