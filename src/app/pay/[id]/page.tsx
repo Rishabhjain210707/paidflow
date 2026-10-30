@@ -118,60 +118,42 @@ export default function ClientUPIPaymentCheckoutPage() {
             <div className="space-y-6">
               {/* Dynamic QR Code */}
               <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-slate-50 border border-slate-200 relative">
-                <div className="w-48 h-48 bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-center">
-                  <svg className="w-full h-full" viewBox="0 0 100 100" fill="currentColor">
-                    <rect x="5" y="5" width="26" height="26" rx="3" fill="#0f172a" />
-                    <rect x="9" y="9" width="18" height="18" rx="2" fill="#ffffff" />
-                    <rect x="13" y="13" width="10" height="10" fill="#4f46e5" />
-                    <rect x="69" y="5" width="26" height="26" rx="3" fill="#0f172a" />
-                    <rect x="73" y="9" width="18" height="18" rx="2" fill="#ffffff" />
-                    <rect x="77" y="13" width="10" height="10" fill="#4f46e5" />
-                    <rect x="5" y="69" width="26" height="26" rx="3" fill="#0f172a" />
-                    <rect x="9" y="73" width="18" height="18" rx="2" fill="#ffffff" />
-                    <rect x="13" y="77" width="10" height="10" fill="#4f46e5" />
-                    <rect x="36" y="8" width="6" height="6" fill="#0f172a" />
-                    <rect x="46" y="8" width="8" height="6" fill="#0f172a" />
-                    <rect x="58" y="8" width="6" height="6" fill="#0f172a" />
-                    <rect x="36" y="18" width="16" height="6" fill="#0f172a" />
-                    <rect x="56" y="18" width="6" height="6" fill="#0f172a" />
-                    <rect x="8" y="36" width="6" height="16" fill="#0f172a" />
-                    <rect x="18" y="46" width="12" height="6" fill="#0f172a" />
-                    <rect x="22" y="36" width="8" height="6" fill="#0f172a" />
-                    <circle cx="50" cy="50" r="11" fill="#4f46e5" />
-                    <text x="50" y="54" fill="#ffffff" fontSize="11" fontWeight="bold" textAnchor="middle">
-                      ₹
-                    </text>
-                    <rect x="36" y="38" width="6" height="6" fill="#0f172a" />
-                    <rect x="60" y="38" width="12" height="6" fill="#0f172a" />
-                    <rect x="76" y="38" width="16" height="6" fill="#0f172a" />
-                    <rect x="66" y="48" width="6" height="14" fill="#0f172a" />
-                    <rect x="76" y="48" width="10" height="6" fill="#0f172a" />
-                    <rect x="36" y="68" width="8" height="8" fill="#0f172a" />
-                    <rect x="48" y="68" width="6" height="8" fill="#0f172a" />
-                    <rect x="58" y="68" width="16" height="6" fill="#0f172a" />
-                    <rect x="80" y="68" width="12" height="8" fill="#0f172a" />
-                    <rect x="36" y="82" width="16" height="10" fill="#0f172a" />
-                    <rect x="56" y="82" width="8" height="10" fill="#0f172a" />
-                    <rect x="68" y="82" width="24" height="10" fill="#0f172a" />
-                  </svg>
+                <div className="w-52 h-52 bg-white p-2.5 rounded-2xl border-2 border-slate-200/90 shadow-md flex items-center justify-center overflow-hidden">
+                  <img
+                    src="/upi-qr.jpg"
+                    alt="Scan to Pay via UPI (9079879010@fam)"
+                    className="w-full h-full object-contain rounded-xl"
+                  />
                 </div>
-                <span className="text-xs font-bold text-slate-700 mt-3">Scan with any UPI App</span>
-                <div className="mt-2 flex items-center justify-center gap-1.5 text-[10px] font-semibold text-slate-500">
-                  <span className="px-1.5 py-0.5 rounded bg-white border border-slate-200">GPay</span>
-                  <span className="px-1.5 py-0.5 rounded bg-white border border-slate-200">PhonePe</span>
-                  <span className="px-1.5 py-0.5 rounded bg-white border border-slate-200">Paytm</span>
-                  <span className="px-1.5 py-0.5 rounded bg-white border border-slate-200">CRED</span>
+                <span className="text-xs font-bold text-slate-800 mt-3">Scan with any UPI App</span>
+                <span className="text-[11px] text-slate-500 font-mono mt-0.5">
+                  UPI ID: <span className="font-bold text-indigo-600">{mockFreelancerProfile.upiId}</span>
+                </span>
+                <div className="mt-2.5 flex items-center justify-center gap-1.5 text-[10px] font-semibold text-slate-500">
+                  <span className="px-2 py-0.5 rounded bg-white border border-slate-200 shadow-2xs">GPay</span>
+                  <span className="px-2 py-0.5 rounded bg-white border border-slate-200 shadow-2xs">PhonePe</span>
+                  <span className="px-2 py-0.5 rounded bg-white border border-slate-200 shadow-2xs">Paytm</span>
+                  <span className="px-2 py-0.5 rounded bg-white border border-slate-200 shadow-2xs">CRED</span>
+                  <span className="px-2 py-0.5 rounded bg-white border border-slate-200 shadow-2xs">BHIM</span>
                 </div>
               </div>
 
               {/* 1-Click Pay on Mobile */}
-              <a
-                href={upiIntent}
-                className="w-full py-3.5 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white text-xs font-bold shadow-md transition-all flex items-center justify-center gap-2"
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    window.location.href = upiIntent;
+                    if (navigator.clipboard) {
+                      navigator.clipboard.writeText(mockFreelancerProfile.upiId);
+                    }
+                  }
+                }}
+                className="w-full py-3.5 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white text-xs font-bold shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Icons.QrCode className="w-4 h-4" />
                 <span>Pay {formatINR(trancheAmount)} via UPI App</span>
-              </a>
+              </button>
 
               {/* Quick Actions */}
               <div className="flex items-center gap-2">

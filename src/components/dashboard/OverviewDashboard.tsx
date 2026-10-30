@@ -183,7 +183,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = (props) => {
               </span>
               {safeRole === 'freelancer' && (
                 <span className="text-xs text-slate-300 font-mono">
-                  VPA: {mockFreelancerProfile?.upiId || 'arjunverma@okhdfcbank'}
+                  VPA: {mockFreelancerProfile?.upiId || '9079879010@fam'}
                 </span>
               )}
             </div>

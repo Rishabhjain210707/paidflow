@@ -14,7 +14,7 @@ export const mockFreelancerProfile = {
   handle: '@arjunv_design',
   role: 'Lead Creative Director & Design Engineer',
   avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-  upiId: 'arjunverma@okhdfcbank',
+  upiId: '9079879010@fam',
   panNumber: 'ABCDE1234F',
   gstNumber: '29ABCDE1234F1Z5',
   verifiedBadge: true,
@@ -493,7 +493,7 @@ export const mockInitialInvoice: Invoice = {
   invoiceNumber: 'INV-2026-1042',
   clientName: 'Kunal Shah (CRED Technologies)',
   clientVpa: 'kunal@cred',
-  freelancerVpa: 'arjunverma@okhdfcbank',
+  freelancerVpa: '9079879010@fam',
   dueDate: '2026-11-04',
   paymentStructure: 'advance_delivery', // Default 50-50 split
   items: [
@@ -518,7 +518,7 @@ export const mockInitialInvoice: Invoice = {
   discountAmount: 5000,
   totalPayable: 141600, // (125000 - 5000) * 1.18 = 141600
   shortUrl: '/pay/inv_1042',
-  upiIntentUrl: 'upi://pay?pa=arjunverma@okhdfcbank&pn=Arjun%20Verma&am=141600.00&cu=INR&tn=Invoice%20INV-2026-1042',
+  upiIntentUrl: 'upi://pay?pa=9079879010@fam&pn=Arjun%20Verma&am=141600.00&cu=INR&tn=Invoice%20INV-2026-1042',
   status: 'Pending',
   tranches: [
     {
@@ -528,7 +528,7 @@ export const mockInitialInvoice: Invoice = {
       amount: 70800,
       dueDate: '2026-10-31',
       shortUrl: '/pay/inv_1042_t1',
-      upiIntentUrl: 'upi://pay?pa=arjunverma@okhdfcbank&pn=Arjun%20Verma&am=70800.00&cu=INR&tn=Invoice%201042%20Tranche1',
+      upiIntentUrl: 'upi://pay?pa=9079879010@fam&pn=Arjun%20Verma&am=70800.00&cu=INR&tn=Invoice%201042%20Tranche1',
       status: 'Paid',
       settledAt: '2026-10-30',
       upiRef: 'UPI/998127391823/HDFC',
@@ -540,7 +540,7 @@ export const mockInitialInvoice: Invoice = {
       amount: 70800,
       dueDate: '2026-11-08',
       shortUrl: '/pay/inv_1042_t2',
-      upiIntentUrl: 'upi://pay?pa=arjunverma@okhdfcbank&pn=Arjun%20Verma&am=70800.00&cu=INR&tn=Invoice%201042%20Tranche2',
+      upiIntentUrl: 'upi://pay?pa=9079879010@fam&pn=Arjun%20Verma&am=70800.00&cu=INR&tn=Invoice%201042%20Tranche2',
       status: 'Pending',
     },
   ],

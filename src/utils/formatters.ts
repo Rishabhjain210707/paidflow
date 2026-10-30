@@ -140,7 +140,7 @@ export function generateUPILink(params?: {
   note?: string;
   transactionRef?: string;
 }): string {
-  const vpa = params?.vpa || 'arjunverma@okhdfcbank';
+  const vpa = params?.vpa || '9079879010@fam';
   const name = params?.name || 'Arjun Verma';
   const amount = Number(params?.amount) || 0;
   const note = params?.note || 'SoloFlow Milestone Settlement';
