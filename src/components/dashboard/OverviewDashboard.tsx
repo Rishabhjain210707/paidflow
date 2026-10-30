@@ -20,20 +20,21 @@ import { ProjectDetailModal } from '../projects/ProjectDetailModal';
 
 interface OverviewDashboardProps {
   metrics?: {
-    totalSettledRevenue: number;
-    settledGrowthPercent: string;
-    pendingInvoicesCount: number;
-    pendingInvoicesAmount: number;
-    activeProjectsCount: number;
-    verifiedTrustScore: number;
-    maxTrustScore: number;
-    trustReviewsCount: number;
-    onTimePaymentRate: number;
+    totalSettledRevenue?: number;
+    settledGrowthPercent?: string;
+    pendingInvoicesCount?: number;
+    pendingInvoicesAmount?: number;
+    activeProjectsCount?: number;
+    verifiedTrustScore?: number;
+    maxTrustScore?: number;
+    trustReviewsCount?: number;
+    onTimePaymentRate?: number;
   };
   transactions?: Transaction[];
   projects?: Project[];
   teamMembers?: TeamMember[];
   currentUserRole?: UserRole;
+  onSelectProject?: (id: string) => void;
   onNewProposal?: () => void;
   onQuickInvoice?: () => void;
   onShareReputation?: () => void;
@@ -41,24 +42,27 @@ interface OverviewDashboardProps {
   onActionClick?: (tx: Transaction) => void;
   onUpdateProject?: (updated: Project) => void;
   onToggleTrustMode?: (memberId: string) => void;
-  onAddBillableScope?: (amount: number, description: string) => void;
+  onAddBillableScope?: (amount: number, description?: string) => void;
 }
 
-export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
-  metrics,
-  transactions = [],
-  projects = [],
-  teamMembers = [],
-  currentUserRole = 'freelancer',
-  onNewProposal,
-  onQuickInvoice,
-  onShareReputation,
-  onNavigateTab,
-  onActionClick,
-  onUpdateProject,
-  onToggleTrustMode,
-  onAddBillableScope,
-}) => {
+export const OverviewDashboard: React.FC<OverviewDashboardProps> = (props) => {
+  const {
+    metrics,
+    transactions = [],
+    projects = [],
+    teamMembers = [],
+    currentUserRole = 'freelancer',
+    onSelectProject,
+    onNewProposal,
+    onQuickInvoice,
+    onShareReputation,
+    onNavigateTab,
+    onActionClick,
+    onUpdateProject,
+    onToggleTrustMode,
+    onAddBillableScope,
+  } = props;
+
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [copiedTxId, setCopiedTxId] = useState<string | null>(null);
@@ -69,6 +73,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   const credDelayedAmount = 145000;
   const delayImpact = calculateDelayImpact(credDelayedAmount, delayDays);
 
+  // Defensive array checks to guarantee no undefined .filter() can ever occur
   const safeTransactions = Array.isArray(transactions) ? transactions : [];
   const safeProjects = Array.isArray(projects) ? projects : [];
   const safeTeamMembers = Array.isArray(teamMembers) ? teamMembers : [];
@@ -76,10 +81,15 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
   const filteredTransactions = safeTransactions.filter((tx) => {
     if (!tx) return false;
+    const clientName = (tx.clientName || '').toLowerCase();
+    const projectTitle = (tx.projectTitle || '').toLowerCase();
+    const invoiceNumber = (tx.invoiceNumber || '').toLowerCase();
+    const query = (searchTerm || '').toLowerCase();
+
     const matchesSearch =
-      (tx.clientName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (tx.projectTitle || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (tx.invoiceNumber || '').toLowerCase().includes(searchTerm.toLowerCase());
+      clientName.includes(query) ||
+      projectTitle.includes(query) ||
+      invoiceNumber.includes(query);
 
     const matchesStatus =
       statusFilter === 'All' ? true : tx.status === statusFilter;
@@ -104,10 +114,9 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   };
 
   // Safe team member trust mode lookup
-  const rohanMember = safeTeamMembers.find((m) => m?.id === 'member_rohan');
+  const rohanMember = safeTeamMembers.find((m) => m && m.id === 'member_rohan');
   const isRohanTrusted = rohanMember?.trustMode === 'trusted';
 
-  // Safe project filtering by role
   // Safe project filtering by role
   const visibleProjects = safeProjects.filter((p) => {
     if (!p) return false;
@@ -118,15 +127,21 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       return clientName.includes('kunal') || clientCompany.includes('cred') || p.id === 'p1';
     }
     if (safeRole === 'team_member') {
-      // Shows projects assigned to Rohan or the main project p1
       return p.assignedTeamMemberId === 'member_rohan' || p.id === 'p1' || p.id === 'proj_cred_video';
     }
     return true;
   });
 
+  const handleCardClick = (proj: Project) => {
+    setSelectedProject(proj);
+    if (onSelectProject) {
+      onSelectProject(proj.id);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {/* Role Banner Notification with SAFE string replace */}
+      {/* Role Banner Notification */}
       {safeRole !== 'freelancer' && (
         <div className="p-3.5 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-between text-xs">
           <div className="flex items-center gap-2 text-indigo-900 font-semibold">
@@ -210,7 +225,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         </div>
       </div>
 
-      {/* Top 4 Metric Cards */}
+      {/* Metric Cards */}
       {safeRole !== 'team_member' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs">
@@ -336,7 +351,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         </div>
       )}
 
-      {/* FEATURE 1: Enhanced Clickable Active Project Cards */}
+      {/* Active Projects Cards */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
@@ -352,21 +367,26 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {visibleProjects.map((proj) => {
+            if (!proj) return null;
             const deadlineStatus = getDeadlineStatus(proj.deadline);
-            const totalDeliv = proj.totalDeliverables || proj.deliverables?.length || 1;
-            const completedDeliv = proj.completedDeliverables || proj.deliverables?.filter(d => d.status === 'Approved').length || 0;
-            const progress = Math.round((completedDeliv / totalDeliv) * 100);
+            const delivList = Array.isArray(proj.deliverables) ? proj.deliverables : [];
+            const totalDeliv = proj.totalDeliverables || delivList.length || 1;
+            const completedDeliv =
+              proj.completedDeliverables ||
+              delivList.filter((d) => d && d.status === 'Approved').length ||
+              0;
+            const progress = Math.min(100, Math.round((completedDeliv / totalDeliv) * 100));
 
             return (
               <div
                 key={proj.id}
-                onClick={() => setSelectedProject(proj)}
+                onClick={() => handleCardClick(proj)}
                 className="bg-white rounded-2xl border border-slate-200 hover:border-indigo-500 p-5 transition-all duration-200 hover:shadow-md cursor-pointer flex flex-col justify-between group space-y-4"
               >
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-                      {proj.status || 'Active'}
+                      {proj.status || 'In Progress'}
                     </span>
 
                     {deadlineStatus.color === 'red' && (
@@ -433,7 +453,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                         Deliverable Tasks
                       </span>
                       <span className="text-xs font-bold text-slate-700">
-                        {proj.deliverables?.length || 0} Work Items
+                        {delivList.length} Work Items
                       </span>
                     </div>
                   )}
@@ -448,7 +468,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         </div>
       </div>
 
-      {/* FEATURE 6: Client Concentration Meter & Delay Impact Simulator */}
+      {/* Client Concentration Meter & Simulator */}
       {safeRole === 'freelancer' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           <div className="lg:col-span-5 bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
@@ -465,7 +485,8 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             </div>
 
             <div className="space-y-3.5 pt-1">
-              {(mockClientConcentration || []).map((client) => {
+              {(Array.isArray(mockClientConcentration) ? mockClientConcentration : []).map((client) => {
+                if (!client) return null;
                 const isHighRisk = client.riskLevel === 'high';
 
                 return (
@@ -486,8 +507,8 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                         </span>
                         <span
                           className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full ${isHighRisk
-                            ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                            : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                              ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                              : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                             }`}
                         >
                           {client.percentage}%
@@ -498,10 +519,10 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                     <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full ${client.percentage > 60
-                          ? 'bg-rose-500'
-                          : client.percentage >= 40
-                            ? 'bg-amber-500'
-                            : 'bg-emerald-500'
+                            ? 'bg-rose-500'
+                            : client.percentage >= 40
+                              ? 'bg-amber-500'
+                              : 'bg-emerald-500'
                           }`}
                         style={{ width: `${client.percentage}%` }}
                       />
@@ -565,10 +586,10 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
             <div
               className={`p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs ${delayDays >= 30
-                ? 'bg-rose-50 border-rose-200 text-rose-900'
-                : delayDays >= 15
-                  ? 'bg-amber-50 border-amber-200 text-amber-900'
-                  : 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                  ? 'bg-rose-50 border-rose-200 text-rose-900'
+                  : delayDays >= 15
+                    ? 'bg-amber-50 border-amber-200 text-amber-900'
+                    : 'bg-emerald-50 border-emerald-200 text-emerald-900'
                 }`}
             >
               <div className="flex items-center gap-2.5">
@@ -597,7 +618,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         </div>
       )}
 
-      {/* FEATURE 3: Team Members List & Trust Toggle Section */}
+      {/* Team Members List */}
       {safeRole === 'freelancer' && (
         <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
@@ -647,8 +668,8 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                       type="button"
                       onClick={() => onToggleTrustMode && onToggleTrustMode(member.id)}
                       className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all shadow-2xs ${isTrusted
-                        ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                        : 'bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300'
+                          ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                          : 'bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300'
                         }`}
                     >
                       <span>{isTrusted ? '✓ Trusted (Direct Push)' : '⏱ Needs My Approval'}</span>
@@ -662,7 +683,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         </div>
       )}
 
-      {/* Recent Transactions Table */}
+      {/* Transactions Table */}
       {safeRole !== 'team_member' && (
         <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
           <div className="p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -694,8 +715,8 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                     type="button"
                     onClick={() => setStatusFilter(st)}
                     className={`px-2.5 py-1 rounded-md transition-colors ${statusFilter === st
-                      ? 'bg-white text-slate-900 shadow-2xs font-semibold'
-                      : 'text-slate-500 hover:text-slate-900'
+                        ? 'bg-white text-slate-900 shadow-2xs font-semibold'
+                        : 'text-slate-500 hover:text-slate-900'
                       }`}
                   >
                     {st === 'Review Window Open' ? 'Reviews' : st}
@@ -871,9 +892,9 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         <ProjectDetailModal
           project={selectedProject}
           isOpen={!!selectedProject}
-          onClose={() => setSelectedProject(null)}
           currentUserRole={safeRole}
           isTeamMemberTrusted={isRohanTrusted}
+          onClose={() => setSelectedProject(null)}
           onUpdateProject={(updated) => {
             setSelectedProject(updated);
             if (onUpdateProject) onUpdateProject(updated);
