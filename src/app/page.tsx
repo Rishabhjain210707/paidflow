@@ -266,7 +266,7 @@ export default function Home() {
   // Generate Tone-Aware WhatsApp URL
   const getWhatsAppNudgeUrl = () => {
     const origin = typeof window !== 'undefined' ? window.location.origin : getAppBaseUrl();
-    const checkoutLink = `${origin}/pay/inv_1042_t2`;
+    const checkoutLink = `${origin}/pay/inv_1042_t2?amount=${delayedCredAmount}&title=Tranche+2%3A+50%25+on+Final+Delivery&inv=INV-2026-1042`;
 
     let msg = '';
     if (simTone === 'friendly') {
@@ -1349,18 +1349,18 @@ export default function Home() {
                           delayedCredAmount
                         )}).\n\nThe DaVinci color master & spatial audio stems are signed off and ready for release:\n${
                           typeof window !== 'undefined' ? window.location.origin : 'https://paidflow.app'
-                        }/pay/inv_1042_t2`
+                        }/pay/inv_1042_t2?amount=${delayedCredAmount}&title=Tranche+2%3A+50%25+on+Final+Delivery&inv=INV-2026-1042`
                       : simTone === 'firm'
                       ? `Hello Kunal, following up regarding the invoice for CRED Pulse (${formatINR(
                           delayedCredAmount
                         )}).\n\nAs the deliverables are approved, settling the UPI tranche today helps us keep our upcoming motion sprint schedule intact:\n${
                           typeof window !== 'undefined' ? window.location.origin : 'https://paidflow.app'
-                        }/pay/inv_1042_t2`
+                        }/pay/inv_1042_t2?amount=${delayedCredAmount}&title=Tranche+2%3A+50%25+on+Final+Delivery&inv=INV-2026-1042`
                       : `Urgent Notice: The UPI milestone invoice for CRED Pulse (${formatINR(
                           delayedCredAmount
                         )}) is past the payment agreement window.\n\nPlease clear the payment immediately to avoid pausing production handoff:\n${
                           typeof window !== 'undefined' ? window.location.origin : 'https://paidflow.app'
-                        }/pay/inv_1042_t2`}
+                        }/pay/inv_1042_t2?amount=${delayedCredAmount}&title=Tranche+2%3A+50%25+on+Final+Delivery&inv=INV-2026-1042`}
                   </div>
 
                   {/* Direct WhatsApp Button */}

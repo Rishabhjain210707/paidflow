@@ -1,20 +1,97 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { mockInitialInvoice, mockFreelancerProfile } from '../../../data/mockData';
 import { formatINR, generateUPILink } from '../../../utils/formatters';
 import { Icons } from '../../../components/ui/Icons';
 
-export default function ClientUPIPaymentCheckoutPage() {
+function ClientUPIPaymentCheckoutContent() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const invoiceId = (params?.id as string) || 'inv_1042_t2';
 
-  // Determine tranche or full invoice
-  const isTranche1 = invoiceId.includes('t1') || invoiceId.includes('1');
-  const trancheLabel = isTranche1 ? 'Tranche 1: 50% Advance Lock' : 'Tranche 2: 50% on Final Delivery';
-  const trancheAmount = 70800; // Half of ₹1,41,600
+  // Read search params if available
+  const queryAmountStr = searchParams?.get('amount');
+  const queryTitle = searchParams?.get('title');
+  const queryInv = searchParams?.get('inv');
+  const queryClient = searchParams?.get('client');
+
+  // Initial calculation based on query params or invoiceId
+  const getInitialData = () => {
+    let amount = 70800;
+    let label = 'Tranche 2: 50% on Final Delivery';
+    let invNum = queryInv || mockInitialInvoice.invoiceNumber;
+    let clientName = queryClient || 'CRED Technologies Pvt Ltd';
+
+    // 1. If explicit amount query param passed (e.g. ?amount=1)
+    if (queryAmountStr !== null && queryAmountStr !== undefined && !isNaN(Number(queryAmountStr))) {
+      amount = Math.max(0, Number(queryAmountStr));
+    } else {
+      // 2. Fallback based on specific tranche suffixes
+      const lower = invoiceId.toLowerCase();
+      if (lower.endsWith('_m1') || lower === 'tranche_m1') {
+        amount = 42480;
+        label = 'Tranche 1: 30% Advance & Scoping';
+      } else if (lower.endsWith('_m2') || lower === 'tranche_m2') {
+        amount = 56640;
+        label = 'Tranche 2: 40% Mid-Sprint Alpha Approval';
+      } else if (lower.endsWith('_m3') || lower === 'tranche_m3') {
+        amount = 42480;
+        label = 'Tranche 3: 30% Final Delivery & Master Handoff';
+      } else if (lower.endsWith('_t1') || lower === 'tranche_1') {
+        amount = 70800;
+        label = 'Tranche 1: 50% Advance Lock';
+      } else if (lower.endsWith('_t2') || lower === 'tranche_2') {
+        amount = 70800;
+        label = 'Tranche 2: 50% on Final Delivery';
+      } else if (lower.endsWith('_full') || lower === 'tranche_full') {
+        amount = 141600;
+        label = '100% Full Payment';
+      }
+    }
+
+    if (queryTitle) {
+      label = decodeURIComponent(queryTitle);
+    }
+
+    return { amount, label, invNum, clientName };
+  };
+
+  const initial = getInitialData();
+  const [trancheAmount, setTrancheAmount] = useState<number>(initial.amount);
+  const [trancheLabel, setTrancheLabel] = useState<string>(initial.label);
+  const [invoiceNumber, setInvoiceNumber] = useState<string>(initial.invNum);
+  const [clientCompany, setClientCompany] = useState<string>(initial.clientName);
+
+  // Check localStorage on mount in case amount was configured locally
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        // If query param is explicitly provided, keep query param
+        if (queryAmountStr !== null && queryAmountStr !== undefined && !isNaN(Number(queryAmountStr))) {
+          setTrancheAmount(Number(queryAmountStr));
+          if (queryTitle) setTrancheLabel(decodeURIComponent(queryTitle));
+          if (queryInv) setInvoiceNumber(queryInv);
+          if (queryClient) setClientCompany(decodeURIComponent(queryClient));
+          return;
+        }
+
+        // Otherwise check localStorage
+        const cached =
+          localStorage.getItem(`paidflow_tranche_${invoiceId}`) ||
+          localStorage.getItem(`paidflow_pay_${invoiceId}`);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed && typeof parsed.amount === 'number') {
+            setTrancheAmount(parsed.amount);
+            if (parsed.label) setTrancheLabel(parsed.label);
+          }
+        }
+      } catch (e) {}
+    }
+  }, [invoiceId, queryAmountStr, queryTitle, queryInv, queryClient]);
 
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'paid'>('pending');
   const [copiedVpa, setCopiedVpa] = useState(false);
@@ -22,10 +99,10 @@ export default function ClientUPIPaymentCheckoutPage() {
   const [settledRef, setSettledRef] = useState<string | null>(null);
 
   const upiIntent = generateUPILink({
-    vpa: mockFreelancerProfile.upiId,
+    vpa: mockFreelancerProfile.upiId, // 9079879010@fam
     name: mockFreelancerProfile.name,
     amount: trancheAmount,
-    note: `CRED Pulse - ${trancheLabel}`,
+    note: `${invoiceNumber} - ${trancheLabel}`,
   });
 
   const handleCopyVpa = () => {
@@ -87,12 +164,12 @@ export default function ClientUPIPaymentCheckoutPage() {
           <div className="flex items-center justify-between pb-5 border-b border-slate-100">
             <div>
               <span className="text-[10px] uppercase font-bold text-indigo-600 tracking-wider block">
-                CRED Technologies Pvt Ltd
+                {clientCompany}
               </span>
               <h1 className="text-xl font-extrabold text-slate-900 mt-0.5">
                 {trancheLabel}
               </h1>
-              <p className="text-xs text-slate-400 mt-0.5">Invoice: {mockInitialInvoice.invoiceNumber}</p>
+              <p className="text-xs text-slate-400 mt-0.5">Invoice: {invoiceNumber}</p>
             </div>
 
             <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
@@ -121,11 +198,11 @@ export default function ClientUPIPaymentCheckoutPage() {
                 <div className="w-52 h-52 bg-white p-2.5 rounded-2xl border-2 border-slate-200/90 shadow-md flex items-center justify-center overflow-hidden">
                   <img
                     src="/upi-qr.jpg"
-                    alt="Scan to Pay via UPI (9079879010@fam)"
+                    alt={`Scan to Pay via UPI (${mockFreelancerProfile.upiId})`}
                     className="w-full h-full object-contain rounded-xl"
                   />
                 </div>
-                <span className="text-xs font-bold text-slate-800 mt-3">Scan with any UPI App</span>
+                <span className="text-xs font-bold text-slate-800 mt-3">Scan to Pay {formatINR(trancheAmount)}</span>
                 <span className="text-[11px] text-slate-500 font-mono mt-0.5">
                   UPI ID: <span className="font-bold text-indigo-600">{mockFreelancerProfile.upiId}</span>
                 </span>
@@ -215,3 +292,19 @@ export default function ClientUPIPaymentCheckoutPage() {
   );
 }
 
+export default function ClientUPIPaymentCheckoutPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-slate-100 flex items-center justify-center font-sans text-slate-600">
+          <div className="flex items-center gap-2">
+            <span className="w-4 h-4 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin" />
+            <span className="text-sm font-semibold">Loading UPI Checkout...</span>
+          </div>
+        </div>
+      }
+    >
+      <ClientUPIPaymentCheckoutContent />
+    </Suspense>
+  );
+}

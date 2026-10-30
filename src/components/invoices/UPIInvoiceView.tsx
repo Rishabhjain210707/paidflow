@@ -84,17 +84,19 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
     existingTranches?: InvoiceTranche[]
   ): InvoiceTranche[] => {
     const origin = typeof window !== 'undefined' ? window.location.origin : getAppBaseUrl();
+    const invClean = invoiceNumber.toLowerCase().replace(/[^a-z0-9]/g, '_');
 
     if (structure === 'full') {
       const isAlreadyPaid = existingTranches?.every((t) => t.status === 'Paid');
+      const label = '100% Full Payment';
       return [
         {
           id: 'tranche_full',
-          label: '100% Full Payment',
+          label,
           percentage: 100,
           amount: totalAmount,
           dueDate: dueDate,
-          shortUrl: `${origin}/pay/${invoiceNumber.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
+          shortUrl: `${origin}/pay/${invClean}?amount=${totalAmount}&title=${encodeURIComponent(label)}&inv=${encodeURIComponent(invoiceNumber)}`,
           upiIntentUrl: generateUPILink({
             vpa: freelancerVpa,
             name: mockFreelancerProfile.name,
@@ -115,14 +117,17 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
       const existingT1 = existingTranches?.find((t) => t.percentage === 50 || t.id.includes('1'));
       const existingT2 = existingTranches?.find((t) => t.id.includes('2'));
 
+      const t1Label = 'Tranche 1: 50% Advance Lock';
+      const t2Label = 'Tranche 2: 50% on Final Delivery';
+
       return [
         {
           id: 'tranche_1',
-          label: 'Tranche 1: 50% Advance Lock',
+          label: t1Label,
           percentage: 50,
           amount: advanceAmount,
           dueDate: '2026-10-31',
-          shortUrl: `${origin}/pay/${invoiceNumber.toLowerCase().replace(/[^a-z0-9]/g, '_')}_t1`,
+          shortUrl: `${origin}/pay/${invClean}_t1?amount=${advanceAmount}&title=${encodeURIComponent(t1Label)}&inv=${encodeURIComponent(invoiceNumber)}`,
           upiIntentUrl: generateUPILink({
             vpa: freelancerVpa,
             name: mockFreelancerProfile.name,
@@ -135,11 +140,11 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
         },
         {
           id: 'tranche_2',
-          label: 'Tranche 2: 50% on Final Delivery',
+          label: t2Label,
           percentage: 50,
           amount: deliveryAmount,
           dueDate: '2026-11-08',
-          shortUrl: `${origin}/pay/${invoiceNumber.toLowerCase().replace(/[^a-z0-9]/g, '_')}_t2`,
+          shortUrl: `${origin}/pay/${invClean}_t2?amount=${deliveryAmount}&title=${encodeURIComponent(t2Label)}&inv=${encodeURIComponent(invoiceNumber)}`,
           upiIntentUrl: generateUPILink({
             vpa: freelancerVpa,
             name: mockFreelancerProfile.name,
@@ -158,14 +163,18 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
     const t2Amount = Math.round(totalAmount * 0.4);
     const t3Amount = totalAmount - t1Amount - t2Amount;
 
+    const m1Label = 'Tranche 1: 30% Advance & Scoping';
+    const m2Label = 'Tranche 2: 40% Mid-Sprint Alpha Approval';
+    const m3Label = 'Tranche 3: 30% Final Delivery & Master Handoff';
+
     return [
       {
         id: 'tranche_m1',
-        label: 'Tranche 1: 30% Advance & Scoping',
+        label: m1Label,
         percentage: 30,
         amount: t1Amount,
         dueDate: '2026-10-31',
-        shortUrl: `${origin}/pay/${invoiceNumber.toLowerCase().replace(/[^a-z0-9]/g, '_')}_m1`,
+        shortUrl: `${origin}/pay/${invClean}_m1?amount=${t1Amount}&title=${encodeURIComponent(m1Label)}&inv=${encodeURIComponent(invoiceNumber)}`,
         upiIntentUrl: generateUPILink({
           vpa: freelancerVpa,
           name: mockFreelancerProfile.name,
@@ -178,11 +187,11 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
       },
       {
         id: 'tranche_m2',
-        label: 'Tranche 2: 40% Mid-Sprint Alpha Approval',
+        label: m2Label,
         percentage: 40,
         amount: t2Amount,
         dueDate: '2026-11-04',
-        shortUrl: `${origin}/pay/${invoiceNumber.toLowerCase().replace(/[^a-z0-9]/g, '_')}_m2`,
+        shortUrl: `${origin}/pay/${invClean}_m2?amount=${t2Amount}&title=${encodeURIComponent(m2Label)}&inv=${encodeURIComponent(invoiceNumber)}`,
         upiIntentUrl: generateUPILink({
           vpa: freelancerVpa,
           name: mockFreelancerProfile.name,
@@ -193,11 +202,11 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
       },
       {
         id: 'tranche_m3',
-        label: 'Tranche 3: 30% Final Delivery & Master Handoff',
+        label: m3Label,
         percentage: 30,
         amount: t3Amount,
         dueDate: '2026-11-12',
-        shortUrl: `${origin}/pay/${invoiceNumber.toLowerCase().replace(/[^a-z0-9]/g, '_')}_m3`,
+        shortUrl: `${origin}/pay/${invClean}_m3?amount=${t3Amount}&title=${encodeURIComponent(m3Label)}&inv=${encodeURIComponent(invoiceNumber)}`,
         upiIntentUrl: generateUPILink({
           vpa: freelancerVpa,
           name: mockFreelancerProfile.name,
@@ -254,6 +263,17 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
       tranches: updatedTranches,
       status: allPaid ? 'Paid' : 'Pending',
     };
+
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        localStorage.setItem(`paidflow_invoice_${invoice.invoiceNumber}`, JSON.stringify(updated));
+        const invClean = invoice.invoiceNumber.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        updatedTranches.forEach((t) => {
+          localStorage.setItem(`paidflow_tranche_${t.id}`, JSON.stringify(t));
+          localStorage.setItem(`paidflow_tranche_${invClean}_${t.id}`, JSON.stringify(t));
+        });
+      } catch (e) {}
+    }
 
     setInvoice(updated);
     if (onInvoiceChange) {
