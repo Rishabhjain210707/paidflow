@@ -1,0 +1,1766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PaidFlow — Freelancer Proposals, UPI Invoicing & Verified Trust</title>
+  
+  <!-- Tailwind CSS CDN for instant Go Live compatibility -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            fintech: {
+              dark: '#0f172a',
+              slate: '#1e293b',
+              border: '#e2e8f0',
+              bg: '#f8fafc',
+              indigo: '#4f46e5',
+              emerald: '#059669',
+            }
+          },
+          boxShadow: {
+            '2xs': '0 1px 2px 0 rgba(0, 0, 0, 0.03)',
+            xs: '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Typography: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <style>
+    * { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .fade-enter { animation: fadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body class="bg-[#f8fafc] text-[#0f172a] antialiased min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
+
+  <!-- Floating Toast Notification -->
+  <div id="toast" class="fixed top-5 right-5 z-50 transform translate-y-[-120px] opacity-0 transition-all duration-300 pointer-events-none bg-slate-900 text-white text-xs font-semibold py-2.5 px-4 rounded-xl shadow-2xl flex items-center gap-2 border border-slate-700">
+    <span id="toast-text">Notification</span>
+  </div>
+
+  <div class="flex-1 flex flex-col lg:flex-row min-h-screen">
+    
+    <!-- ==================== SIDEBAR (DESKTOP) ==================== -->
+    <aside class="hidden lg:flex lg:flex-col lg:w-64 border-r border-slate-200 bg-white p-5 select-none shrink-0">
+      <!-- Brand Header -->
+      <div class="flex items-center justify-between pb-6 border-b border-slate-100">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-700 to-indigo-500 flex items-center justify-center text-white shadow-sm shadow-indigo-200">
+            <span class="font-bold text-lg tracking-tight">₹</span>
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="font-bold text-slate-900 tracking-tight text-base">PaidFlow</span>
+              <span class="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-100">
+                Solo Pro
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-400 font-medium">Fintech for Freelancers</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="pt-5 pb-4 space-y-2">
+        <button onclick="openModal('quick-invoice-modal')" class="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-xs font-semibold py-2.5 px-3.5 rounded-lg shadow-sm transition-all">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          <span>Quick UPI Invoice</span>
+        </button>
+
+        <button onclick="openModal('new-proposal-modal')" class="w-full flex items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold py-2 px-3.5 rounded-lg transition-colors">
+          <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+          <span>New Proposal & Scope</span>
+        </button>
+      </div>
+
+      <!-- Main Navigation Tabs -->
+      <nav class="flex-1 pt-3 space-y-1">
+        <p class="px-3 text-[11px] font-semibold tracking-wider uppercase text-slate-400 mb-2">Workspace</p>
+        
+        <button onclick="switchTab('overview')" id="nav-btn-overview" class="nav-tab-btn w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 transition-all">
+          <div class="flex items-center gap-3">
+            <svg class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+            <span>Overview</span>
+          </div>
+          <span class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-200/60 text-indigo-800 font-medium">Live</span>
+        </button>
+
+        <button onclick="switchTab('proposals')" id="nav-btn-proposals" class="nav-tab-btn w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 transition-all">
+          <div class="flex items-center gap-3">
+            <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <span>Proposals & E-Sign</span>
+          </div>
+          <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-medium">E-Sign</span>
+        </button>
+
+        <button onclick="switchTab('invoices')" id="nav-btn-invoices" class="nav-tab-btn w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 transition-all">
+          <div class="flex items-center gap-3">
+            <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3"/><rect x="18" y="18" width="3" height="3"/><rect x="14" y="18" width="2" height="2"/><rect x="18" y="14" width="2" height="2"/></svg>
+            <span>UPI Invoicing</span>
+          </div>
+          <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-medium">Instant</span>
+        </button>
+
+        <button onclick="switchTab('trust')" id="nav-btn-trust" class="nav-tab-btn w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 transition-all">
+          <div class="flex items-center gap-3">
+            <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            <span>Trust & Reputation</span>
+          </div>
+          <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">4.9 ★</span>
+        </button>
+      </nav>
+
+      <!-- Trust & Escrow Badge -->
+      <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 mb-4">
+        <div class="flex items-center justify-between mb-1.5">
+          <div class="flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span class="text-[11px] font-bold text-slate-800">NPCI Escrow Active</span>
+          </div>
+          <span class="text-[10px] font-bold text-emerald-700 bg-emerald-100/70 px-1.5 py-0.5 rounded">98% Punctual</span>
+        </div>
+        <p class="text-[11px] text-slate-500 leading-relaxed">
+          Zero fee deduction on UPI P2M payments. Direct instant settlement into HDFC Bank.
+        </p>
+      </div>
+
+      <!-- Freelancer Profile Footer -->
+      <div class="pt-4 border-t border-slate-100 flex items-center gap-3">
+        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80" alt="Arjun Verma" class="w-9 h-9 rounded-full object-cover ring-2 ring-indigo-100">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-1">
+            <p class="text-xs font-bold text-slate-900 truncate">Arjun Verma</p>
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" title="Online"></span>
+          </div>
+          <p class="text-[10px] text-slate-400 font-mono truncate">arjunverma@okhdfcbank</p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ==================== MAIN WORKSPACE ==================== -->
+    <div class="flex-1 flex flex-col min-w-0 pb-20 lg:pb-8">
+      
+      <!-- Top Sticky Header -->
+      <header class="bg-white border-b border-slate-200 px-5 sm:px-8 py-4 sticky top-0 z-20">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 id="header-title" class="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">Financial Pulse & Overview</h1>
+              <div class="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-semibold">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>UPI Autopay Ready</span>
+              </div>
+            </div>
+            <p id="header-subtitle" class="text-xs text-slate-500 mt-0.5">Real-time UPI settlements, milestone proposals, and verified reputation.</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="openModal('share-reputation-modal')" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors shadow-2xs">
+              <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              <span>Share Reputation</span>
+            </button>
+
+            <button onclick="openModal('new-proposal-modal')" class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+              <span>+ Proposal</span>
+            </button>
+
+            <button onclick="openModal('quick-invoice-modal')" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 active:scale-95 rounded-lg shadow-sm transition-all">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+              <span>+ Quick UPI Invoice</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content Container -->
+      <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+        
+        <!-- ==================== TAB 1: OVERVIEW DASHBOARD ==================== -->
+        <div id="view-overview" class="tab-view space-y-6 fade-enter">
+          
+          <!-- Welcome Hero Banner -->
+          <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 text-white shadow-md relative overflow-hidden">
+            <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div class="space-y-1.5 max-w-xl">
+                <div class="flex items-center gap-2">
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
+                    Verified Top 1% Freelancer
+                  </span>
+                  <span class="text-xs text-slate-300 font-mono">HDFC UPI: arjunverma@okhdfcbank</span>
+                </div>
+                <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight text-white">Welcome back, Arjun 👋</h2>
+                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                  Your UPI milestone pipeline has settled <strong class="text-emerald-300 font-bold">₹14.85 Lakhs</strong> with zero gateway cuts. You have 3 pending invoices and 1 client review waiting for mutual unlock.
+                </p>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2.5">
+                <button onclick="openModal('new-proposal-modal')" class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white text-xs font-semibold backdrop-blur-sm border border-white/15 transition-all">
+                  <svg class="w-4 h-4 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                  <span>+ New Proposal</span>
+                </button>
+
+                <button onclick="openModal('quick-invoice-modal')" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white text-xs font-bold transition-all shadow-sm">
+                  <span>+ Quick UPI Invoice</span>
+                </button>
+
+                <button onclick="openModal('share-reputation-modal')" class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-100 active:scale-95 text-slate-900 text-xs font-bold transition-all shadow-sm">
+                  <svg class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                  <span>Share Profile</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top Metrics Bar (4 Core KPIs) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            
+            <!-- Metric 1: Total Settled Revenue -->
+            <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-xs">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Settled Revenue</span>
+                <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-base">₹</div>
+              </div>
+              <div class="mt-3">
+                <div id="stat-settled-rev" class="text-2xl font-extrabold text-slate-900 tracking-tight">₹14,85,000</div>
+                <div class="mt-1 flex items-center gap-1.5 text-xs">
+                  <span class="text-emerald-700 font-bold inline-flex items-center">↑ +18.4%</span>
+                  <span class="text-slate-400">vs last month</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Metric 2: Pending UPI Invoices -->
+            <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-xs">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Pending UPI Invoices</span>
+                <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-semibold">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+              </div>
+              <div class="mt-3">
+                <div class="flex items-baseline gap-2">
+                  <span id="stat-pending-amount" class="text-2xl font-extrabold text-slate-900 tracking-tight">₹1,82,500</span>
+                  <span id="stat-pending-count" class="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">3 Pending</span>
+                </div>
+                <div class="mt-1 text-xs text-slate-400">
+                  <span>Avg UPI clearance: </span><span class="text-slate-600 font-medium">3.4 hrs</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Metric 3: Active Projects -->
+            <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-xs">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Active Projects</span>
+                <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                </div>
+              </div>
+              <div class="mt-3">
+                <div class="flex items-baseline gap-2">
+                  <span class="text-2xl font-extrabold text-slate-900 tracking-tight">5</span>
+                  <span class="text-xs text-slate-500 font-medium">Scopes Locked</span>
+                </div>
+                <div class="mt-1 flex items-center gap-1.5 text-xs text-slate-400">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span class="text-slate-600 font-medium">All milestones on track</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Metric 4: Verified Trust Score -->
+            <div onclick="switchTab('trust')" class="bg-white rounded-xl border border-slate-200 p-5 shadow-xs hover:border-indigo-300 transition-colors cursor-pointer group">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Verified Trust Score</span>
+                <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                </div>
+              </div>
+              <div class="mt-3">
+                <div class="flex items-center gap-1.5">
+                  <span id="stat-trust-score" class="text-2xl font-extrabold text-slate-900 tracking-tight">4.92</span>
+                  <span class="text-slate-400 font-semibold text-xs">/ 5.0</span>
+                  <span class="text-amber-400 text-base leading-none">★</span>
+                </div>
+                <div class="mt-1 flex items-center justify-between text-xs">
+                  <span class="text-emerald-700 font-bold">38 Verified Reviews</span>
+                  <span class="text-indigo-600 group-hover:underline text-[11px] font-semibold">Pillars →</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Recent Transactions Section -->
+          <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm font-bold text-slate-900">Recent Transactions & UPI Settlements</h3>
+                  <span id="tx-count-badge" class="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-bold">5 Transactions</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-0.5">Automated UPI milestone releases with instant settlement directly into bank.</p>
+              </div>
+
+              <!-- Filter Search -->
+              <div class="flex items-center gap-2">
+                <input id="tx-search-input" onkeyup="filterTransactions()" type="text" placeholder="Search client or project..." class="px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-500 w-48 sm:w-56">
+              </div>
+            </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs" id="tx-table">
+                <thead class="bg-slate-50/80 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-bold">
+                  <tr>
+                    <th class="py-3 px-5">Client & Organization</th>
+                    <th class="py-3 px-4">Project Title & Invoice</th>
+                    <th class="py-3 px-4">Amount (INR)</th>
+                    <th class="py-3 px-4">Payment Method</th>
+                    <th class="py-3 px-4">Status</th>
+                    <th class="py-3 px-5 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100" id="tx-table-body">
+                  <!-- Row 1 -->
+                  <tr class="hover:bg-slate-50/60 transition-colors">
+                    <td class="py-4 px-5">
+                      <div class="flex items-center gap-3">
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80" class="w-8 h-8 rounded-full object-cover ring-1 ring-slate-200" alt="Kunal">
+                        <div>
+                          <span class="font-bold text-slate-900 block">Kunal Shah</span>
+                          <span class="text-[10px] text-slate-400 font-mono">kunal@cred</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-4 px-4 max-w-xs">
+                      <span class="font-semibold text-slate-800 line-clamp-1 block">CRED Mobile App Micro-Interactions & Tokens</span>
+                      <span class="text-[10px] text-slate-400 font-mono">INV-2026-089 • 28 Oct 2026</span>
+                    </td>
+                    <td class="py-4 px-4 whitespace-nowrap">
+                      <span class="text-sm font-extrabold text-slate-900">₹1,45,000</span>
+                      <span class="block text-[10px] text-slate-400 font-mono">Ref: UPI/239019284</span>
+                    </td>
+                    <td class="py-4 px-4 whitespace-nowrap">
+                      <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-semibold text-[11px] border border-slate-200">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        <span>UPI Auto-Pay</span>
+                      </span>
+                    </td>
+                    <td class="py-4 px-4 whitespace-nowrap">
+                      <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        ✓ Paid
+                      </span>
+                    </td>
+                    <td class="py-4 px-5 text-right whitespace-nowrap">
+                      <button onclick="triggerToast('✓ Receipt PDF downloaded for INV-2026-089')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">Receipt</button>
+                    </td>
+                  </tr>
+
+                  <!-- Row 2 -->
+                  <tr class="hover:bg-slate-50/60 transition-colors">
+                    <td class="py-4 px-5">
+                      <div class="flex items-center gap-3">
+                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80" class="w-8 h-8 rounded-full object-cover ring-1 ring-slate-200" alt="Neha">
+                        <div>
+                          <span class="font-bold text-slate-900 block">Neha Singhal (Finly.io)</span>
+                          <span class="text-[10px] text-slate-400 font-mono">neha@axisbank</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-4 px-4 max-w-xs">
+                      <span class="font-semibold text-slate-800 line-clamp-1 block">Fintech Dashboard Redesign & Multi-Currency Flow</span>
+                      <span class="text-[10px] text-slate-400 font-mono">INV-2026-090 • 29 Oct 2026</span>
+                    </td>
+                    <td class="py-4 px-4 whitespace-nowrap">
+                      <span class="text-sm font-extrabold text-slate-900">₹85,000</span>
+                      <span class="block text-[10px] text-slate-400 font-mono">Ref: UPI/884910294</span>
+                    </td>
+                    <td class="py-4 px-4 whitespace-nowrap">
+                      <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-semibold text-[11px] border border-slate-200">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        <span>UPI</span>
+                      </span>
+                    </td>
+                    <td class="py-4 px-4 whitespace-nowrap">
+                      <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                        ✦ Review Window Open
+                      </span>
+                    </td>
+                    <td class="py-4 px-5 text-right whitespace-nowrap">
+                      <button onclick="switchTab('trust')" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition-colors">Rate & Unlock</button>
+                    </td>
+                  </tr>
+
+                  <!-- Row 3 -->
+                  <tr class="hover:bg-slate-50/60 transition-colors">
+                    <td class="py-4 px-5">
+                      <div class="flex items-center gap-3">
+                        <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80" class="w-8 h-8 rounded-full object-cover ring-1 ring-slate-200" alt="Vikram">
+                        <div>
+                          <span class="font-bold text-slate-900 block">Vikramaditya Rao</span>
+                          <span class="text-[10px] text-slate-400 font-mono">vikram.rao@icici</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-4 px-4 max-w-xs">
+                      <span class="font-semibold text-slate-800 line-clamp-1 block">B2B SaaS Onboarding Flow & Landing Page</span>
+                      <span class="text-[10px] text-slate-400 font-mono">INV-2026-091 • 30 Oct 2026</span>
+                    </td>
+                    <td class="py-4 px-4 whitespace-nowrap">
+                      <span class="text-sm font-extrabold text-slate-900">₹97,500</span>
+                      <span class="block text-[10px] text-amber-600 font-medium">Due in 2 days</span>
+                    </td>
+                    <td class="py-4 px-4 whitespace-nowrap">
+                      <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-semibold text-[11px] border border-slate-200">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                        <span>UPI Link</span>
+                      </span>
+                    </td>
+                    <td class="py-4 px-4 whitespace-nowrap">
+                      <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                        ⏳ Pending
+                      </span>
+                    </td>
+                    <td class="py-4 px-5 text-right whitespace-nowrap">
+                      <div class="inline-flex items-center gap-1">
+                        <button onclick="copyToClipboard('https://pflow.in/pay/inv_091', 'UPI link copied!')" class="px-2 py-1 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">Copy Link</button>
+                        <button onclick="triggerToast('WhatsApp reminder sent to Vikramaditya!')" class="px-2 py-1 text-xs font-semibold rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-colors">Remind</button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <!-- Row 4 -->
+                  <tr class="hover:bg-slate-50/60 transition-colors">
+                    <td class="py-4 px-5">
+                      <div class="flex items-center gap-3">
+                        <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80" class="w-8 h-8 rounded-full object-cover ring-1 ring-slate-200" alt="Pooja">
+                        <div>
+                          <span class="font-bold text-slate-900 block">Pooja Iyer (Aura Health)</span>
+                          <span class="text-[10px] text-slate-400 font-mono">pooja.iyer@okaxis</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-4 px-4 max-w-xs">
+                      <span class="font-semibold text-slate-800 line-clamp-1 block">Telemedicine Patient Booking & Video UX</span>
+                      <span class="text-[10px] text-slate-400 font-mono">INV-2026-088 • 22 Oct 2026</span>
+                    </td>
+                    <td class="py-4 px-4 whitespace-nowrap">
+                      <span class="text-sm font-extrabold text-slate-900">₹2,20,000</span>
+                      <span class="block text-[10px] text-slate-400 font-mono">Ref: UPI/192039481</span>
+                    </td>
+                    <td class="py-4 px-4 whitespace-nowrap">
+                      <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-semibold text-[11px] border border-slate-200">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        <span>UPI Direct</span>
+                      </span>
+                    </td>
+                    <td class="py-4 px-4 whitespace-nowrap">
+                      <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        ✓ Paid
+                      </span>
+                    </td>
+                    <td class="py-4 px-5 text-right whitespace-nowrap">
+                      <button onclick="triggerToast('✓ Receipt PDF downloaded')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">Receipt</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Table Footer -->
+            <div class="p-3.5 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+              <span class="flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>Automated settlement to HDFC Bank ****9810 with 0% platform fee.</span>
+              </span>
+              <button onclick="switchTab('invoices')" class="text-indigo-600 font-bold hover:underline">Manage All Invoices →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== TAB 2: PROPOSAL & E-SIGN CREATOR ==================== -->
+        <div id="view-proposals" class="tab-view space-y-6 hidden fade-enter">
+          
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">Interactive Proposal Builder</span>
+                <span id="proposal-status-badge" class="text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">Awaiting E-Sign</span>
+              </div>
+              <h2 class="text-lg font-bold text-slate-900 mt-1">Project Scope & Digital Contract</h2>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button onclick="copyToClipboard('https://paidflow.me/p/prop_2026_01', 'Proposal client link copied!')" class="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"/></svg>
+                <span>Copy Client Link</span>
+              </button>
+
+              <button onclick="shareProposalWhatsApp()" class="px-3.5 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm transition-colors flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 fill-white" viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm0 18.15c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.16 8.16 0 01-1.25-4.38c0-4.54 3.7-8.24 8.24-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 012.41 5.83c.01 4.54-3.69 8.23-8.43 8.23z"/></svg>
+                <span>Send to WhatsApp</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Split Grid: Left Editor & Right Live Preview -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            
+            <!-- Left Form Builder (6 Cols) -->
+            <div class="lg:col-span-6 space-y-5">
+              
+              <!-- Section 1: Project Details -->
+              <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-4">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                  <span class="w-5 h-5 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs">1</span>
+                  <span>Project & Client Information</span>
+                </h3>
+
+                <div class="space-y-3 text-xs">
+                  <div>
+                    <label class="block text-slate-600 font-semibold mb-1">Project Title</label>
+                    <input id="prop-input-title" oninput="updateProposalPreview()" type="text" value="AI Workflow Automation & Agent UI Dashboard" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-semibold focus:outline-none focus:border-indigo-500">
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-slate-600 font-semibold mb-1">Client Full Name</label>
+                      <input id="prop-input-client" oninput="updateProposalPreview()" type="text" value="Aditya Mathur" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                      <label class="block text-slate-600 font-semibold mb-1">Client WhatsApp</label>
+                      <input id="prop-input-phone" oninput="updateProposalPreview()" type="text" value="+91 98765 43210" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-mono focus:outline-none focus:border-indigo-500">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section 2: Milestones -->
+              <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-4">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                    <span class="w-5 h-5 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs">2</span>
+                    <span>Milestones & Delivery Dates</span>
+                  </h3>
+                  <button onclick="addMilestoneRow()" class="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-100">+ Add Milestone</button>
+                </div>
+
+                <div id="milestones-container" class="space-y-3">
+                  <!-- Milestone Item 1 -->
+                  <div class="milestone-row p-3 rounded-lg border border-slate-200 bg-slate-50/60 text-xs space-y-2">
+                    <div class="flex items-center justify-between">
+                      <span class="font-bold text-slate-700">Milestone 1</span>
+                      <span class="text-[10px] text-slate-400">Escrow Tranche 1</span>
+                    </div>
+                    <input type="text" oninput="calculateProposalTotals()" class="m-title w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded font-semibold text-slate-800" value="UX Wireframes & Information Architecture">
+                    <div class="grid grid-cols-2 gap-2">
+                      <input type="date" class="m-date w-full px-2 py-1 bg-white border border-slate-200 rounded text-slate-700" value="2026-11-08">
+                      <input type="number" oninput="calculateProposalTotals()" class="m-amount w-full px-2 py-1 bg-white border border-slate-200 rounded font-bold text-slate-900" value="45000">
+                    </div>
+                  </div>
+
+                  <!-- Milestone Item 2 -->
+                  <div class="milestone-row p-3 rounded-lg border border-slate-200 bg-slate-50/60 text-xs space-y-2">
+                    <div class="flex items-center justify-between">
+                      <span class="font-bold text-slate-700">Milestone 2</span>
+                      <span class="text-[10px] text-slate-400">Escrow Tranche 2</span>
+                    </div>
+                    <input type="text" oninput="calculateProposalTotals()" class="m-title w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded font-semibold text-slate-800" value="High-Fidelity UI Design System & Tokens">
+                    <div class="grid grid-cols-2 gap-2">
+                      <input type="date" class="m-date w-full px-2 py-1 bg-white border border-slate-200 rounded text-slate-700" value="2026-11-20">
+                      <input type="number" oninput="calculateProposalTotals()" class="m-amount w-full px-2 py-1 bg-white border border-slate-200 rounded font-bold text-slate-900" value="65000">
+                    </div>
+                  </div>
+
+                  <!-- Milestone Item 3 -->
+                  <div class="milestone-row p-3 rounded-lg border border-slate-200 bg-slate-50/60 text-xs space-y-2">
+                    <div class="flex items-center justify-between">
+                      <span class="font-bold text-slate-700">Milestone 3</span>
+                      <span class="text-[10px] text-slate-400">Escrow Tranche 3</span>
+                    </div>
+                    <input type="text" oninput="calculateProposalTotals()" class="m-title w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded font-semibold text-slate-800" value="React & Next.js Production Frontend Build">
+                    <div class="grid grid-cols-2 gap-2">
+                      <input type="date" class="m-date w-full px-2 py-1 bg-white border border-slate-200 rounded text-slate-700" value="2026-12-05">
+                      <input type="number" oninput="calculateProposalTotals()" class="m-amount w-full px-2 py-1 bg-white border border-slate-200 rounded font-bold text-slate-900" value="75000">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section 3: Pricing & GST Engine -->
+              <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-3 text-xs">
+                <div class="flex justify-between items-center text-slate-600">
+                  <span>Milestone Subtotal</span>
+                  <span id="prop-subtotal-disp" class="font-bold text-slate-900">₹1,85,000</span>
+                </div>
+
+                <div class="flex justify-between items-center">
+                  <span>Early Bird / Flat Discount (₹)</span>
+                  <input id="prop-discount" oninput="calculateProposalTotals()" type="number" value="10000" class="w-28 text-right px-2 py-1 bg-slate-50 border border-slate-200 rounded font-semibold">
+                </div>
+
+                <div class="flex justify-between items-center pt-2 border-t border-slate-100">
+                  <div>
+                    <span class="font-semibold text-slate-800 block">18% Indian GST</span>
+                    <span class="text-[10px] text-slate-400">SAC: 998314</span>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input id="prop-gst-toggle" onchange="calculateProposalTotals()" type="checkbox" checked class="sr-only peer">
+                    <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                  </label>
+                </div>
+
+                <div id="prop-gst-row" class="flex justify-between text-slate-500">
+                  <span>GST Amount (18%)</span>
+                  <span id="prop-gst-disp" class="font-semibold">₹31,500</span>
+                </div>
+
+                <div class="pt-3 border-t border-slate-200 flex justify-between items-center">
+                  <span class="text-xs uppercase font-bold tracking-wider text-slate-600">Total Proposal Value</span>
+                  <span id="prop-grand-total" class="text-xl font-extrabold text-slate-900">₹2,06,500</span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Right Live Client Preview (6 Cols) -->
+            <div class="lg:col-span-6 space-y-4">
+              <div class="flex items-center justify-between px-1">
+                <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span>Client-Facing Proposal Preview</span>
+                </span>
+                <span class="text-[11px] text-slate-400 font-mono">pflow.me/p/prop_2026_01</span>
+              </div>
+
+              <!-- The Proposal Document Container -->
+              <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6 relative overflow-hidden">
+                
+                <!-- Freelancer Info Header -->
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                  <div class="flex items-center gap-3">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80" class="w-10 h-10 rounded-full object-cover ring-2 ring-indigo-100" alt="Arjun">
+                    <div>
+                      <div class="flex items-center gap-1.5">
+                        <span class="font-bold text-slate-900 text-sm">Arjun Verma</span>
+                        <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                      </div>
+                      <span class="text-[11px] text-slate-500">Senior Product Designer • ★ 4.9 Trust</span>
+                    </div>
+                  </div>
+
+                  <div class="text-right">
+                    <span class="text-[10px] font-bold uppercase text-slate-400 block">Proposal For</span>
+                    <span id="prev-client-name" class="text-xs font-bold text-slate-900">Aditya Mathur</span>
+                    <span class="text-[10px] text-slate-400 block">AgentFlow Tech</span>
+                  </div>
+                </div>
+
+                <!-- Scope Document Title -->
+                <div>
+                  <span class="text-[10px] uppercase font-bold tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">Scope Lock Document</span>
+                  <h3 id="prev-proj-title" class="text-base font-bold text-slate-900 mt-1">AI Workflow Automation & Agent UI Dashboard</h3>
+                  <p class="text-[11px] text-slate-500 mt-0.5">Valid until 15 Nov 2026 • NPCI Escrow Protected</p>
+                </div>
+
+                <!-- Deliverable Roadmap -->
+                <div class="space-y-2">
+                  <span class="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">Deliverables Roadmap</span>
+                  <div id="prev-milestones-list" class="space-y-2 text-xs">
+                    <div class="p-2.5 rounded-lg border border-slate-200 bg-slate-50/50 flex justify-between items-center">
+                      <span>1. UX Wireframes & Architecture</span>
+                      <span class="font-bold text-slate-900">₹45,000</span>
+                    </div>
+                    <div class="p-2.5 rounded-lg border border-slate-200 bg-slate-50/50 flex justify-between items-center">
+                      <span>2. UI Design System & Tokens</span>
+                      <span class="font-bold text-slate-900">₹65,000</span>
+                    </div>
+                    <div class="p-2.5 rounded-lg border border-slate-200 bg-slate-50/50 flex justify-between items-center">
+                      <span>3. Next.js Production Build</span>
+                      <span class="font-bold text-slate-900">₹75,000</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Financial Snapshot -->
+                <div class="bg-slate-50 rounded-xl p-3.5 space-y-1.5 text-xs">
+                  <div class="flex justify-between text-slate-600">
+                    <span>Total Investment</span>
+                    <span id="prev-total-disp" class="font-extrabold text-indigo-600 text-sm">₹2,06,500</span>
+                  </div>
+                  <div class="text-[10px] text-slate-400 flex justify-between">
+                    <span>Tax Inclusive</span>
+                    <span>Direct UPI Milestone Settlement</span>
+                  </div>
+                </div>
+
+                <!-- Interactive E-Sign Canvas Area -->
+                <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/60 space-y-2">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                      <span>Client Digital E-Signature Pad</span>
+                    </span>
+                    <button onclick="clearSignatureCanvas()" type="button" class="text-[10px] text-slate-400 hover:text-rose-600 font-semibold">Clear</button>
+                  </div>
+
+                  <div id="signature-wrapper" class="relative bg-white rounded-lg border border-dashed border-slate-300 overflow-hidden">
+                    <canvas id="sign-canvas" width="460" height="120" class="w-full h-28 block cursor-crosshair touch-none"></canvas>
+                    <div id="sign-placeholder" class="absolute inset-0 pointer-events-none flex items-center justify-center text-slate-400 text-xs">
+                      <span>Draw client signature with mouse or touch</span>
+                    </div>
+                  </div>
+
+                  <div id="signature-status" class="hidden p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-center">
+                    <p class="text-xs font-bold text-emerald-800">✓ Digitally Signed & Sealed</p>
+                    <p class="text-[10px] text-emerald-700 font-mono mt-0.5">Signer: Aditya Mathur • SHA-256 Verified</p>
+                  </div>
+                </div>
+
+                <!-- Simulation Approval Button -->
+                <button id="btn-approve-prop" onclick="simulateClientApproval()" class="w-full flex items-center justify-center gap-2 py-3 px-4 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white text-xs font-bold rounded-xl shadow-md transition-all">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  <span>Simulate Client E-Sign & Approve</span>
+                </button>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ==================== TAB 3: UPI INVOICING ==================== -->
+        <div id="view-invoices" class="tab-view space-y-6 hidden fade-enter">
+          
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded font-mono">INV-2026-1042</span>
+                <span id="invoice-status-pill" class="text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">Awaiting UPI Clearance</span>
+              </div>
+              <h2 class="text-lg font-bold text-slate-900 mt-1">UPI Invoicing & QR Code Hub</h2>
+              <p class="text-xs text-slate-500">Collect payments with zero gateway commissions directly into your bank.</p>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button id="btn-simulate-upi-pay" onclick="simulateUpiPaymentSettled()" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 rounded-xl shadow-xs transition-all">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                <span>Simulate Instant UPI Settlement</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            
+            <!-- Left Invoice Sheet (7 Cols) -->
+            <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
+              
+              <div class="flex flex-col sm:flex-row sm:items-start justify-between pb-6 border-b border-slate-100 gap-4">
+                <div>
+                  <div class="flex items-center gap-2 mb-1">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-sm">₹</div>
+                    <div>
+                      <h3 class="font-bold text-slate-900 text-sm">Arjun Verma</h3>
+                      <p class="text-xs text-slate-400">Design Engineer</p>
+                    </div>
+                  </div>
+                  <div class="text-xs text-slate-500 space-y-0.5 mt-2">
+                    <p>GSTIN: 29ABCDE1234F1Z5</p>
+                    <p>Bengaluru, Karnataka</p>
+                  </div>
+                </div>
+
+                <div class="text-left sm:text-right text-xs">
+                  <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">Billed To</span>
+                  <p class="font-bold text-slate-900 text-sm mt-0.5">Siddharth Roy (ScaleAI Labs)</p>
+                  <p class="text-slate-500 mt-1">UPI: siddharth@icici</p>
+                  <p class="text-slate-400 mt-1">Due Date: 04 Nov 2026</p>
+                </div>
+              </div>
+
+              <!-- Itemized Table -->
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Itemized Deliverables</h4>
+                  <button onclick="addInvoiceItemRow()" class="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">+ Add Line Item</button>
+                </div>
+
+                <div class="border border-slate-200 rounded-xl overflow-hidden">
+                  <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
+                      <tr>
+                        <th class="py-2.5 px-3">Description</th>
+                        <th class="py-2.5 px-2 w-16 text-center">Qty</th>
+                        <th class="py-2.5 px-3 w-28 text-right">Rate (₹)</th>
+                        <th class="py-2.5 px-3 w-28 text-right">Amount (₹)</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100" id="inv-table-body">
+                      <tr class="inv-line-row">
+                        <td class="py-2.5 px-3"><input type="text" class="w-full text-xs font-medium text-slate-800 bg-transparent border-0 focus:ring-0" value="Milestone 1: Design System & Token Specs"></td>
+                        <td class="py-2.5 px-2 text-center">1</td>
+                        <td class="py-2.5 px-3 text-right"><input type="number" oninput="calculateInvoiceTotals()" class="inv-item-rate w-20 text-right text-xs font-bold bg-transparent border-0 focus:ring-0" value="45000"></td>
+                        <td class="py-2.5 px-3 text-right font-bold text-slate-900 inv-item-amt">₹45,000</td>
+                      </tr>
+                      <tr class="inv-line-row">
+                        <td class="py-2.5 px-3"><input type="text" class="w-full text-xs font-medium text-slate-800 bg-transparent border-0 focus:ring-0" value="Production Next.js Responsive App (5 Screens)"></td>
+                        <td class="py-2.5 px-2 text-center">1</td>
+                        <td class="py-2.5 px-3 text-right"><input type="number" oninput="calculateInvoiceTotals()" class="inv-item-rate w-20 text-right text-xs font-bold bg-transparent border-0 focus:ring-0" value="65000"></td>
+                        <td class="py-2.5 px-3 text-right font-bold text-slate-900 inv-item-amt">₹65,000</td>
+                      </tr>
+                      <tr class="inv-line-row">
+                        <td class="py-2.5 px-3"><input type="text" class="w-full text-xs font-medium text-slate-800 bg-transparent border-0 focus:ring-0" value="Performance Optimization & Lighthouse Audit"></td>
+                        <td class="py-2.5 px-2 text-center">1</td>
+                        <td class="py-2.5 px-3 text-right"><input type="number" oninput="calculateInvoiceTotals()" class="inv-item-rate w-20 text-right text-xs font-bold bg-transparent border-0 focus:ring-0" value="15000"></td>
+                        <td class="py-2.5 px-3 text-right font-bold text-slate-900 inv-item-amt">₹15,000</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Financial Controls -->
+              <div class="bg-slate-50 rounded-xl p-4 space-y-3 text-xs">
+                <div class="flex justify-between text-slate-600">
+                  <span>Subtotal</span>
+                  <span id="inv-subtotal" class="font-bold text-slate-900">₹1,25,000</span>
+                </div>
+
+                <div class="flex justify-between items-center">
+                  <span>Special Discount (₹)</span>
+                  <input id="inv-discount" oninput="calculateInvoiceTotals()" type="number" value="5000" class="w-24 text-right px-2 py-0.5 bg-white border border-slate-200 rounded font-bold">
+                </div>
+
+                <div class="flex justify-between items-center pt-2 border-t border-slate-200">
+                  <div>
+                    <span class="font-semibold text-slate-800">Add 18% GST</span>
+                    <span class="text-[10px] text-slate-400 block">Indian business GST invoice</span>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input id="inv-gst-toggle" onchange="calculateInvoiceTotals()" type="checkbox" checked class="sr-only peer">
+                    <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                  </label>
+                </div>
+
+                <div id="inv-gst-breakdown" class="flex justify-between text-slate-500">
+                  <span>IGST @ 18%</span>
+                  <span id="inv-gst-amt" class="font-semibold">₹21,600</span>
+                </div>
+
+                <div class="pt-3 border-t border-slate-200 flex justify-between items-center">
+                  <div>
+                    <span class="font-bold text-slate-900 text-sm block">Total Net Payable</span>
+                    <span class="text-[10px] text-emerald-600 font-semibold">Zero Fee via UPI Direct</span>
+                  </div>
+                  <span id="inv-grand-total" class="text-2xl font-extrabold text-slate-900">₹1,41,600</span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Right UPI QR & Link Preview (5 Cols) -->
+            <div class="lg:col-span-5 space-y-5">
+              
+              <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3"/></svg>
+                    </div>
+                    <div>
+                      <h3 class="font-bold text-slate-900 text-sm">Dynamic UPI Checkout</h3>
+                      <p class="text-[11px] text-slate-500">Scan & pay with any UPI app</p>
+                    </div>
+                  </div>
+                  <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">0% Commission</span>
+                </div>
+
+                <!-- Styled SVG QR Code -->
+                <div class="bg-slate-50 rounded-xl p-5 border border-slate-200 text-center flex flex-col items-center justify-center">
+                  <div class="w-44 h-44 bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex items-center justify-center relative">
+                    <svg class="w-full h-full text-slate-900" viewBox="0 0 100 100" fill="currentColor">
+                      <rect x="5" y="5" width="26" height="26" rx="3" fill="#0f172a" />
+                      <rect x="9" y="9" width="18" height="18" rx="2" fill="#ffffff" />
+                      <rect x="13" y="13" width="10" height="10" fill="#4f46e5" />
+                      <rect x="69" y="5" width="26" height="26" rx="3" fill="#0f172a" />
+                      <rect x="73" y="9" width="18" height="18" rx="2" fill="#ffffff" />
+                      <rect x="77" y="13" width="10" height="10" fill="#4f46e5" />
+                      <rect x="5" y="69" width="26" height="26" rx="3" fill="#0f172a" />
+                      <rect x="9" y="73" width="18" height="18" rx="2" fill="#ffffff" />
+                      <rect x="13" y="77" width="10" height="10" fill="#4f46e5" />
+                      <rect x="36" y="8" width="6" height="6" />
+                      <rect x="46" y="8" width="8" height="6" />
+                      <rect x="58" y="8" width="6" height="6" />
+                      <rect x="36" y="18" width="16" height="6" />
+                      <rect x="56" y="18" width="6" height="6" />
+                      <circle cx="50" cy="50" r="10" fill="#4f46e5" />
+                      <text x="50" y="54" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle">₹</text>
+                      <rect x="36" y="38" width="6" height="6" />
+                      <rect x="60" y="38" width="12" height="6" />
+                      <rect x="76" y="38" width="16" height="6" />
+                      <rect x="36" y="68" width="8" height="8" />
+                      <rect x="48" y="68" width="6" height="8" />
+                      <rect x="58" y="68" width="16" height="6" />
+                      <rect x="80" y="68" width="12" height="8" />
+                      <rect x="36" y="82" width="16" height="10" />
+                      <rect x="68" y="82" width="24" height="10" />
+                    </svg>
+                  </div>
+
+                  <div class="mt-3">
+                    <span id="qr-amount-caption" class="text-xs font-bold text-slate-900 block">Scan to Pay ₹1,41,600</span>
+                    <span class="text-[10px] text-slate-500 font-mono">UPI VPA: arjunverma@okhdfcbank</span>
+                  </div>
+
+                  <div class="mt-3 flex items-center justify-center gap-1.5 text-[10px] font-semibold text-slate-500">
+                    <span class="px-1.5 py-0.5 rounded bg-white border border-slate-200">GPay</span>
+                    <span class="px-1.5 py-0.5 rounded bg-white border border-slate-200">PhonePe</span>
+                    <span class="px-1.5 py-0.5 rounded bg-white border border-slate-200">Paytm</span>
+                    <span class="px-1.5 py-0.5 rounded bg-white border border-slate-200">CRED</span>
+                  </div>
+                </div>
+
+                <!-- Short-Link Box -->
+                <div class="space-y-1.5">
+                  <label class="text-xs font-semibold text-slate-700 block">Razorpay / PaidFlow Short Link</label>
+                  <div class="flex items-center gap-2">
+                    <input readonly value="https://pflow.in/pay/inv_1042" class="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-800 select-all">
+                    <button onclick="copyToClipboard('https://pflow.in/pay/inv_1042', 'UPI payment link copied!')" class="px-3.5 py-2 rounded-lg bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 text-xs font-bold transition-colors shrink-0">
+                      Copy Link
+                    </button>
+                  </div>
+                </div>
+
+                <!-- WhatsApp Button -->
+                <button onclick="sendInvoiceWhatsApp()" class="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white text-xs font-bold shadow-sm transition-all">
+                  <svg class="w-4 h-4 fill-white" viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm0 18.15c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.16 8.16 0 01-1.25-4.38c0-4.54 3.7-8.24 8.24-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 012.41 5.83c.01 4.54-3.69 8.23-8.43 8.23z"/></svg>
+                  <span>Send to WhatsApp</span>
+                </button>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ==================== TAB 4: TRUST & REVIEW TAB ==================== -->
+        <div id="view-trust" class="tab-view space-y-6 hidden fade-enter">
+          
+          <!-- Trust Score Banner -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-100">
+              <div class="flex items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-md shadow-emerald-200 font-extrabold text-2xl">
+                  ★
+                </div>
+
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h2 class="text-xl font-bold text-slate-900">Verified Freelancer Reputation</h2>
+                    <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      Escrow Verified
+                    </span>
+                  </div>
+                  <p class="text-xs text-slate-500 mt-1 max-w-xl">
+                    PaidFlow reviews are tamper-proof and double-blind. Client feedback is released once mutual ratings are submitted.
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-4">
+                <div class="text-right">
+                  <div class="flex items-center justify-end gap-1">
+                    <span id="reputation-big-score" class="text-3xl font-extrabold text-slate-900">4.92</span>
+                    <span class="text-slate-400 font-semibold text-sm">/ 5.0</span>
+                    <span class="text-amber-400 text-xl leading-none">★</span>
+                  </div>
+                  <span id="reputation-reviews-count" class="text-xs font-semibold text-slate-500 block">38 Verified Reviews</span>
+                </div>
+
+                <button onclick="openModal('share-reputation-modal')" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition-colors">
+                  Share Badge
+                </button>
+              </div>
+            </div>
+
+            <!-- 3 Pillars of Freelancer Reputation -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6">
+              
+              <!-- Pillar 1 -->
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-700">Product Craftsmanship & Quality</span>
+                  <span class="text-xs font-bold text-indigo-700 font-mono">4.95 / 5.0</span>
+                </div>
+                <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                  <div class="bg-indigo-600 h-full rounded-full" style="width: 98%;"></div>
+                </div>
+                <p class="text-[11px] text-slate-500">Design token fidelity, clean Next.js architecture, and micro-interactions.</p>
+              </div>
+
+              <!-- Pillar 2 -->
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-700">Deadline Punctuality</span>
+                  <span class="text-xs font-bold text-emerald-700 font-mono">4.89 / 5.0</span>
+                </div>
+                <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                  <div class="bg-emerald-600 h-full rounded-full" style="width: 96%;"></div>
+                </div>
+                <p class="text-[11px] text-slate-500">98% of milestones delivered on or before the agreed delivery date.</p>
+              </div>
+
+              <!-- Pillar 3 -->
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-700">Communication & Revisions</span>
+                  <span class="text-xs font-bold text-indigo-700 font-mono">4.93 / 5.0</span>
+                </div>
+                <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                  <div class="bg-indigo-600 h-full rounded-full" style="width: 97%;"></div>
+                </div>
+                <p class="text-[11px] text-slate-500">Async WhatsApp & Loom update turnaround averaging under 45 mins.</p>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Review Pending Queue -->
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm font-bold text-slate-900">Review Pending Queue</h3>
+                  <span id="pending-queue-badge" class="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-xs font-bold border border-amber-200">1 Action Required</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-0.5">Rate the client across Payment Discipline, Scope Clarity, and Cooperation to unlock their reciprocal review.</p>
+              </div>
+            </div>
+
+            <div id="pending-queue-list" class="space-y-3">
+              <!-- Item 1 Pending -->
+              <div id="pending-card-neha" class="bg-white rounded-xl border border-amber-200/90 p-5 shadow-xs space-y-3">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80" class="w-10 h-10 rounded-full object-cover" alt="Neha">
+                    <div>
+                      <h4 class="font-bold text-slate-900 text-sm">Neha Singhal (Finly.io)</h4>
+                      <p class="text-xs text-slate-500">Fintech Dashboard Redesign & Multi-Currency Flow</p>
+                    </div>
+                  </div>
+                  <span class="text-xs font-extrabold text-slate-900 bg-slate-50 px-2.5 py-1 rounded">₹85,000 Settled</span>
+                </div>
+
+                <div class="p-3 bg-amber-50 rounded-lg border border-amber-200 flex items-center justify-between text-xs">
+                  <div class="flex items-center gap-2 text-amber-800">
+                    <svg class="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                    <span>Client has rated your performance. Rate client to unlock reciprocal review!</span>
+                  </div>
+                  <button onclick="openClientRatingModal('Neha Singhal', 'Fintech Dashboard Redesign', '₹85,000')" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs transition-colors">
+                    Rate Client
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Unlocked Client Reviews Feed -->
+          <div class="space-y-3.5">
+            <h3 class="text-sm font-bold text-slate-900">Verified Client Testimonials</h3>
+
+            <div id="unlocked-reviews-feed" class="space-y-3">
+              <!-- Unlocked 1 -->
+              <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-3">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80" class="w-10 h-10 rounded-full object-cover" alt="Kunal">
+                    <div>
+                      <div class="flex items-center gap-2">
+                        <span class="font-bold text-slate-900 text-sm">Kunal Shah</span>
+                        <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">Verified Payer</span>
+                      </div>
+                      <p class="text-xs text-slate-500">CRED Mobile App Micro-Interactions</p>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-amber-400 text-sm">★★★★★</div>
+                    <span class="text-[10px] text-slate-400">Settled ₹1,45,000 via UPI</span>
+                  </div>
+                </div>
+
+                <p class="text-xs text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100 italic leading-relaxed">
+                  &ldquo;Arjun is an absolute rockstar. High velocity, impeccably designed Figma tokens and smooth micro-animations. Would hire again in a heartbeat!&rdquo;
+                </p>
+
+                <div class="flex items-center gap-3 text-[10px] text-slate-500 pt-1 border-t border-slate-100">
+                  <span class="font-semibold text-slate-700">Freelancer mutual rating:</span>
+                  <span class="bg-slate-100 px-2 py-0.5 rounded">Payment Discipline: 5/5 ★</span>
+                  <span class="bg-slate-100 px-2 py-0.5 rounded">Scope Clarity: 5/5 ★</span>
+                  <span class="bg-slate-100 px-2 py-0.5 rounded">Cooperation: 5/5 ★</span>
+                </div>
+              </div>
+
+              <!-- Unlocked 2 -->
+              <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-3">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80" class="w-10 h-10 rounded-full object-cover" alt="Pooja">
+                    <div>
+                      <div class="flex items-center gap-2">
+                        <span class="font-bold text-slate-900 text-sm">Pooja Iyer (Aura Health)</span>
+                        <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">Verified Payer</span>
+                      </div>
+                      <p class="text-xs text-slate-500">Telemedicine Patient Booking & Video UX</p>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-amber-400 text-sm">★★★★★</div>
+                    <span class="text-[10px] text-slate-400">Settled ₹2,20,000 via UPI</span>
+                  </div>
+                </div>
+
+                <p class="text-xs text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100 italic leading-relaxed">
+                  &ldquo;Exceptional attention to detail in patient accessibility and streamlined doctor scheduling flows. Very receptive to clinical team feedback.&rdquo;
+                </p>
+
+                <div class="flex items-center gap-3 text-[10px] text-slate-500 pt-1 border-t border-slate-100">
+                  <span class="font-semibold text-slate-700">Freelancer mutual rating:</span>
+                  <span class="bg-slate-100 px-2 py-0.5 rounded">Payment Discipline: 5/5 ★</span>
+                  <span class="bg-slate-100 px-2 py-0.5 rounded">Scope Clarity: 4/5 ★</span>
+                  <span class="bg-slate-100 px-2 py-0.5 rounded">Cooperation: 5/5 ★</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </main>
+    </div>
+
+    <!-- ==================== MOBILE NAVIGATION ==================== -->
+    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-30 px-3 py-2 flex items-center justify-around shadow-lg">
+      <button onclick="switchTab('overview')" class="flex flex-col items-center py-1 px-3 text-xs font-semibold text-indigo-600">
+        <svg class="w-5 h-5 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        <span>Overview</span>
+      </button>
+
+      <button onclick="switchTab('proposals')" class="flex flex-col items-center py-1 px-3 text-xs font-medium text-slate-500 hover:text-slate-900">
+        <svg class="w-5 h-5 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <span>Proposals</span>
+      </button>
+
+      <button onclick="switchTab('invoices')" class="flex flex-col items-center py-1 px-3 text-xs font-medium text-slate-500 hover:text-slate-900">
+        <svg class="w-5 h-5 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3"/></svg>
+        <span>Invoices</span>
+      </button>
+
+      <button onclick="switchTab('trust')" class="flex flex-col items-center py-1 px-3 text-xs font-medium text-slate-500 hover:text-slate-900">
+        <svg class="w-5 h-5 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        <span>Trust</span>
+      </button>
+
+      <button onclick="openModal('quick-invoice-modal')" class="p-2 rounded-xl bg-emerald-600 text-white shadow-sm">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- Modal 1: Client Rating Modal (To Unlock Reciprocal Review) -->
+  <div id="rate-client-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+    <div class="bg-white rounded-2xl max-w-lg w-full border border-slate-200 shadow-xl overflow-hidden fade-enter">
+      <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+        <div>
+          <h3 class="font-bold text-slate-900 text-sm">Rate Client to Unlock Mutual Review</h3>
+          <p class="text-xs text-slate-500">Both ratings remain confidential until mutual completion</p>
+        </div>
+        <button onclick="closeModal('rate-client-modal')" class="text-slate-400 hover:text-slate-600 text-sm">✕</button>
+      </div>
+
+      <div class="p-5 space-y-4 text-xs">
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+          <span id="rate-modal-client-name" class="font-bold text-slate-900 block">Neha Singhal</span>
+          <span id="rate-modal-proj-name" class="text-slate-500 block">Fintech Dashboard Redesign</span>
+        </div>
+
+        <div class="space-y-3">
+          <div>
+            <label class="block font-semibold text-slate-800 mb-1">1. Payment Discipline & UPI Speed</label>
+            <div class="flex gap-2 text-base text-amber-400 cursor-pointer">
+              <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+              <span class="text-xs text-slate-600 font-bold ml-2">5.0 / 5.0</span>
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-800 mb-1">2. Scope Clarity & Specifications</label>
+            <div class="flex gap-2 text-base text-amber-400 cursor-pointer">
+              <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+              <span class="text-xs text-slate-600 font-bold ml-2">5.0 / 5.0</span>
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-800 mb-1">3. Cooperation & Feedback Speed</label>
+            <div class="flex gap-2 text-base text-amber-400 cursor-pointer">
+              <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+              <span class="text-xs text-slate-600 font-bold ml-2">5.0 / 5.0</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2">
+          <button onclick="closeModal('rate-client-modal')" class="px-3.5 py-2 font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+          <button onclick="submitClientRating()" class="px-4 py-2 font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm">Submit & Unlock Client Review</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: New Proposal Quick Modal -->
+  <div id="new-proposal-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+    <div class="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-xl overflow-hidden fade-enter">
+      <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+        <div>
+          <h3 class="font-bold text-slate-900 text-sm">Create New Proposal</h3>
+          <p class="text-xs text-slate-500">Lock milestones & delivery dates</p>
+        </div>
+        <button onclick="closeModal('new-proposal-modal')" class="text-slate-400 hover:text-slate-600">✕</button>
+      </div>
+
+      <div class="p-5 space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Project Name</label>
+          <input id="quick-prop-title" type="text" value="SaaS Analytics Dashboard & Component System" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Client Name</label>
+          <input id="quick-prop-client" type="text" value="Deepak Gupta (HyperTrack)" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Budget in INR (₹)</label>
+          <input id="quick-prop-budget" type="number" value="120000" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-bold">
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2">
+          <button onclick="closeModal('new-proposal-modal')" class="px-3.5 py-2 font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+          <button onclick="saveQuickProposal()" class="px-4 py-2 font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm">Open in Scope Builder</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Quick UPI Invoice Modal -->
+  <div id="quick-invoice-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+    <div class="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-xl overflow-hidden fade-enter">
+      <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+        <div>
+          <h3 class="font-bold text-slate-900 text-sm">Quick UPI Invoice (15-Sec Generator)</h3>
+          <p class="text-xs text-slate-500">Instant UPI QR & short link generation</p>
+        </div>
+        <button onclick="closeModal('quick-invoice-modal')" class="text-slate-400 hover:text-slate-600">✕</button>
+      </div>
+
+      <div class="p-5 space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Client Name</label>
+          <input id="modal-inv-client" type="text" value="Zomato Design Team" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Task Deliverable</label>
+          <input id="modal-inv-task" type="text" value="Micro-Interaction Motion Kit & Icon Library" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Invoice Amount (₹ INR)</label>
+          <input id="modal-inv-amount" type="number" value="55000" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-bold">
+        </div>
+
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+          <span class="text-[10px] text-slate-500 block">Generated UPI Payment Rail:</span>
+          <span class="font-mono text-indigo-700 font-bold text-xs block">upi://pay?pa=arjunverma@okhdfcbank&pn=ArjunVerma</span>
+        </div>
+
+        <div class="pt-2 flex justify-between items-center">
+          <button onclick="copyToClipboard('https://pflow.in/pay/inv_fast', 'UPI link copied!')" class="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50">Copy Link</button>
+          <div class="flex gap-2">
+            <button onclick="closeModal('quick-invoice-modal')" class="px-3 py-1.5 font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+            <button onclick="saveQuickInvoice()" class="px-4 py-1.5 font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-sm">Issue Invoice</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: Share Reputation Modal -->
+  <div id="share-reputation-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+    <div class="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-xl overflow-hidden fade-enter">
+      <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+        <div>
+          <h3 class="font-bold text-slate-900 text-sm">Public Reputation Profile</h3>
+          <p class="text-xs text-slate-500">Verified credentials & trust badges</p>
+        </div>
+        <button onclick="closeModal('share-reputation-modal')" class="text-slate-400 hover:text-slate-600">✕</button>
+      </div>
+
+      <div class="p-5 space-y-4 text-xs">
+        <!-- Reputation Card Preview -->
+        <div class="bg-gradient-to-br from-slate-900 to-indigo-950 p-4 rounded-xl text-white space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" class="w-9 h-9 rounded-full object-cover ring-2 ring-indigo-400" alt="Arjun">
+              <div>
+                <span class="font-bold text-sm block">Arjun Verma</span>
+                <span class="text-[11px] text-slate-300">Design Engineer</span>
+              </div>
+            </div>
+            <span class="text-xs font-bold text-amber-400">★ 4.92 / 5.0</span>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 text-center pt-1 text-[11px]">
+            <div class="bg-white/5 p-1.5 rounded">₹14.85 L Settled</div>
+            <div class="bg-white/5 p-1.5 rounded">98% On-Time</div>
+            <div class="bg-white/5 p-1.5 rounded">38 Reviews</div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Your Verified Profile URL</label>
+          <div class="flex gap-2">
+            <input readonly value="https://paidflow.me/arjunverma" class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono text-slate-800">
+            <button onclick="copyToClipboard('https://paidflow.me/arjunverma', 'Profile URL copied!')" class="px-3.5 py-2 font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg">Copy</button>
+          </div>
+        </div>
+
+        <div class="flex justify-end pt-2">
+          <button onclick="closeModal('share-reputation-modal')" class="px-4 py-2 font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg">Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== INTERACTIVE JAVASCRIPT LOGIC ==================== -->
+  <script>
+    // Tab switching
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
+      const activeEl = document.getElementById('view-' + tabId);
+      if (activeEl) activeEl.classList.remove('hidden');
+
+      // Update sidebar nav buttons
+      document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+        btn.classList.remove('bg-indigo-50', 'text-indigo-700', 'font-semibold');
+        btn.classList.add('text-slate-600', 'font-medium');
+      });
+      const activeBtn = document.getElementById('nav-btn-' + tabId);
+      if (activeBtn) {
+        activeBtn.classList.add('bg-indigo-50', 'text-indigo-700', 'font-semibold');
+        activeBtn.classList.remove('text-slate-600', 'font-medium');
+      }
+
+      // Update headers
+      const titleMap = {
+        'overview': { title: 'Financial Pulse & Overview', subtitle: 'Real-time UPI settlements, milestone proposals, and verified reputation.' },
+        'proposals': { title: 'Milestone Proposals & E-Signatures', subtitle: 'Scope lock-in with legally binding digital sign-off and milestone escrow.' },
+        'invoices': { title: 'UPI Invoicing & Instant Links', subtitle: 'Generate zero-fee UPI QR codes and Razorpay direct payment links.' },
+        'trust': { title: 'Verified Client Trust Score', subtitle: 'Mutual ratings across craftsmanship, punctuality, and scope discipline.' }
+      };
+
+      if (titleMap[tabId]) {
+        document.getElementById('header-title').innerText = titleMap[tabId].title;
+        document.getElementById('header-subtitle').innerText = titleMap[tabId].subtitle;
+      }
+    }
+
+    // Modal Helpers
+    function openModal(modalId) {
+      document.getElementById(modalId)?.classList.remove('hidden');
+    }
+    function closeModal(modalId) {
+      document.getElementById(modalId)?.classList.add('hidden');
+    }
+
+    // Toast Notification Trigger
+    function triggerToast(msg) {
+      const toast = document.getElementById('toast');
+      const text = document.getElementById('toast-text');
+      text.innerText = msg;
+      toast.classList.remove('translate-y-[-120px]', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-[-120px]', 'opacity-0');
+      }, 3000);
+    }
+
+    function copyToClipboard(text, successMsg) {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text);
+      }
+      triggerToast(successMsg || 'Copied to clipboard!');
+    }
+
+    // Format INR Helper
+    function formatRupee(amount) {
+      return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
+    }
+
+    // ================= PROPOSAL CALCULATOR & E-SIGN =================
+    function calculateProposalTotals() {
+      const amountInputs = document.querySelectorAll('.m-amount');
+      let subtotal = 0;
+      amountInputs.forEach(inp => {
+        subtotal += Number(inp.value) || 0;
+      });
+
+      const discount = Number(document.getElementById('prop-discount')?.value) || 0;
+      const gstChecked = document.getElementById('prop-gst-toggle')?.checked;
+      
+      const taxable = Math.max(0, subtotal - discount);
+      const gst = gstChecked ? taxable * 0.18 : 0;
+      const grandTotal = taxable + gst;
+
+      document.getElementById('prop-subtotal-disp').innerText = formatRupee(subtotal);
+      document.getElementById('prop-gst-disp').innerText = formatRupee(gst);
+      document.getElementById('prop-grand-total').innerText = formatRupee(grandTotal);
+      document.getElementById('prev-total-disp').innerText = formatRupee(grandTotal);
+
+      // Refresh preview milestones
+      updateProposalPreview();
+    }
+
+    function updateProposalPreview() {
+      const title = document.getElementById('prop-input-title')?.value || 'Project Scope Document';
+      const client = document.getElementById('prop-input-client')?.value || 'Client Partner';
+      
+      const titleEl = document.getElementById('prev-proj-title');
+      const clientEl = document.getElementById('prev-client-name');
+      if (titleEl) titleEl.innerText = title;
+      if (clientEl) clientEl.innerText = client;
+
+      // Update milestones list in preview
+      const previewContainer = document.getElementById('prev-milestones-list');
+      if (previewContainer) {
+        const rows = document.querySelectorAll('.milestone-row');
+        let html = '';
+        rows.forEach((row, i) => {
+          const t = row.querySelector('.m-title')?.value || `Milestone ${i+1}`;
+          const a = Number(row.querySelector('.m-amount')?.value) || 0;
+          html += `
+            <div class="p-2.5 rounded-lg border border-slate-200 bg-slate-50/50 flex justify-between items-center">
+              <span>${i+1}. ${t}</span>
+              <span class="font-bold text-slate-900">${formatRupee(a)}</span>
+            </div>
+          `;
+        });
+        previewContainer.innerHTML = html;
+      }
+    }
+
+    function addMilestoneRow() {
+      const container = document.getElementById('milestones-container');
+      const count = container.children.length + 1;
+      const div = document.createElement('div');
+      div.className = 'milestone-row p-3 rounded-lg border border-slate-200 bg-slate-50/60 text-xs space-y-2';
+      div.innerHTML = `
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-slate-700">Milestone ${count}</span>
+          <span class="text-[10px] text-slate-400">Escrow Tranche ${count}</span>
+        </div>
+        <input type="text" oninput="calculateProposalTotals()" class="m-title w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded font-semibold text-slate-800" value="Deliverable Scope Phase ${count}">
+        <div class="grid grid-cols-2 gap-2">
+          <input type="date" class="m-date w-full px-2 py-1 bg-white border border-slate-200 rounded text-slate-700" value="2026-12-18">
+          <input type="number" oninput="calculateProposalTotals()" class="m-amount w-full px-2 py-1 bg-white border border-slate-200 rounded font-bold text-slate-900" value="35000">
+        </div>
+      `;
+      container.appendChild(div);
+      calculateProposalTotals();
+    }
+
+    // Signature Canvas Drawing
+    let canvas, ctx, isDrawing = false, hasDrawn = false;
+    window.addEventListener('DOMContentLoaded', () => {
+      canvas = document.getElementById('sign-canvas');
+      if (canvas) {
+        ctx = canvas.getContext('2d');
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 2.2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        function start(e) {
+          isDrawing = true;
+          hasDrawn = true;
+          document.getElementById('sign-placeholder')?.classList.add('hidden');
+          const rect = canvas.getBoundingClientRect();
+          const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+          const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+        }
+
+        function draw(e) {
+          if (!isDrawing) return;
+          const rect = canvas.getBoundingClientRect();
+          const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+          const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
+          ctx.lineTo(x, y);
+          ctx.stroke();
+        }
+
+        function stop() { isDrawing = false; }
+
+        canvas.addEventListener('mousedown', start);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stop);
+        canvas.addEventListener('mouseleave', stop);
+
+        canvas.addEventListener('touchstart', start);
+        canvas.addEventListener('touchmove', draw);
+        canvas.addEventListener('touchend', stop);
+      }
+    });
+
+    function clearSignatureCanvas() {
+      if (canvas && ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        hasDrawn = false;
+        document.getElementById('sign-placeholder')?.classList.remove('hidden');
+      }
+    }
+
+    function simulateClientApproval() {
+      document.getElementById('signature-wrapper')?.classList.add('hidden');
+      document.getElementById('signature-status')?.classList.remove('hidden');
+      document.getElementById('proposal-status-badge').className = "text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200";
+      document.getElementById('proposal-status-badge').innerText = "✓ Approved & Sealed";
+      document.getElementById('btn-approve-prop').className = "w-full flex items-center justify-center gap-2 py-3 px-4 bg-emerald-600 text-white text-xs font-bold rounded-xl transition-all pointer-events-none";
+      document.getElementById('btn-approve-prop').innerHTML = "<span>✓ Agreement Legally Sealed & Active</span>";
+      triggerToast('🎉 Proposal Approved! Milestone Escrow has been unlocked.');
+    }
+
+    function shareProposalWhatsApp() {
+      const client = document.getElementById('prop-input-client')?.value || 'there';
+      const text = `Hi ${client}, please find the verified PaidFlow project scope & milestone proposal here for your e-signature: https://paidflow.me/p/prop_2026_01`;
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+    // ================= INVOICE ENGINE =================
+    function calculateInvoiceTotals() {
+      const rows = document.querySelectorAll('.inv-line-row');
+      let subtotal = 0;
+      rows.forEach(r => {
+        const rate = Number(r.querySelector('.inv-item-rate')?.value) || 0;
+        subtotal += rate;
+        const amtCell = r.querySelector('.inv-item-amt');
+        if (amtCell) amtCell.innerText = formatRupee(rate);
+      });
+
+      const discount = Number(document.getElementById('inv-discount')?.value) || 0;
+      const gstChecked = document.getElementById('inv-gst-toggle')?.checked;
+      const taxable = Math.max(0, subtotal - discount);
+      const gst = gstChecked ? taxable * 0.18 : 0;
+      const grandTotal = taxable + gst;
+
+      document.getElementById('inv-subtotal').innerText = formatRupee(subtotal);
+      document.getElementById('inv-gst-amt').innerText = formatRupee(gst);
+      document.getElementById('inv-grand-total').innerText = formatRupee(grandTotal);
+      document.getElementById('qr-amount-caption').innerText = `Scan to Pay ${formatRupee(grandTotal)}`;
+    }
+
+    function addInvoiceItemRow() {
+      const tbody = document.getElementById('inv-table-body');
+      const tr = document.createElement('tr');
+      tr.className = 'inv-line-row';
+      tr.innerHTML = `
+        <td class="py-2.5 px-3"><input type="text" class="w-full text-xs font-medium text-slate-800 bg-transparent border-0 focus:ring-0" value="Additional Sprint Deliverables & Code Handoff"></td>
+        <td class="py-2.5 px-2 text-center">1</td>
+        <td class="py-2.5 px-3 text-right"><input type="number" oninput="calculateInvoiceTotals()" class="inv-item-rate w-20 text-right text-xs font-bold bg-transparent border-0 focus:ring-0" value="25000"></td>
+        <td class="py-2.5 px-3 text-right font-bold text-slate-900 inv-item-amt">₹25,000</td>
+      `;
+      tbody.appendChild(tr);
+      calculateInvoiceTotals();
+    }
+
+    function simulateUpiPaymentSettled() {
+      document.getElementById('invoice-status-pill').className = "text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200";
+      document.getElementById('invoice-status-pill').innerText = "✓ Settled to Bank";
+      
+      const btn = document.getElementById('btn-simulate-upi-pay');
+      btn.className = "inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-emerald-800 bg-emerald-100 rounded-xl pointer-events-none";
+      btn.innerHTML = "<span>✓ Ref: UPI/902819284910 Settled</span>";
+
+      // Increment overview revenue
+      document.getElementById('stat-settled-rev').innerText = "₹16,26,600";
+      document.getElementById('stat-pending-amount').innerText = "₹40,900";
+      document.getElementById('stat-pending-count').innerText = "2 Pending";
+
+      triggerToast('💰 UPI Payment of ₹1,41,600 cleared! Settled into HDFC Bank.');
+    }
+
+    function sendInvoiceWhatsApp() {
+      const msg = `Hi Siddharth, here is your verified UPI invoice INV-2026-1042 for ₹1,41,600 from Arjun Verma: https://pflow.in/pay/inv_1042. Zero fees via UPI!`;
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    // ================= TRUST & REVIEWS ENGINE =================
+    function openClientRatingModal(client, project, amount) {
+      document.getElementById('rate-modal-client-name').innerText = client;
+      document.getElementById('rate-modal-proj-name').innerText = `${project} • ${amount}`;
+      openModal('rate-client-modal');
+    }
+
+    function submitClientRating() {
+      closeModal('rate-client-modal');
+      
+      // Remove pending card
+      document.getElementById('pending-card-neha')?.remove();
+      document.getElementById('pending-queue-badge').innerText = "0 Pending";
+      document.getElementById('pending-queue-badge').className = "px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-xs font-semibold";
+      
+      // Append reciprocal unlocked review
+      const feed = document.getElementById('unlocked-reviews-feed');
+      const div = document.createElement('div');
+      div.className = "bg-white rounded-xl border border-emerald-200 p-5 shadow-xs space-y-3 fade-enter";
+      div.innerHTML = `
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80" class="w-10 h-10 rounded-full object-cover" alt="Neha">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-slate-900 text-sm">Neha Singhal (Finly.io)</span>
+                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">Mutual Review Unlocked</span>
+              </div>
+              <p class="text-xs text-slate-500">Fintech Dashboard Redesign</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-amber-400 text-sm">★★★★★</div>
+            <span class="text-[10px] text-slate-400">Settled ₹85,000 via UPI</span>
+          </div>
+        </div>
+
+        <p class="text-xs text-slate-700 bg-emerald-50/50 p-3 rounded-lg border border-emerald-100 italic leading-relaxed">
+          &ldquo;Arjun executed our fintech app tokens with world-class polish. Shipped 3 days ahead of schedule with zero UI bugs!&rdquo;
+        </p>
+
+        <div class="flex items-center gap-3 text-[10px] text-slate-500 pt-1 border-t border-slate-100">
+          <span class="font-semibold text-slate-700">Your rating for client:</span>
+          <span class="bg-slate-100 px-2 py-0.5 rounded">Payment Discipline: 5/5 ★</span>
+          <span class="bg-slate-100 px-2 py-0.5 rounded">Scope Clarity: 5/5 ★</span>
+          <span class="bg-slate-100 px-2 py-0.5 rounded">Cooperation: 5/5 ★</span>
+        </div>
+      `;
+      feed.prepend(div);
+
+      // Update trust score in header & card
+      document.getElementById('reputation-big-score').innerText = "4.94";
+      document.getElementById('reputation-reviews-count').innerText = "39 Verified Reviews";
+      document.getElementById('stat-trust-score').innerText = "4.94";
+
+      triggerToast('🎉 Mutual Review Unlocked! Score upgraded to 4.94 ★.');
+    }
+
+    // Search filter for transactions table
+    function filterTransactions() {
+      const filter = document.getElementById('tx-search-input')?.value.toLowerCase();
+      const rows = document.querySelectorAll('#tx-table-body tr');
+      rows.forEach(r => {
+        const text = r.innerText.toLowerCase();
+        r.style.display = text.includes(filter) ? '' : 'none';
+      });
+    }
+
+    function saveQuickProposal() {
+      closeModal('new-proposal-modal');
+      switchTab('proposals');
+      const title = document.getElementById('quick-prop-title')?.value;
+      const client = document.getElementById('quick-prop-client')?.value;
+      if (title) document.getElementById('prop-input-title').value = title;
+      if (client) document.getElementById('prop-input-client').value = client;
+      calculateProposalTotals();
+      triggerToast('✓ Proposal loaded into editor');
+    }
+
+    function saveQuickInvoice() {
+      closeModal('quick-invoice-modal');
+      const client = document.getElementById('modal-inv-client')?.value || 'Client Partner';
+      const task = document.getElementById('modal-inv-task')?.value || 'Design Sprint';
+      const amount = Number(document.getElementById('modal-inv-amount')?.value) || 55000;
+      
+      // Prepend to transactions table
+      const tbody = document.getElementById('tx-table-body');
+      const tr = document.createElement('tr');
+      tr.className = "hover:bg-slate-50/60 transition-colors fade-enter";
+      tr.innerHTML = `
+        <td class="py-4 px-5">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs ring-1 ring-slate-200">
+              ${client.charAt(0)}
+            </div>
+            <div>
+              <span class="font-bold text-slate-900 block">${client}</span>
+              <span class="text-[10px] text-slate-400 font-mono">client@upi</span>
+            </div>
+          </div>
+        </td>
+        <td class="py-4 px-4 max-w-xs">
+          <span class="font-semibold text-slate-800 line-clamp-1 block">${task}</span>
+          <span class="text-[10px] text-slate-400 font-mono">INV-2026-092 • Today</span>
+        </td>
+        <td class="py-4 px-4 whitespace-nowrap">
+          <span class="text-sm font-extrabold text-slate-900">${formatRupee(amount)}</span>
+          <span class="block text-[10px] text-amber-600 font-medium">Just issued</span>
+        </td>
+        <td class="py-4 px-4 whitespace-nowrap">
+          <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-semibold text-[11px] border border-slate-200">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            <span>UPI Instant</span>
+          </span>
+        </td>
+        <td class="py-4 px-4 whitespace-nowrap">
+          <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+            ⏳ Pending
+          </span>
+        </td>
+        <td class="py-4 px-5 text-right whitespace-nowrap">
+          <button onclick="copyToClipboard('https://pflow.in/pay/inv_092', 'UPI payment link copied!')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">Copy Link</button>
+        </td>
+      `;
+      tbody.prepend(tr);
+
+      // Update badge
+      document.getElementById('tx-count-badge').innerText = "6 Transactions";
+      document.getElementById('stat-pending-count').innerText = "4 Pending";
+
+      switchTab('overview');
+      triggerToast('✓ Fast UPI Invoice issued successfully!');
+    }
+  </script>
+</body>
+</html>
+
