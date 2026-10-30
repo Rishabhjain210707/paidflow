@@ -1,159 +1,157 @@
+'use client';
+
 import React from 'react';
 
-export interface IconProps extends React.SVGProps<SVGSVGElement> {
+type IconProps = React.SVGProps<SVGSVGElement> & {
   className?: string;
-  size?: number;
-}
+  filled?: boolean;
+};
+
+const DefaultSvg: React.FC<IconProps> = ({ className = 'w-4 h-4', children, ...props }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    {...props}
+  >
+    {children}
+  </svg>
+);
 
 export const Icons = {
-  Dashboard: ({ className = 'w-5 h-5', ...props }: IconProps) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} {...props}>
-      <rect x="3" y="3" width="7" height="9" rx="1.5" />
-      <rect x="14" y="3" width="7" height="5" rx="1.5" />
-      <rect x="14" y="12" width="7" height="9" rx="1.5" />
-      <rect x="3" y="16" width="7" height="5" rx="1.5" />
+  Rupee: ({ className = 'w-4 h-4', ...props }: IconProps) => (
+    <DefaultSvg className={className} {...props}>
+      <path d="M6 3h12M6 8h12M6 13l8.5 8M6 13h3a4 4 0 0 0 0-8" />
+    </DefaultSvg>
+  ),
+  Plus: ({ className = 'w-4 h-4', ...props }: IconProps) => (
+    <DefaultSvg className={className} {...props}>
+      <path d="M5 12h14M12 5v14" />
+    </DefaultSvg>
+  ),
+  Check: ({ className = 'w-4 h-4', ...props }: IconProps) => (
+    <DefaultSvg className={className} {...props}>
+      <polyline points="20 6 9 17 4 12" />
+    </DefaultSvg>
+  ),
+  CheckCircle2: ({ className = 'w-4 h-4', ...props }: IconProps) => (
+    <DefaultSvg className={className} {...props}>
+      <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+      <path d="m9 12 2 2 4-4" />
+    </DefaultSvg>
+  ),
+  Copy: ({ className = 'w-4 h-4', ...props }: IconProps) => (
+    <DefaultSvg className={className} {...props}>
+      <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+    </DefaultSvg>
+  ),
+  Trash: ({ className = 'w-4 h-4', ...props }: IconProps) => (
+    <DefaultSvg className={className} {...props}>
+      <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+    </DefaultSvg>
+  ),
+  Clock: ({ className = 'w-4 h-4', ...props }: IconProps) => (
+    <DefaultSvg className={className} {...props}>
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </DefaultSvg>
+  ),
+  FileText: ({ className = 'w-4 h-4', ...props }: IconProps) => (
+    <DefaultSvg className={className} {...props}>
+      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+      <path d="M10 9H8M16 13H8M16 17H8" />
+    </DefaultSvg>
+  ),
+  ShieldCheck: ({ className = 'w-4 h-4', ...props }: IconProps) => (
+    <DefaultSvg className={className} {...props}>
+      <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+      <path d="m9 12 2 2 4-4" />
+    </DefaultSvg>
+  ),
+  Star: ({ className = 'w-4 h-4', filled = false, ...props }: IconProps) => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill={filled ? 'currentColor' : 'none'}
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      {...props}
+    >
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
     </svg>
   ),
-  FileText: ({ className = 'w-5 h-5', ...props }: IconProps) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} {...props}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-    </svg>
+  Search: ({ className = 'w-4 h-4', ...props }: IconProps) => (
+    <DefaultSvg className={className} {...props}>
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.3-4.3" />
+    </DefaultSvg>
   ),
-  QrCode: ({ className = 'w-5 h-5', ...props }: IconProps) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} {...props}>
-      <rect x="3" y="3" width="7" height="7" rx="1" />
-      <rect x="14" y="3" width="7" height="7" rx="1" />
-      <rect x="3" y="14" width="7" height="7" rx="1" />
-      <rect x="14" y="14" width="3" height="3" />
-      <rect x="18" y="18" width="3" height="3" />
-      <rect x="14" y="18" width="2" height="2" />
-      <rect x="18" y="14" width="2" height="2" />
-      <path d="M7 7h.01M17 7h.01M7 17h.01" strokeWidth={2.5} strokeLinecap="round" />
-    </svg>
+  Sparkles: ({ className = 'w-4 h-4', ...props }: IconProps) => (
+    <DefaultSvg className={className} {...props}>
+      <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z" />
+    </DefaultSvg>
   ),
-  ShieldCheck: ({ className = 'w-5 h-5', ...props }: IconProps) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} {...props}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-    </svg>
-  ),
-  Rupee: ({ className = 'w-5 h-5', ...props }: IconProps) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} {...props}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6 3h12M6 8h12M6 13h5a4 4 0 000-8H6m5 8l6 8" />
-    </svg>
-  ),
-  Plus: ({ className = 'w-5 h-5', ...props }: IconProps) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-    </svg>
-  ),
-  Copy: ({ className = 'w-5 h-5', ...props }: IconProps) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} {...props}>
-      <rect x="8" y="8" width="12" height="12" rx="2" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2" />
-    </svg>
-  ),
-  Check: ({ className = 'w-5 h-5', ...props }: IconProps) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} {...props}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-    </svg>
-  ),
-  Share2: ({ className = 'w-5 h-5', ...props }: IconProps) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} {...props}>
+  Share2: ({ className = 'w-4 h-4', ...props }: IconProps) => (
+    <DefaultSvg className={className} {...props}>
       <circle cx="18" cy="5" r="3" />
       <circle cx="6" cy="12" r="3" />
       <circle cx="18" cy="19" r="3" />
-      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-    </svg>
+      <line x1="8.59" x2="15.42" y1="13.51" y2="17.49" />
+      <line x1="15.41" x2="8.59" y1="6.51" y2="10.49" />
+    </DefaultSvg>
   ),
-  Star: ({ className = 'w-5 h-5', filled = false, ...props }: IconProps & { filled?: boolean }) => (
+  ArrowUpRight: ({ className = 'w-4 h-4', ...props }: IconProps) => (
+    <DefaultSvg className={className} {...props}>
+      <line x1="7" y1="17" x2="17" y2="7" />
+      <polyline points="7 7 17 7 17 17" />
+    </DefaultSvg>
+  ),
+  PenTool: ({ className = 'w-4 h-4', ...props }: IconProps) => (
+    <DefaultSvg className={className} {...props}>
+      <path d="M12 19l7-7 3 3-7 7-3-3z" />
+      <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" />
+      <circle cx="11" cy="11" r="2" />
+    </DefaultSvg>
+  ),
+  WhatsApp: ({ className = 'w-4 h-4', ...props }: IconProps) => (
     <svg
-      className={className}
-      fill={filled ? 'currentColor' : 'none'}
+      xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={1.75}
+      fill="currentColor"
+      className={className}
       {...props}
     >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-    </svg>
-  ),
-  ExternalLink: ({ className = 'w-5 h-5', ...props }: IconProps) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} {...props}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-    </svg>
-  ),
-  ArrowUpRight: ({ className = 'w-5 h-5', ...props }: IconProps) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7m0 0H7m10 0v10" />
-    </svg>
-  ),
-  WhatsApp: ({ className = 'w-5 h-5', ...props }: IconProps) => (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" {...props}>
-      <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm0 18.15c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.16 8.16 0 01-1.25-4.38c0-4.54 3.7-8.24 8.24-8.24 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 012.41 5.83c.01 4.54-3.69 8.23-8.43 8.23zm4.52-6.17c-.25-.12-1.47-.72-1.7-.81-.23-.08-.39-.12-.56.12-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.24-1.47-1.38-1.72-.15-.25-.02-.38.11-.51.11-.11.25-.29.37-.44.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.44-.06-.12-.56-1.35-.77-1.85-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.44.06-.67.31-.23.25-.87.85-.87 2.08 0 1.23.89 2.41 1.02 2.58.12.17 1.76 2.68 4.26 3.76.59.26 1.06.41 1.42.53.6.19 1.15.16 1.58.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.15-1.18-.06-.11-.22-.18-.47-.3z"/>
-    </svg>
-  ),
-  Clock: ({ className = 'w-5 h-5', ...props }: IconProps) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} {...props}>
-      <circle cx="12" cy="12" r="10" />
-      <polyline points="12 6 12 12 16 14" />
-    </svg>
-  ),
-  Trash: ({ className = 'w-5 h-5', ...props }: IconProps) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} {...props}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-    </svg>
-  ),
-  Download: ({ className = 'w-5 h-5', ...props }: IconProps) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} {...props}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-    </svg>
-  ),
-  Search: ({ className = 'w-5 h-5', ...props }: IconProps) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} {...props}>
-      <circle cx="11" cy="11" r="8" />
-      <line x1="21" y1="21" x2="16.65" y2="16.65" />
-    </svg>
-  ),
-  X: ({ className = 'w-5 h-5', ...props }: IconProps) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
-  ),
-  PenTool: ({ className = 'w-5 h-5', ...props }: IconProps) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} {...props}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-    </svg>
-  ),
-  Sparkles: ({ className = 'w-5 h-5', ...props }: IconProps) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} {...props}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-    </svg>
-  ),
-  Lock: ({ className = 'w-5 h-5', ...props }: IconProps) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} {...props}>
-      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M7 11V7a5 5 0 0110 0v4" />
-    </svg>
-  ),
-  Unlock: ({ className = 'w-5 h-5', ...props }: IconProps) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} {...props}>
-      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M7 11V7a5 5 0 019.9-1" />
-    </svg>
-  ),
-  CheckCircle2: ({ className = 'w-5 h-5', ...props }: IconProps) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-  ),
-  AlertCircle: ({ className = 'w-5 h-5', ...props }: IconProps) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}>
-      <circle cx="12" cy="12" r="10" />
-      <line x1="12" y1="8" x2="12" y2="12" />
-      <line x1="12" y1="16" x2="12.01" y2="16" />
+      <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2M12.05 3.67C14.25 3.67 16.31 4.53 17.87 6.09C19.42 7.65 20.28 9.72 20.28 11.92C20.28 16.46 16.58 20.15 12.04 20.15C10.56 20.15 9.11 19.76 7.85 19.01L7.55 18.83L4.43 19.65L5.26 16.61L5.06 16.29C4.24 14.99 3.81 13.47 3.81 11.91C3.81 7.37 7.5 3.67 12.05 3.67Z" />
     </svg>
   ),
 };
 
+// Also export each individually so both `import { Icons }` and `import { Rupee }` work
+export const {
+  Rupee,
+  Plus,
+  Check,
+  CheckCircle2,
+  Copy,
+  Trash,
+  Clock,
+  FileText,
+  ShieldCheck,
+  Star,
+  Search,
+  Sparkles,
+  Share2,
+  ArrowUpRight,
+  PenTool,
+  WhatsApp,
+} = Icons;
