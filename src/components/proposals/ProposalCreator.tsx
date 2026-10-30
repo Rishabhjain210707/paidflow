@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Proposal, MilestoneItem } from '../../types';
-import { formatINR, generateWhatsAppShareUrl } from '../../utils/formatters';
+import { formatINR, generateWhatsAppShareUrl, getAppBaseUrl } from '../../utils/formatters';
 import { Icons } from '../ui/Icons';
 import { SignatureCanvas } from './SignatureCanvas';
 import { mockFreelancerProfile } from '../../data/mockData';
@@ -93,7 +93,8 @@ export const ProposalCreator: React.FC<ProposalCreatorProps> = ({
     }
   };
 
-  const proposalShareUrl = `https://paidflow.me/p/${proposal.id}`;
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : getAppBaseUrl();
+  const proposalShareUrl = `${baseUrl}/p/${proposal.id}`;
 
   const handleCopyLink = () => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {

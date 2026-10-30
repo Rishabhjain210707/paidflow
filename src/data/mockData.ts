@@ -21,7 +21,7 @@ export const mockFreelancerProfile = {
   city: 'Bengaluru, India',
   joinedYear: 2023,
   completedProjectsCount: 42,
-  reputationUrl: 'https://paidflow.me/arjunverma',
+  reputationUrl: '/#trust',
 };
 
 export const mockTeamMembers: TeamMember[] = [
@@ -517,7 +517,7 @@ export const mockInitialInvoice: Invoice = {
   gstNumber: '29ABCDE1234F1Z5',
   discountAmount: 5000,
   totalPayable: 141600, // (125000 - 5000) * 1.18 = 141600
-  shortUrl: 'https://pflow.in/pay/inv_1042',
+  shortUrl: '/pay/inv_1042',
   upiIntentUrl: 'upi://pay?pa=arjunverma@okhdfcbank&pn=Arjun%20Verma&am=141600.00&cu=INR&tn=Invoice%20INV-2026-1042',
   status: 'Pending',
   tranches: [
@@ -527,7 +527,7 @@ export const mockInitialInvoice: Invoice = {
       percentage: 50,
       amount: 70800,
       dueDate: '2026-10-31',
-      shortUrl: 'https://pflow.in/pay/inv_1042_t1',
+      shortUrl: '/pay/inv_1042_t1',
       upiIntentUrl: 'upi://pay?pa=arjunverma@okhdfcbank&pn=Arjun%20Verma&am=70800.00&cu=INR&tn=Invoice%201042%20Tranche1',
       status: 'Paid',
       settledAt: '2026-10-30',
@@ -539,7 +539,7 @@ export const mockInitialInvoice: Invoice = {
       percentage: 50,
       amount: 70800,
       dueDate: '2026-11-08',
-      shortUrl: 'https://pflow.in/pay/inv_1042_t2',
+      shortUrl: '/pay/inv_1042_t2',
       upiIntentUrl: 'upi://pay?pa=arjunverma@okhdfcbank&pn=Arjun%20Verma&am=70800.00&cu=INR&tn=Invoice%201042%20Tranche2',
       status: 'Pending',
     },

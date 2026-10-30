@@ -29,7 +29,8 @@ export const QuickUPIInvoiceModal: React.FC<QuickUPIInvoiceModalProps> = ({
   const gstAmount = addGst ? baseAmount * 0.18 : 0;
   const totalAmount = baseAmount + gstAmount;
   const invNumber = 'INV-' + Math.floor(1000 + Math.random() * 9000);
-  const generatedShortUrl = `https://pflow.in/pay/${invNumber.toLowerCase()}`;
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+  const generatedShortUrl = `${origin}/pay/${invNumber.toLowerCase()}`;
 
   const handleCopyLink = () => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {

@@ -13,6 +13,7 @@ import {
   getDeadlineStatus,
   calculateDelayImpact,
   generateWhatsAppShareUrl,
+  getAppBaseUrl,
 } from '../../utils/formatters';
 import { Icons } from '../ui/Icons';
 import {
@@ -106,15 +107,17 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = (props) => {
   });
 
   const handleCopyLink = (txId: string) => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : getAppBaseUrl();
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(`https://pflow.in/pay/${txId}`);
+      navigator.clipboard.writeText(`${origin}/pay/${txId}`);
       setCopiedTxId(txId);
       setTimeout(() => setCopiedTxId(null), 2000);
     }
   };
 
   const handleSendNudgeWhatsApp = () => {
-    const text = `Hi Kunal, hope you're having a great week! Just following up on the pending milestone tranche for CRED Pulse (${formatINR(credDelayedAmount)}). The DaVinci color grade & audio stems are ready for your review: https://pflow.in/pay/inv_1042_t2`;
+    const origin = typeof window !== 'undefined' ? window.location.origin : getAppBaseUrl();
+    const text = `Hi Kunal, hope you're having a great week! Just following up on the pending milestone tranche for CRED Pulse (${formatINR(credDelayedAmount)}). The DaVinci color grade & audio stems are ready for your review: ${origin}/pay/inv_1042_t2`;
     const url = generateWhatsAppShareUrl('+919820011223', text);
     if (typeof window !== 'undefined') {
       window.open(url, '_blank');

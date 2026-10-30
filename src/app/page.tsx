@@ -32,6 +32,7 @@ import {
   getDeadlineStatus,
   calculateDelayImpact,
   generateWhatsAppShareUrl,
+  getAppBaseUrl,
 } from '../utils/formatters';
 
 export default function Home() {
@@ -264,19 +265,22 @@ export default function Home() {
 
   // Generate Tone-Aware WhatsApp URL
   const getWhatsAppNudgeUrl = () => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : getAppBaseUrl();
+    const checkoutLink = `${origin}/pay/inv_1042_t2`;
+
     let msg = '';
     if (simTone === 'friendly') {
       msg = `Hi Kunal, hope you're having a productive week! Just checking in on the pending milestone tranche for CRED Pulse (${formatINR(
         delayedCredAmount
-      )}). The DaVinci color master & spatial audio stems are signed off and ready for release: https://pflow.in/pay/inv_1042_t2`;
+      )}). The DaVinci color master & spatial audio stems are signed off and ready for release: ${checkoutLink}`;
     } else if (simTone === 'firm') {
       msg = `Hello Kunal, following up regarding the invoice for CRED Pulse (${formatINR(
         delayedCredAmount
-      )}). As the deliverables are approved, settling the UPI tranche today helps us keep our upcoming motion sprint schedule intact: https://pflow.in/pay/inv_1042_t2`;
+      )}). As the deliverables are approved, settling the UPI tranche today helps us keep our upcoming motion sprint schedule intact: ${checkoutLink}`;
     } else {
       msg = `Urgent Notice: The UPI milestone invoice for CRED Pulse (${formatINR(
         delayedCredAmount
-      )}) is past the payment agreement window. Please clear the payment immediately to avoid pausing production handoff: https://pflow.in/pay/inv_1042_t2`;
+      )}) is past the payment agreement window. Please clear the payment immediately to avoid pausing production handoff: ${checkoutLink}`;
     }
     return generateWhatsAppShareUrl('+919820011223', msg);
   };
@@ -1343,14 +1347,20 @@ export default function Home() {
                     {simTone === 'friendly'
                       ? `Hi Kunal, hope you're having a productive week! Just checking in on the pending milestone tranche for CRED Pulse (${formatINR(
                           delayedCredAmount
-                        )}).\n\nThe DaVinci color master & spatial audio stems are signed off and ready for release:\nhttps://pflow.in/pay/inv_1042_t2`
+                        )}).\n\nThe DaVinci color master & spatial audio stems are signed off and ready for release:\n${
+                          typeof window !== 'undefined' ? window.location.origin : 'https://paidflow.app'
+                        }/pay/inv_1042_t2`
                       : simTone === 'firm'
                       ? `Hello Kunal, following up regarding the invoice for CRED Pulse (${formatINR(
                           delayedCredAmount
-                        )}).\n\nAs the deliverables are approved, settling the UPI tranche today helps us keep our upcoming motion sprint schedule intact:\nhttps://pflow.in/pay/inv_1042_t2`
+                        )}).\n\nAs the deliverables are approved, settling the UPI tranche today helps us keep our upcoming motion sprint schedule intact:\n${
+                          typeof window !== 'undefined' ? window.location.origin : 'https://paidflow.app'
+                        }/pay/inv_1042_t2`
                       : `Urgent Notice: The UPI milestone invoice for CRED Pulse (${formatINR(
                           delayedCredAmount
-                        )}) is past the payment agreement window.\n\nPlease clear the payment immediately to avoid pausing production handoff:\nhttps://pflow.in/pay/inv_1042_t2`}
+                        )}) is past the payment agreement window.\n\nPlease clear the payment immediately to avoid pausing production handoff:\n${
+                          typeof window !== 'undefined' ? window.location.origin : 'https://paidflow.app'
+                        }/pay/inv_1042_t2`}
                   </div>
 
                   {/* Direct WhatsApp Button */}

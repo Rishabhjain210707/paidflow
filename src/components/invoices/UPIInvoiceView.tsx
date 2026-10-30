@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Invoice, InvoiceItem, InvoiceTranche, PaymentStructure, UserRole } from '../../types';
-import { formatINR, generateUPILink, generateWhatsAppShareUrl } from '../../utils/formatters';
+import { formatINR, generateUPILink, generateWhatsAppShareUrl, getAppBaseUrl } from '../../utils/formatters';
 import { Icons } from '../ui/Icons';
 import { mockFreelancerProfile, mockInitialInvoice } from '../../data/mockData';
 
@@ -80,6 +80,8 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
     dueDate: string,
     existingTranches?: InvoiceTranche[]
   ): InvoiceTranche[] => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : getAppBaseUrl();
+
     if (structure === 'full') {
       const isAlreadyPaid = existingTranches?.every((t) => t.status === 'Paid');
       return [
@@ -89,7 +91,7 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
           percentage: 100,
           amount: totalAmount,
           dueDate: dueDate,
-          shortUrl: `https://pflow.in/pay/${invoiceNumber.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
+          shortUrl: `${origin}/pay/${invoiceNumber.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
           upiIntentUrl: generateUPILink({
             vpa: freelancerVpa,
             name: mockFreelancerProfile.name,
@@ -117,7 +119,7 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
           percentage: 50,
           amount: advanceAmount,
           dueDate: '2026-10-31',
-          shortUrl: `https://pflow.in/pay/${invoiceNumber.toLowerCase().replace(/[^a-z0-9]/g, '_')}_t1`,
+          shortUrl: `${origin}/pay/${invoiceNumber.toLowerCase().replace(/[^a-z0-9]/g, '_')}_t1`,
           upiIntentUrl: generateUPILink({
             vpa: freelancerVpa,
             name: mockFreelancerProfile.name,
@@ -134,7 +136,7 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
           percentage: 50,
           amount: deliveryAmount,
           dueDate: '2026-11-08',
-          shortUrl: `https://pflow.in/pay/${invoiceNumber.toLowerCase().replace(/[^a-z0-9]/g, '_')}_t2`,
+          shortUrl: `${origin}/pay/${invoiceNumber.toLowerCase().replace(/[^a-z0-9]/g, '_')}_t2`,
           upiIntentUrl: generateUPILink({
             vpa: freelancerVpa,
             name: mockFreelancerProfile.name,
@@ -160,7 +162,7 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
         percentage: 30,
         amount: t1Amount,
         dueDate: '2026-10-31',
-        shortUrl: `https://pflow.in/pay/${invoiceNumber.toLowerCase().replace(/[^a-z0-9]/g, '_')}_m1`,
+        shortUrl: `${origin}/pay/${invoiceNumber.toLowerCase().replace(/[^a-z0-9]/g, '_')}_m1`,
         upiIntentUrl: generateUPILink({
           vpa: freelancerVpa,
           name: mockFreelancerProfile.name,
@@ -177,7 +179,7 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
         percentage: 40,
         amount: t2Amount,
         dueDate: '2026-11-04',
-        shortUrl: `https://pflow.in/pay/${invoiceNumber.toLowerCase().replace(/[^a-z0-9]/g, '_')}_m2`,
+        shortUrl: `${origin}/pay/${invoiceNumber.toLowerCase().replace(/[^a-z0-9]/g, '_')}_m2`,
         upiIntentUrl: generateUPILink({
           vpa: freelancerVpa,
           name: mockFreelancerProfile.name,
@@ -192,7 +194,7 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
         percentage: 30,
         amount: t3Amount,
         dueDate: '2026-11-12',
-        shortUrl: `https://pflow.in/pay/${invoiceNumber.toLowerCase().replace(/[^a-z0-9]/g, '_')}_m3`,
+        shortUrl: `${origin}/pay/${invoiceNumber.toLowerCase().replace(/[^a-z0-9]/g, '_')}_m3`,
         upiIntentUrl: generateUPILink({
           vpa: freelancerVpa,
           name: mockFreelancerProfile.name,
