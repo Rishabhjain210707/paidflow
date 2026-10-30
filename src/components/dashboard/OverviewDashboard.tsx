@@ -1,8 +1,10 @@
+'use client';
+
 import React, { useState } from 'react';
-import { Transaction } from '../../types';
+import { Transaction, Proposal } from '../../types';
 import { formatINR, formatDate } from '../../utils/formatters';
 import { Icons } from '../ui/Icons';
-import { mockFreelancerProfile } from '../../data/mockData';
+import { mockFreelancerProfile, mockProposals } from '../../data/mockData';
 
 interface OverviewDashboardProps {
   metrics: {
@@ -36,6 +38,102 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [copiedTxId, setCopiedTxId] = useState<string | null>(null);
+  const [selectedProject, setSelectedProject] = useState<Proposal | null>(null);
+
+  // Active projects list with fallback
+  const projects: Proposal[] = mockProposals || [
+    {
+      id: 'prop_01',
+      title: 'CRED Mobile App Micro-Interactions & Tokens',
+      clientName: 'Kunal Shah',
+      clientCompany: 'CRED',
+      clientEmail: 'kunal@cred.club',
+      clientPhone: '+91 98765 00001',
+      totalAmount: 145000,
+      subtotal: 145000,
+      discount: 0,
+      gstApplicable: false,
+      status: 'Approved',
+      signedByClient: true,
+      validUntil: '2026-11-30',
+      milestones: [
+        {
+          id: 'm1',
+          title: 'Design System & Micro-Interactions',
+          description: 'Figma prototypes, spline assets, and animation curves.',
+          deliverableDate: '2026-11-10',
+          amount: 70000,
+          status: 'Completed',
+        },
+        {
+          id: 'm2',
+          title: 'React Native Components Integration',
+          description: 'Production-ready code handoff and test coverage.',
+          deliverableDate: '2026-11-25',
+          amount: 75000,
+          status: 'In Progress',
+        },
+      ],
+    },
+    {
+      id: 'prop_02',
+      title: 'Fintech Dashboard Redesign & Multi-Currency Flow',
+      clientName: 'Neha Singhal',
+      clientCompany: 'Finly.io',
+      clientEmail: 'neha@finly.io',
+      clientPhone: '+91 98765 00002',
+      totalAmount: 85000,
+      subtotal: 85000,
+      discount: 0,
+      gstApplicable: true,
+      status: 'Approved',
+      signedByClient: true,
+      validUntil: '2026-12-05',
+      milestones: [
+        {
+          id: 'm3',
+          title: 'Dashboard UX Architecture',
+          description: 'Wireframes and client reviews for real-time INR/USD ledger.',
+          deliverableDate: '2026-11-15',
+          amount: 45000,
+          status: 'Completed',
+        },
+        {
+          id: 'm4',
+          title: 'Frontend Next.js Implementation',
+          description: 'Responsive Tailwind layout with clean state management.',
+          deliverableDate: '2026-12-01',
+          amount: 40000,
+          status: 'Upcoming',
+        },
+      ],
+    },
+    {
+      id: 'prop_03',
+      title: 'B2B SaaS Onboarding Flow & Landing Page',
+      clientName: 'Vikramaditya Rao',
+      clientCompany: 'ScaleStack Tech',
+      clientEmail: 'vikram@scalestack.io',
+      clientPhone: '+91 98765 00003',
+      totalAmount: 97500,
+      subtotal: 97500,
+      discount: 0,
+      gstApplicable: false,
+      status: 'Pending',
+      signedByClient: false,
+      validUntil: '2026-11-20',
+      milestones: [
+        {
+          id: 'm5',
+          title: 'Landing Page & Interactive Demo',
+          description: 'Conversion-optimized hero, interactive product calculator.',
+          deliverableDate: '2026-11-18',
+          amount: 97500,
+          status: 'Upcoming',
+        },
+      ],
+    },
+  ];
 
   const filteredTransactions = transactions.filter((tx) => {
     const matchesSearch =
@@ -59,7 +157,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
     <div className="space-y-6">
       {/* Quick Action Ribbon & Freelancer Welcome Banner */}
       <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 text-white shadow-md relative overflow-hidden">
-        {/* Subtle decorative mesh glow */}
         <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute right-1/3 -top-12 w-48 h-48 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
 
@@ -114,7 +211,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
       {/* Top Metrics Bar: 4 Core KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Metric 1: Total Settled Revenue */}
+        {/* Metric 1 */}
         <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
@@ -138,7 +235,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           </div>
         </div>
 
-        {/* Metric 2: Pending UPI Invoices */}
+        {/* Metric 2 */}
         <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
@@ -164,7 +261,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           </div>
         </div>
 
-        {/* Metric 3: Active Projects */}
+        {/* Metric 3 */}
         <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
@@ -188,7 +285,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           </div>
         </div>
 
-        {/* Metric 4: Verified Trust Score */}
+        {/* Metric 4 */}
         <div
           onClick={() => onNavigateTab('trust')}
           className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs hover:border-indigo-300 cursor-pointer transition-colors group"
@@ -220,6 +317,75 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               </span>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Clickable Active Project Cards Section */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-base font-bold text-slate-900">Active Projects & Scopes</h3>
+            <p className="text-xs text-slate-500">
+              Click any project card to review milestones, escrow releases, and contract details.
+            </p>
+          </div>
+          <span className="text-xs text-indigo-600 font-semibold bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100">
+            {projects.length} Active
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {projects.map((proj) => (
+            <div
+              key={proj.id}
+              onClick={() => setSelectedProject(proj)}
+              className="bg-white rounded-xl border border-slate-200 hover:border-indigo-500 p-4 transition-all duration-200 hover:shadow-md cursor-pointer flex flex-col justify-between group"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${proj.signedByClient
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : 'bg-amber-50 text-amber-700 border-amber-200'
+                      }`}
+                  >
+                    {proj.signedByClient ? '✓ E-Signed & Active' : '⏱ Awaiting E-Sign'}
+                  </span>
+                  <span className="text-[11px] text-slate-400 font-mono">
+                    {proj.milestones.length} Milestones
+                  </span>
+                </div>
+
+                <h4 className="font-bold text-slate-900 text-sm group-hover:text-indigo-600 transition-colors line-clamp-2">
+                  {proj.title}
+                </h4>
+
+                <div className="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
+                  <span className="font-medium text-slate-700">{proj.clientName}</span>
+                  {proj.clientCompany && (
+                    <>
+                      <span>•</span>
+                      <span>{proj.clientCompany}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] text-slate-400 block uppercase font-semibold">
+                    Budget
+                  </span>
+                  <span className="text-sm font-bold text-slate-900">
+                    {formatINR(proj.totalAmount)}
+                  </span>
+                </div>
+                <span className="text-xs font-semibold text-indigo-600 group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-1">
+                  View Details →
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -258,11 +424,10 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 <button
                   key={st}
                   onClick={() => setStatusFilter(st)}
-                  className={`px-2.5 py-1 rounded-md transition-colors ${
-                    statusFilter === st
+                  className={`px-2.5 py-1 rounded-md transition-colors ${statusFilter === st
                       ? 'bg-white text-slate-900 shadow-2xs font-semibold'
                       : 'text-slate-500 hover:text-slate-900'
-                  }`}
+                    }`}
                 >
                   {st === 'Review Window Open' ? 'Reviews' : st}
                 </button>
@@ -434,7 +599,110 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Project Details Modal */}
+      {selectedProject && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="p-5 border-b border-slate-100 flex items-start justify-between bg-slate-50/70">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded border border-indigo-100">
+                    Project Scope Detail
+                  </span>
+                  <span className="text-xs text-slate-400 font-mono">ID: {selectedProject.id}</span>
+                </div>
+                <h3 className="text-base font-bold text-slate-900">{selectedProject.title}</h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Client: <strong className="text-slate-800">{selectedProject.clientName}</strong>
+                  {selectedProject.clientCompany && ` (${selectedProject.clientCompany})`} • Valid until {selectedProject.validUntil}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedProject(null)}
+                className="text-slate-400 hover:text-slate-700 bg-white hover:bg-slate-100 p-1.5 rounded-lg border border-slate-200 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-5 overflow-y-auto space-y-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-100 text-xs">
+                <div>
+                  <span className="text-slate-400 block text-[11px]">Total Commitment</span>
+                  <span className="text-base font-bold text-slate-900">
+                    {formatINR(selectedProject.totalAmount)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[11px]">E-Sign Status</span>
+                  <span
+                    className={`font-semibold inline-block mt-0.5 ${selectedProject.signedByClient ? 'text-emerald-700' : 'text-amber-700'
+                      }`}
+                  >
+                    {selectedProject.signedByClient ? '✓ Sealed & Binding' : '⏱ Pending Signature'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[11px]">Settlement Channel</span>
+                  <span className="font-semibold text-slate-800 inline-block mt-0.5">
+                    UPI Instant P2P
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2.5">
+                  Scope Milestones ({selectedProject.milestones.length})
+                </h4>
+                <div className="space-y-2.5">
+                  {selectedProject.milestones.map((m, idx) => (
+                    <div
+                      key={m.id}
+                      className="p-3 bg-white border border-slate-200 rounded-lg space-y-1 shadow-xs"
+                    >
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-semibold text-slate-900">
+                          {idx + 1}. {m.title}
+                        </span>
+                        <span className="font-bold text-slate-900">{formatINR(m.amount)}</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500">{m.description}</p>
+                      <div className="pt-1 flex items-center justify-between text-[10px] text-slate-400">
+                        <span>Delivery Target: {m.deliverableDate}</span>
+                        <span
+                          className={`px-1.5 py-0.5 rounded font-medium ${m.status === 'Completed'
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : m.status === 'In Progress'
+                                ? 'bg-blue-50 text-blue-700'
+                                : 'bg-slate-100 text-slate-600'
+                            }`}
+                        >
+                          {m.status || 'Upcoming'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedProject(null)}
+                className="px-4 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
-
