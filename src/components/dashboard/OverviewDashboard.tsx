@@ -345,8 +345,8 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 <div className="flex items-center justify-between mb-2">
                   <span
                     className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${proj.signedByClient
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                        : 'bg-amber-50 text-amber-700 border-amber-200'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-amber-50 text-amber-700 border-amber-200'
                       }`}
                   >
                     {proj.signedByClient ? '✓ E-Signed & Active' : '⏱ Awaiting E-Sign'}
@@ -425,8 +425,8 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                   key={st}
                   onClick={() => setStatusFilter(st)}
                   className={`px-2.5 py-1 rounded-md transition-colors ${statusFilter === st
-                      ? 'bg-white text-slate-900 shadow-2xs font-semibold'
-                      : 'text-slate-500 hover:text-slate-900'
+                    ? 'bg-white text-slate-900 shadow-2xs font-semibold'
+                    : 'text-slate-500 hover:text-slate-900'
                     }`}
                 >
                   {st === 'Review Window Open' ? 'Reviews' : st}
@@ -675,10 +675,10 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                         <span>Delivery Target: {m.deliverableDate}</span>
                         <span
                           className={`px-1.5 py-0.5 rounded font-medium ${m.status === 'Completed'
-                              ? 'bg-emerald-50 text-emerald-700'
-                              : m.status === 'In Progress'
-                                ? 'bg-blue-50 text-blue-700'
-                                : 'bg-slate-100 text-slate-600'
+                            ? 'bg-emerald-50 text-emerald-700'
+                            : m.status === 'In Progress'
+                              ? 'bg-blue-50 text-blue-700'
+                              : 'bg-slate-100 text-slate-600'
                             }`}
                         >
                           {m.status || 'Upcoming'}
