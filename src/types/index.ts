@@ -1,6 +1,7 @@
 export type TabType = 'overview' | 'proposals' | 'invoices' | 'trust' | 'projects';
 
 export type UserRole = 'freelancer' | 'team_member' | 'client';
+export type Role = UserRole;
 
 export type TransactionStatus = 'Paid' | 'Pending' | 'Review Window Open';
 
@@ -161,17 +162,19 @@ export interface DeliverableComment {
 export interface DeliverableItem {
   id: string;
   title: string;
-  type: string; // e.g. "Hero Ad Video Cut", "Figma Design System", "Sound Design & Mix"
+  type?: string; // e.g. "Hero Ad Video Cut", "Figma Design System", "Sound Design & Mix"
   workLink: string;
   currentVersion: string;
+  version?: string; // alias
   versions: DeliverableVersion[];
-  status: DeliverableStatus;
+  status: DeliverableStatus | string;
   assignedToName: string;
   assignedToRole: string;
   freeRevisionsLimit: number; // default 2
   revisionsUsed: number;
   billableRevisionsCount: number;
   comments: DeliverableComment[];
+  latestComment?: string;
 }
 
 export interface ActivityLogItem {
@@ -183,15 +186,16 @@ export interface ActivityLogItem {
   action: string;
   detail?: string;
   timestamp: string;
-  badgeType: 'submission' | 'approval' | 'changes' | 'payment' | 'scope';
+  badgeType?: 'submission' | 'approval' | 'changes' | 'payment' | 'scope';
 }
+export type ActivityLog = ActivityLogItem;
 
 export interface TeamMember {
   id: string;
   name: string;
   role: string; // e.g. "Video Editor & Motion Designer"
   avatar: string;
-  trustMode: 'trusted' | 'needs_approval';
+  trustMode: 'trusted' | 'needs_approval' | 'approval_required';
   assignedProjectIds: string[];
   activeTasksCount: number;
 }
@@ -201,17 +205,21 @@ export interface Project {
   title: string;
   clientName: string;
   clientCompany: string;
-  clientAvatar: string;
-  clientPhone: string;
+  clientAvatar?: string;
+  clientPhone?: string;
   totalBudget: number;
-  settledAmount: number;
+  budget?: number; // alias
+  settledAmount?: number;
   deadline: string; // ISO date 'YYYY-MM-DD'
-  status: 'In Progress' | 'Completed' | 'Pending Review';
+  status: 'In Progress' | 'Completed' | 'Pending Review' | string;
   totalDeliverables: number;
   completedDeliverables: number;
   deliverables: DeliverableItem[];
-  activityLog: ActivityLogItem[];
+  activityLog?: ActivityLogItem[];
   assignedTeamMemberId?: string;
+  freeRevisionsTotal?: number;
+  freeRevisionsUsed?: number;
+  extraScopeAmount?: number;
 }
 
 export interface ClientConcentration {

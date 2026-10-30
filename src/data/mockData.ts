@@ -607,3 +607,7 @@ export const mockPendingClientReviews: ClientReviewItem[] = [
     },
   },
 ];
+
+export const initialProjects = mockProjects;
+export const initialTeamMembers = mockTeamMembers;
+export const initialActivityLogs = mockProjects[0]?.activityLog || [];

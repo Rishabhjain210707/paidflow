@@ -15,7 +15,14 @@ import {
   generateWhatsAppShareUrl,
 } from '../../utils/formatters';
 import { Icons } from '../ui/Icons';
-import { mockFreelancerProfile, mockClientConcentration } from '../../data/mockData';
+import {
+  mockFreelancerProfile,
+  mockClientConcentration,
+  mockProjects,
+  mockTeamMembers,
+  mockMetrics,
+  mockTransactions,
+} from '../../data/mockData';
 import { ProjectDetailModal } from '../projects/ProjectDetailModal';
 
 interface OverviewDashboardProps {
@@ -73,10 +80,11 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = (props) => {
   const credDelayedAmount = 145000;
   const delayImpact = calculateDelayImpact(credDelayedAmount, delayDays);
 
-  // Defensive array checks to guarantee no undefined .filter() can ever occur
-  const safeTransactions = Array.isArray(transactions) ? transactions : [];
-  const safeProjects = Array.isArray(projects) ? projects : [];
-  const safeTeamMembers = Array.isArray(teamMembers) ? teamMembers : [];
+  // Defensive array checks to guarantee no undefined .filter() or .find() can ever occur
+  const safeTransactions = Array.isArray(transactions) && transactions.length > 0 ? transactions : (mockTransactions || []);
+  const safeProjects = Array.isArray(projects) && projects.length > 0 ? projects : (mockProjects || []);
+  const safeTeamMembers = Array.isArray(teamMembers) && teamMembers.length > 0 ? teamMembers : (mockTeamMembers || []);
+  const safeMetrics = metrics || mockMetrics;
   const safeRole = currentUserRole || 'freelancer';
 
   const filteredTransactions = safeTransactions.filter((tx) => {
@@ -444,7 +452,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = (props) => {
                         Total Scope Budget
                       </span>
                       <span className="text-sm font-extrabold text-slate-900">
-                        {formatINR(proj.totalBudget || proj.budget)}
+                        {formatINR(proj.totalBudget || proj.budget || 0)}
                       </span>
                     </div>
                   ) : (

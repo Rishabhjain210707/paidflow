@@ -14,95 +14,9 @@ export default function Home() {
   const [currentRole, setCurrentRole] = useState<Role>('freelancer');
 
   // Hardened initial data fallbacks ensuring project cards and transactions always render
-  const defaultProjects: Project[] = [
-    {
-      id: 'p1',
-      title: 'Brand Refresh & Launch Motion Assets',
-      clientName: 'Kunal Shah',
-      clientCompany: 'CRED',
-      deadline: '2026-11-05',
-      budget: 185000,
-      totalBudget: 185000,
-      status: 'In Progress',
-      totalDeliverables: 3,
-      completedDeliverables: 1,
-      freeRevisionsTotal: 2,
-      freeRevisionsUsed: 1,
-      extraScopeAmount: 0,
-      assignedTeamMemberId: 'member_rohan',
-      deliverables: [
-        {
-          id: 'd1',
-          title: '30s Motion Teaser (4K ProRes)',
-          workLink: 'https://drive.google.com/file/d/demo-cred-teaser',
-          version: 'v2',
-          status: 'Submitted',
-          latestComment: 'Color grading matched to CRED neon palette.',
-        },
-        {
-          id: 'd2',
-          title: 'Interactive Token Assets (Lottie/JSON)',
-          workLink: '',
-          version: 'v1',
-          status: 'In Progress',
-        },
-        {
-          id: 'd3',
-          title: 'Design System Documentation',
-          workLink: '',
-          version: 'v1',
-          status: 'Approved',
-        },
-      ],
-    },
-    {
-      id: 'p2',
-      title: 'Mobile App Micro-Interactions',
-      clientName: 'Deepinder Goyal',
-      clientCompany: 'Zomato',
-      deadline: '2026-11-12',
-      budget: 95000,
-      totalBudget: 95000,
-      status: 'In Progress',
-      totalDeliverables: 2,
-      completedDeliverables: 1,
-      freeRevisionsTotal: 2,
-      freeRevisionsUsed: 0,
-      extraScopeAmount: 0,
-      deliverables: [
-        {
-          id: 'd4',
-          title: 'Order Status Animation Curves',
-          workLink: 'https://drive.google.com/file/d/demo-zomato',
-          version: 'v1',
-          status: 'Approved',
-        },
-      ],
-    },
-    {
-      id: 'p3',
-      title: 'SaaS Fintech Payment Flow Design',
-      clientName: 'Harshil Mathur',
-      clientCompany: 'Razorpay',
-      deadline: '2026-11-20',
-      budget: 120000,
-      totalBudget: 120000,
-      status: 'In Progress',
-      totalDeliverables: 4,
-      completedDeliverables: 2,
-      freeRevisionsTotal: 2,
-      freeRevisionsUsed: 2,
-      extraScopeAmount: 15000,
-      deliverables: [],
-    },
-  ];
+  const defaultProjects: Project[] = Array.isArray(initialProjects) && initialProjects.length > 0 ? initialProjects : [];
 
-  const [projects, setProjects] = useState<Project[]>(() => {
-    if (Array.isArray(initialProjects) && initialProjects.length > 0) {
-      return initialProjects;
-    }
-    return defaultProjects;
-  });
+  const [projects, setProjects] = useState<Project[]>(defaultProjects);
 
   const [transactions] = useState<Transaction[]>(() => {
     return Array.isArray(mockTransactions) ? mockTransactions : [];
@@ -116,7 +30,7 @@ export default function Home() {
     Array.isArray(initialActivityLogs) ? initialActivityLogs : []
   );
 
-  const [activeProjectId, setActiveProjectId] = useState<string>('p1');
+  const [activeProjectId, setActiveProjectId] = useState<string>('proj_cred_video');
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -157,7 +71,7 @@ export default function Home() {
       (Array.isArray(prevProjects) ? prevProjects : []).map((project) => {
         if (project.id !== projectId) return project;
 
-        let revisionsUsed = project.freeRevisionsUsed;
+        let revisionsUsed = project.freeRevisionsUsed || 0;
         if (newStatus === 'Changes Requested') {
           revisionsUsed += 1;
         }
@@ -207,11 +121,12 @@ export default function Home() {
     setProjects((prevProjects) =>
       (Array.isArray(prevProjects) ? prevProjects : []).map((project) => {
         if (project.id !== projectId) return project;
+        const currentBudget = project.totalBudget || project.budget || 0;
         return {
           ...project,
           extraScopeAmount: (project.extraScopeAmount || 0) + amount,
-          budget: project.budget + amount,
-          totalBudget: (project.totalBudget || project.budget) + amount,
+          budget: currentBudget + amount,
+          totalBudget: currentBudget + amount,
         };
       })
     );
@@ -569,8 +484,11 @@ export default function Home() {
                 clientCompany: activeProject.clientCompany,
                 clientEmail: 'client@example.com',
                 clientPhone: '+91 98765 00000',
-                totalAmount: activeProject.budget,
-                subtotal: activeProject.budget,
+                createdAt: '2026-10-30',
+                currency: 'INR',
+                gstRate: 18,
+                totalAmount: activeProject.totalBudget || activeProject.budget || 185000,
+                subtotal: activeProject.totalBudget || activeProject.budget || 185000,
                 discount: 0,
                 gstApplicable: false,
                 status: 'Approved',
@@ -581,8 +499,8 @@ export default function Home() {
                   title: d.title,
                   description: d.workLink || 'Deliverable link asset',
                   deliverableDate: activeProject.deadline,
-                  amount: Math.round(activeProject.budget / (activeProject.deliverables?.length || 1)),
-                  status: d.status === 'Approved' ? 'Completed' : 'In Progress',
+                  amount: Math.round((activeProject.totalBudget || activeProject.budget || 185000) / (activeProject.deliverables?.length || 1)),
+                  status: (d.status === 'Approved' ? 'Completed' : 'In Progress') as any,
                 })),
               }}
               onSaveProposal={() => { }}
@@ -594,10 +512,10 @@ export default function Home() {
               invoiceNumber="INV-2026-001"
               clientName={activeProject.clientName}
               clientVPA="kunal@cred.club"
-              totalAmount={activeProject.budget}
+              totalAmount={activeProject.totalBudget || activeProject.budget || 185000}
               initialTranches={[
-                { id: 'tr_1', title: '50% Advance Commitment', amount: Math.round(activeProject.budget / 2), isPaid: true, dueDate: 'Paid (Immediate)' },
-                { id: 'tr_2', title: 'Final Delivery & Copyright Release', amount: Math.round(activeProject.budget / 2), isPaid: false, dueDate: activeProject.deadline },
+                { id: 'tr_1', title: '50% Advance Commitment', amount: Math.round((activeProject.totalBudget || activeProject.budget || 185000) / 2), isPaid: true, dueDate: 'Paid (Immediate)' },
+                { id: 'tr_2', title: 'Final Delivery & Copyright Release', amount: Math.round((activeProject.totalBudget || activeProject.budget || 185000) / 2), isPaid: false, dueDate: activeProject.deadline },
               ]}
             />
           )}

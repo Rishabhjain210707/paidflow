@@ -8,6 +8,11 @@ import { mockFreelancerProfile, mockInitialInvoice } from '../../data/mockData';
 
 interface UPIInvoiceViewProps {
   initialInvoice?: Invoice;
+  invoiceNumber?: string;
+  clientName?: string;
+  clientVPA?: string;
+  totalAmount?: number;
+  initialTranches?: any[];
   onPaymentSettled?: (invoice: Invoice, settledTrancheId?: string) => void;
   onInvoiceChange?: (updatedInvoice: Invoice) => void;
   currentUserRole?: UserRole;
@@ -15,38 +20,55 @@ interface UPIInvoiceViewProps {
   transactions?: any; // For backward compatibility
 }
 
-export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = ({
-  initialInvoice = mockInitialInvoice,
-  onPaymentSettled,
-  onInvoiceChange,
-  currentUserRole = 'freelancer',
-  onBackToDashboard,
-}) => {
-  const [invoice, setInvoice] = useState<Invoice>(initialInvoice);
+export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
+  const {
+    initialInvoice,
+    invoiceNumber,
+    clientName,
+    clientVPA,
+    totalAmount,
+    initialTranches,
+    onPaymentSettled,
+    onInvoiceChange,
+    currentUserRole = 'freelancer',
+    onBackToDashboard,
+  } = props;
+
+  const baseInvoice: Invoice = initialInvoice || {
+    ...mockInitialInvoice,
+    invoiceNumber: invoiceNumber || mockInitialInvoice.invoiceNumber,
+    clientName: clientName || mockInitialInvoice.clientName,
+    clientVpa: clientVPA || mockInitialInvoice.clientVpa,
+    totalPayable: totalAmount || mockInitialInvoice.totalPayable,
+    subtotal: totalAmount || mockInitialInvoice.subtotal,
+  };
+
+  const [invoice, setInvoice] = useState<Invoice>(baseInvoice);
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedVpa, setCopiedVpa] = useState(false);
   const [copiedTrancheId, setCopiedTrancheId] = useState<string | null>(null);
 
   // Selected tranche for QR preview & link sharing (default to first pending or tranche 2)
+  const safeTranches = Array.isArray(invoice?.tranches) ? invoice.tranches : [];
   const initialPendingTranche =
-    invoice.tranches?.find((t) => t.status === 'Pending') ||
-    invoice.tranches?.[0];
+    safeTranches.find((t) => t.status === 'Pending') ||
+    safeTranches[0];
   const [selectedTrancheId, setSelectedTrancheId] = useState<string>(
     initialPendingTranche?.id || 'tranche_2'
   );
 
   // Active tranche object
   const activeTranche =
-    invoice.tranches?.find((t) => t.id === selectedTrancheId) ||
-    invoice.tranches?.[0] || {
+    safeTranches.find((t) => t.id === selectedTrancheId) ||
+    safeTranches[0] || {
       id: 'tranche_full',
       label: 'Full Payment',
       percentage: 100,
-      amount: invoice.totalPayable,
-      dueDate: invoice.dueDate,
-      shortUrl: invoice.shortUrl,
-      upiIntentUrl: invoice.upiIntentUrl,
-      status: invoice.status === 'Paid' ? 'Paid' : 'Pending',
+      amount: invoice?.totalPayable || 141600,
+      dueDate: invoice?.dueDate || '2026-11-04',
+      shortUrl: invoice?.shortUrl || 'https://pflow.in/pay/inv_1042',
+      upiIntentUrl: invoice?.upiIntentUrl || '',
+      status: invoice?.status === 'Paid' ? 'Paid' : 'Pending',
     };
 
   // Helper to re-generate tranches based on structure and current total

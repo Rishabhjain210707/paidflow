@@ -73,7 +73,7 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
     const completedCount = updatedDeliverables.filter((d) => d.status === 'Approved').length;
 
     // Create activity log entry
-    const targetDel = project.deliverables.find((d) => d.id === deliverableId);
+    const targetDel = (project.deliverables || []).find((d) => d.id === deliverableId);
     let personName = 'Arjun Verma';
     let roleLabel = 'Lead Freelancer';
     let badgeType: ActivityLogItem['badgeType'] = 'approval';
@@ -107,7 +107,7 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
       deliverables: updatedDeliverables,
       completedDeliverables: completedCount,
       status: completedCount === project.totalDeliverables ? 'Completed' : project.status,
-      activityLog: [newLogItem, ...project.activityLog],
+      activityLog: [newLogItem, ...(project.activityLog || [])],
     };
 
     onUpdateProject(updatedProject);
@@ -118,7 +118,7 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
     const workLink = newVersionInput[deliverableId];
     if (!workLink) return;
 
-    const targetDel = project.deliverables.find((d) => d.id === deliverableId);
+    const targetDel = (project.deliverables || []).find((d) => d.id === deliverableId);
     if (!targetDel) return;
 
     const currentVNum = parseInt(targetDel.currentVersion.replace('v', ''), 10) || 1;
@@ -175,7 +175,7 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
     const updatedProject: Project = {
       ...project,
       deliverables: updatedDeliverables,
-      activityLog: [newLog, ...project.activityLog],
+      activityLog: [newLog, ...(project.activityLog || [])],
     };
 
     onUpdateProject(updatedProject);
@@ -199,7 +199,7 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
       avatarUrl = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&auto=format&fit=crop&q=80';
     } else if (currentUserRole === 'client') {
       authorName = project.clientName;
-      avatarUrl = project.clientAvatar;
+      avatarUrl = project.clientAvatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&auto=format&fit=crop&q=80';
     }
 
     const newComment = {
@@ -252,13 +252,13 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
 
     onUpdateProject({
       ...project,
-      activityLog: [newLog, ...project.activityLog],
+      activityLog: [newLog, ...(project.activityLog || [])],
     });
 
     setBillableScopeAdded({ ...billableScopeAdded, [deliverable.id]: true });
   };
 
-  const filteredLogs = project.activityLog.filter((log) => {
+  const filteredLogs = (project.activityLog || []).filter((log) => {
     if (selectedDeliverableFilter === 'all') return true;
     return log.deliverableId === selectedDeliverableFilter;
   });
@@ -374,7 +374,7 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
               }`}
             >
               <Icons.History className="w-3.5 h-3.5" />
-              <span>Activity Log ({project.activityLog.length})</span>
+              <span>Activity Log ({(project.activityLog || []).length})</span>
             </button>
           </div>
         </div>
