@@ -3,8 +3,7 @@
 import React, { useState } from 'react';
 import { Transaction, Proposal } from '../../types';
 import { formatINR, formatDate } from '../../utils/formatters';
-import { Icons } from '../ui/Icons';
-import { mockFreelancerProfile, mockProposals } from '../../data/mockData';
+import { mockFreelancerProfile } from '../../data/mockData';
 
 interface OverviewDashboardProps {
   metrics: {
@@ -40,8 +39,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   const [copiedTxId, setCopiedTxId] = useState<string | null>(null);
   const [selectedProject, setSelectedProject] = useState<Proposal | null>(null);
 
-  // Active projects list with fallback
-  const projects: Proposal[] = mockProposals || [
+  const projects: Proposal[] = [
     {
       id: 'prop_01',
       title: 'CRED Mobile App Micro-Interactions & Tokens',
@@ -135,11 +133,11 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
     },
   ];
 
-  const filteredTransactions = transactions.filter((tx) => {
+  const filteredTransactions = (transactions || []).filter((tx) => {
     const matchesSearch =
-      tx.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tx.projectTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tx.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase());
+      tx.clientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tx.projectTitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tx.invoiceNumber?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
       statusFilter === 'All' ? true : tx.status === statusFilter;
@@ -148,18 +146,17 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   });
 
   const handleCopyLink = (txId: string) => {
-    navigator.clipboard?.writeText?.(`https://pflow.in/pay/${txId}`);
-    setCopiedTxId(txId);
-    setTimeout(() => setCopiedTxId(null), 2200);
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(`https://pflow.in/pay/${txId}`);
+      setCopiedTxId(txId);
+      setTimeout(() => setCopiedTxId(null), 2000);
+    }
   };
 
   return (
     <div className="space-y-6">
-      {/* Quick Action Ribbon & Freelancer Welcome Banner */}
+      {/* Quick Action Ribbon */}
       <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 text-white shadow-md relative overflow-hidden">
-        <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute right-1/3 -top-12 w-48 h-48 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
-
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-1.5 max-w-xl">
             <div className="flex items-center gap-2">
@@ -167,125 +164,111 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 Verified Freelancer
               </span>
               <span className="text-xs text-slate-300 font-mono">
-                VPA: {mockFreelancerProfile.upiId}
+                VPA: {mockFreelancerProfile?.upiId || 'arjunverma@okhdfcbank'}
               </span>
             </div>
             <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-              Welcome back, {mockFreelancerProfile.name.split(' ')[0]} 👋
+              Welcome back, {mockFreelancerProfile?.name ? mockFreelancerProfile.name.split(' ')[0] : 'Arjun'} 👋
             </h2>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
               Your UPI settlement pipeline is running at zero fees. You have{' '}
-              <strong className="text-emerald-300 font-semibold">{metrics.pendingInvoicesCount} invoices</strong>{' '}
-              eligible for auto-reminders and 1 review waiting for mutual unlock.
+              <strong className="text-emerald-300 font-semibold">{metrics?.pendingInvoicesCount ?? 0} invoices</strong>{' '}
+              eligible for auto-reminders.
             </p>
           </div>
 
-          {/* Quick Action Buttons */}
           <div className="flex flex-wrap items-center gap-2.5 sm:self-center">
             <button
+              type="button"
               onClick={onNewProposal}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white text-xs font-semibold backdrop-blur-sm border border-white/15 transition-all shadow-sm"
             >
-              <Icons.Plus className="w-4 h-4 text-indigo-300" />
               <span>+ New Proposal</span>
             </button>
 
             <button
+              type="button"
               onClick={onQuickInvoice}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white text-xs font-semibold transition-all shadow-sm shadow-emerald-950/30"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white text-xs font-semibold transition-all shadow-sm"
             >
-              <Icons.Rupee className="w-4 h-4" />
               <span>+ Quick UPI Invoice</span>
             </button>
 
             <button
+              type="button"
               onClick={onShareReputation}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 active:scale-95 text-slate-900 text-xs font-semibold transition-all shadow-sm"
             >
-              <Icons.Share2 className="w-4 h-4 text-indigo-600" />
               <span>Share Reputation</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Top Metrics Bar: 4 Core KPIs */}
+      {/* Top 4 Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Metric 1 */}
-        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs hover:border-slate-300 transition-colors">
+        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
               Total Settled Revenue
             </span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-              <Icons.Rupee className="w-4 h-4" />
-            </div>
+            <span className="text-emerald-600 font-bold text-sm">₹</span>
           </div>
           <div className="mt-3">
             <div className="text-2xl font-bold text-slate-900 tracking-tight">
-              {formatINR(metrics.totalSettledRevenue)}
+              {formatINR(metrics?.totalSettledRevenue || 1485000)}
             </div>
             <div className="mt-1 flex items-center gap-1.5 text-xs">
-              <span className="text-emerald-700 font-semibold inline-flex items-center">
-                <Icons.ArrowUpRight className="w-3.5 h-3.5 mr-0.5" />
-                {metrics.settledGrowthPercent}
+              <span className="text-emerald-700 font-semibold">
+                {metrics?.settledGrowthPercent || '+18.4%'}
               </span>
               <span className="text-slate-400">vs last 30 days</span>
             </div>
           </div>
         </div>
 
-        {/* Metric 2 */}
-        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs hover:border-slate-300 transition-colors">
+        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
               Pending UPI Invoices
             </span>
-            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-              <Icons.Clock className="w-4 h-4" />
-            </div>
+            <span className="text-amber-500 text-sm">⏱</span>
           </div>
           <div className="mt-3">
             <div className="flex items-baseline gap-2">
               <span className="text-2xl font-bold text-slate-900 tracking-tight">
-                {formatINR(metrics.pendingInvoicesAmount)}
+                {formatINR(metrics?.pendingInvoicesAmount || 182500)}
               </span>
               <span className="text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
-                {metrics.pendingInvoicesCount} Unsettled
+                {metrics?.pendingInvoicesCount || 3} Unsettled
               </span>
             </div>
-            <div className="mt-1 flex items-center gap-1 text-xs text-slate-400">
-              <span>Avg clearance:</span>
-              <span className="text-slate-600 font-medium">3.4 hours via UPI Intent</span>
+            <div className="mt-1 text-xs text-slate-400">
+              Avg clearance: <span className="text-slate-600 font-medium">3.4 hrs via UPI Intent</span>
             </div>
           </div>
         </div>
 
-        {/* Metric 3 */}
-        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs hover:border-slate-300 transition-colors">
+        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
               Active Projects
             </span>
-            <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-              <Icons.FileText className="w-4 h-4" />
-            </div>
+            <span className="text-indigo-600 text-sm">📄</span>
           </div>
           <div className="mt-3">
             <div className="flex items-baseline gap-2">
               <span className="text-2xl font-bold text-slate-900 tracking-tight">
-                {metrics.activeProjectsCount}
+                {metrics?.activeProjectsCount || projects.length}
               </span>
               <span className="text-xs text-slate-500">Scopes In Progress</span>
             </div>
-            <div className="mt-1 flex items-center gap-1 text-xs text-slate-400">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
-              <span className="text-slate-600 font-medium">All milestones on track</span>
+            <div className="mt-1 text-xs text-emerald-600 font-medium">
+              ● All milestones on track
             </div>
           </div>
         </div>
 
-        {/* Metric 4 */}
         <div
           onClick={() => onNavigateTab('trust')}
           className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs hover:border-indigo-300 cursor-pointer transition-colors group"
@@ -294,23 +277,18 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
               Verified Trust Score
             </span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-              <Icons.ShieldCheck className="w-4 h-4" />
-            </div>
+            <span className="text-emerald-600 text-sm">🛡</span>
           </div>
           <div className="mt-3">
             <div className="flex items-center gap-2">
               <span className="text-2xl font-bold text-slate-900 tracking-tight">
-                {metrics.verifiedTrustScore.toFixed(1)}
+                {(metrics?.verifiedTrustScore || 4.9).toFixed(1)}
               </span>
-              <span className="text-slate-400 font-medium text-sm">/ 5.0</span>
-              <div className="flex text-amber-400 ml-1">
-                <Icons.Star className="w-4 h-4" filled={true} />
-              </div>
+              <span className="text-slate-400 font-medium text-sm">/ 5.0 ★</span>
             </div>
             <div className="mt-1 flex items-center justify-between text-xs">
               <span className="text-emerald-700 font-semibold">
-                {metrics.trustReviewsCount} Verified Reviews
+                {metrics?.trustReviewsCount || 38} Verified Reviews
               </span>
               <span className="text-indigo-600 group-hover:underline text-[11px] font-medium">
                 View Pillars →
@@ -320,7 +298,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         </div>
       </div>
 
-      {/* Clickable Active Project Cards Section */}
+      {/* Clickable Active Project Cards */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
@@ -345,8 +323,8 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 <div className="flex items-center justify-between mb-2">
                   <span
                     className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${proj.signedByClient
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      : 'bg-amber-50 text-amber-700 border-amber-200'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : 'bg-amber-50 text-amber-700 border-amber-200'
                       }`}
                   >
                     {proj.signedByClient ? '✓ E-Signed & Active' : '⏱ Awaiting E-Sign'}
@@ -389,9 +367,8 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         </div>
       </div>
 
-      {/* Recent Transactions Section */}
+      {/* Recent Transactions Table */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-        {/* Table Header & Controls */}
         <div className="p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
@@ -406,27 +383,23 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
-            {/* Search Input */}
-            <div className="relative">
-              <Icons.Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Search client, project..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 w-48 sm:w-56"
-              />
-            </div>
+            <input
+              type="text"
+              placeholder="Search client, project..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 w-48 sm:w-56"
+            />
 
-            {/* Filter Pills */}
             <div className="flex items-center bg-slate-100 p-0.5 rounded-lg text-xs font-medium">
               {['All', 'Paid', 'Pending', 'Review Window Open'].map((st) => (
                 <button
                   key={st}
+                  type="button"
                   onClick={() => setStatusFilter(st)}
                   className={`px-2.5 py-1 rounded-md transition-colors ${statusFilter === st
-                    ? 'bg-white text-slate-900 shadow-2xs font-semibold'
-                    : 'text-slate-500 hover:text-slate-900'
+                      ? 'bg-white text-slate-900 shadow-2xs font-semibold'
+                      : 'text-slate-500 hover:text-slate-900'
                     }`}
                 >
                   {st === 'Review Window Open' ? 'Reviews' : st}
@@ -436,7 +409,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           </div>
         </div>
 
-        {/* Table Content */}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50/70 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-semibold">
@@ -463,18 +435,20 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                   const isReviewOpen = tx.status === 'Review Window Open';
 
                   return (
-                    <tr
-                      key={tx.id}
-                      className="hover:bg-slate-50/80 transition-colors group"
-                    >
-                      {/* Client */}
+                    <tr key={tx.id} className="hover:bg-slate-50/80 transition-colors group">
                       <td className="py-4 px-5">
                         <div className="flex items-center gap-3">
-                          <img
-                            src={tx.clientAvatar}
-                            alt={tx.clientName}
-                            className="w-8 h-8 rounded-full object-cover ring-1 ring-slate-200"
-                          />
+                          {tx.clientAvatar ? (
+                            <img
+                              src={tx.clientAvatar}
+                              alt={tx.clientName}
+                              className="w-8 h-8 rounded-full object-cover ring-1 ring-slate-200"
+                            />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
+                              {tx.clientName ? tx.clientName[0] : 'C'}
+                            </div>
+                          )}
                           <div>
                             <span className="font-semibold text-slate-900 block">
                               {tx.clientName}
@@ -484,7 +458,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                         </div>
                       </td>
 
-                      {/* Project Title & Invoice ID */}
                       <td className="py-4 px-4 max-w-xs">
                         <span className="font-medium text-slate-800 line-clamp-1 block">
                           {tx.projectTitle}
@@ -496,7 +469,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                         </div>
                       </td>
 
-                      {/* Amount */}
                       <td className="py-4 px-4 whitespace-nowrap">
                         <span className="text-sm font-bold text-slate-900">
                           {formatINR(tx.amount)}
@@ -508,7 +480,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                         )}
                       </td>
 
-                      {/* Payment Method */}
                       <td className="py-4 px-4 whitespace-nowrap">
                         <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-semibold text-[11px] border border-slate-200">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
@@ -516,52 +487,44 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                         </span>
                       </td>
 
-                      {/* Status Pill */}
                       <td className="py-4 px-4 whitespace-nowrap">
                         {isPaid && (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            <Icons.Check className="w-3 h-3 stroke-[3]" />
-                            <span>Paid</span>
+                            ✓ <span>Paid</span>
                           </span>
                         )}
                         {isPending && (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                            <Icons.Clock className="w-3 h-3" />
-                            <span>Pending</span>
+                            ⏱ <span>Pending</span>
                           </span>
                         )}
                         {isReviewOpen && (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                            <Icons.Sparkles className="w-3 h-3" />
-                            <span>Review Window Open</span>
+                            ★ <span>Review Window Open</span>
                           </span>
                         )}
                       </td>
 
-                      {/* Action Button */}
                       <td className="py-4 px-5 text-right whitespace-nowrap">
                         {isReviewOpen ? (
                           <button
+                            type="button"
                             onClick={() => onActionClick(tx)}
                             className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition-colors"
                           >
-                            <Icons.Star className="w-3.5 h-3.5" filled={true} />
                             <span>Rate & Unlock</span>
                           </button>
                         ) : isPending ? (
                           <div className="inline-flex items-center gap-1.5">
                             <button
+                              type="button"
                               onClick={() => handleCopyLink(tx.id)}
                               className="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
-                              title="Copy UPI payment link"
                             >
-                              {copiedTxId === tx.id ? (
-                                <span className="text-emerald-600 font-semibold">Copied!</span>
-                              ) : (
-                                <span>Copy Link</span>
-                              )}
+                              {copiedTxId === tx.id ? 'Copied!' : 'Copy Link'}
                             </button>
                             <button
+                              type="button"
                               onClick={() => onActionClick(tx)}
                               className="px-2.5 py-1 text-xs font-medium rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-colors"
                             >
@@ -570,6 +533,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                           </div>
                         ) : (
                           <button
+                            type="button"
                             onClick={() => onActionClick(tx)}
                             className="px-2.5 py-1 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
                           >
@@ -585,13 +549,10 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           </table>
         </div>
 
-        {/* Footer info banner */}
         <div className="p-3.5 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-          <div className="flex items-center gap-2">
-            <Icons.ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>Escrow release backed by NPCI & RBI compliant UPI 2.0 handle.</span>
-          </div>
+          <span>Escrow release backed by NPCI & RBI compliant UPI 2.0 handle.</span>
           <button
+            type="button"
             onClick={() => onNavigateTab('invoices')}
             className="text-indigo-600 hover:underline font-medium text-xs"
           >
@@ -604,7 +565,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       {selectedProject && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
           <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
-            {/* Modal Header */}
             <div className="p-5 border-b border-slate-100 flex items-start justify-between bg-slate-50/70">
               <div>
                 <div className="flex items-center gap-2 mb-1">
@@ -628,7 +588,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               </button>
             </div>
 
-            {/* Modal Content */}
             <div className="p-5 overflow-y-auto space-y-4">
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-100 text-xs">
                 <div>
@@ -658,51 +617,4 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2.5">
                   Scope Milestones ({selectedProject.milestones.length})
                 </h4>
-                <div className="space-y-2.5">
-                  {selectedProject.milestones.map((m, idx) => (
-                    <div
-                      key={m.id}
-                      className="p-3 bg-white border border-slate-200 rounded-lg space-y-1 shadow-xs"
-                    >
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-semibold text-slate-900">
-                          {idx + 1}. {m.title}
-                        </span>
-                        <span className="font-bold text-slate-900">{formatINR(m.amount)}</span>
-                      </div>
-                      <p className="text-[11px] text-slate-500">{m.description}</p>
-                      <div className="pt-1 flex items-center justify-between text-[10px] text-slate-400">
-                        <span>Delivery Target: {m.deliverableDate}</span>
-                        <span
-                          className={`px-1.5 py-0.5 rounded font-medium ${m.status === 'Completed'
-                            ? 'bg-emerald-50 text-emerald-700'
-                            : m.status === 'In Progress'
-                              ? 'bg-blue-50 text-blue-700'
-                              : 'bg-slate-100 text-slate-600'
-                            }`}
-                        >
-                          {m.status || 'Upcoming'}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end">
-              <button
-                type="button"
-                onClick={() => setSelectedProject(null)}
-                className="px-4 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 rounded-lg transition-colors"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
+                <div className="

@@ -12,38 +12,37 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'overview' | 'proposals' | 'invoices' | 'trust'>('overview');
   const [transactions, setTransactions] = useState<Transaction[]>(mockTransactions || []);
   const [proposals, setProposals] = useState<Proposal[]>(mockProposals || []);
-  const [activeProposalIndex, setActiveProposalIndex] = useState(0);
 
-  const defaultProposal: Proposal = proposals[activeProposalIndex] || {
-    id: 'prop_current',
-    title: 'Next.js SaaS MVP & Stripe/UPI Integration',
-    clientName: 'Aditya Mathur',
-    clientCompany: 'TechFlow Systems',
-    clientEmail: 'aditya@techflow.dev',
-    clientPhone: '+91 98765 43210',
-    totalAmount: 95000,
-    subtotal: 95000,
+  const defaultProposal: Proposal = proposals[0] || {
+    id: 'prop_01',
+    title: 'CRED Mobile App Micro-Interactions & Tokens',
+    clientName: 'Kunal Shah',
+    clientCompany: 'CRED',
+    clientEmail: 'kunal@cred.club',
+    clientPhone: '+91 98765 00001',
+    totalAmount: 145000,
+    subtotal: 145000,
     discount: 0,
     gstApplicable: false,
-    status: 'Pending',
-    signedByClient: false,
-    validUntil: '2026-11-20',
+    status: 'Approved',
+    signedByClient: true,
+    validUntil: '2026-11-30',
     milestones: [
       {
         id: 'ms_1',
-        title: 'Milestone 1: UI/UX & High-Fidelity Wireframes',
-        description: 'Complete dashboard wireframes, responsive mobile views, and theme tokens.',
-        deliverableDate: '2026-11-08',
-        amount: 45000,
-        status: 'Upcoming',
+        title: 'Design System & Micro-Interactions',
+        description: 'Figma prototypes, spline assets, and animation curves.',
+        deliverableDate: '2026-11-10',
+        amount: 70000,
+        status: 'Completed',
       },
       {
         id: 'ms_2',
-        title: 'Milestone 2: Frontend Architecture & API Wire-up',
-        description: 'App router scaffolding, Tailwind components, and UPI callback webhooks.',
-        deliverableDate: '2026-11-22',
-        amount: 50000,
-        status: 'Upcoming',
+        title: 'React Native Components Integration',
+        description: 'Production-ready code handoff and test coverage.',
+        deliverableDate: '2026-11-25',
+        amount: 75000,
+        status: 'In Progress',
       },
     ],
   };
@@ -53,7 +52,7 @@ export default function Home() {
     settledGrowthPercent: '+18.4%',
     pendingInvoicesCount: 3,
     pendingInvoicesAmount: 182500,
-    activeProjectsCount: proposals.length || 3,
+    activeProjectsCount: 3,
     verifiedTrustScore: 4.92,
     maxTrustScore: 5.0,
     trustReviewsCount: 38,
@@ -62,7 +61,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-slate-100 flex flex-col md:flex-row text-slate-800 antialiased font-sans">
-      {/* Left Sidebar */}
+      {/* Sidebar Navigation */}
       <aside className="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-slate-200 p-5 shrink-0 flex flex-col justify-between">
         <div className="space-y-6">
           {/* Logo */}
@@ -81,15 +80,17 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Quick Action Buttons */}
+          {/* Quick Buttons */}
           <div className="space-y-2">
             <button
+              type="button"
               onClick={() => setActiveTab('invoices')}
               className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center justify-center gap-2 transition-all active:scale-[0.99]"
             >
               <span>+ Quick UPI Invoice</span>
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab('proposals')}
               className="w-full py-2.5 px-3 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all"
             >
@@ -97,49 +98,52 @@ export default function Home() {
             </button>
           </div>
 
-          {/* Navigation Links */}
+          {/* Tabs */}
           <nav className="space-y-1">
             <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase px-3 block mb-2">
               Workspace
             </span>
 
             <button
+              type="button"
               onClick={() => setActiveTab('overview')}
               className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors ${activeTab === 'overview'
-                ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 }`}
             >
               <div className="flex items-center gap-2.5">
-                <span className="text-sm">⊞</span>
+                <span>⊞</span>
                 <span>Overview</span>
               </div>
               <span className="text-[10px] text-slate-400 font-normal">Live</span>
             </button>
 
             <button
+              type="button"
               onClick={() => setActiveTab('proposals')}
               className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors ${activeTab === 'proposals'
-                ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 }`}
             >
               <div className="flex items-center gap-2.5">
-                <span className="text-sm">📄</span>
+                <span>📄</span>
                 <span>Proposals & E-Sign</span>
               </div>
               <span className="text-[10px] text-slate-400 font-normal">E-Sign</span>
             </button>
 
             <button
+              type="button"
               onClick={() => setActiveTab('invoices')}
               className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors ${activeTab === 'invoices'
-                ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 }`}
             >
               <div className="flex items-center gap-2.5">
-                <span className="text-sm">💳</span>
+                <span>💳</span>
                 <span>UPI Invoicing</span>
               </div>
               <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded font-medium">
@@ -148,14 +152,15 @@ export default function Home() {
             </button>
 
             <button
+              type="button"
               onClick={() => setActiveTab('trust')}
               className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors ${activeTab === 'trust'
-                ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 }`}
             >
               <div className="flex items-center gap-2.5">
-                <span className="text-sm">🛡</span>
+                <span>🛡</span>
                 <span>Trust & Reputation</span>
               </div>
               <span className="text-[10px] text-slate-400 font-mono">4.9 ★</span>
@@ -163,7 +168,7 @@ export default function Home() {
           </nav>
         </div>
 
-        {/* Profile Footer */}
+        {/* User Info */}
         <div className="pt-4 border-t border-slate-100 mt-6 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-xs">
@@ -174,11 +179,11 @@ export default function Home() {
               <p className="text-[10px] text-slate-400">arjunverma@okhdfcbank</p>
             </div>
           </div>
-          <span className="w-2 h-2 rounded-full bg-emerald-500" title="UPI Rail Online" />
+          <span className="w-2 h-2 rounded-full bg-emerald-500" title="UPI Active" />
         </div>
       </aside>
 
-      {/* Main Content Area */}
+      {/* Main View Area */}
       <section className="flex-1 p-4 md:p-8 overflow-y-auto max-w-7xl">
         {activeTab === 'overview' && (
           <OverviewDashboard
@@ -188,7 +193,7 @@ export default function Home() {
             onQuickInvoice={() => setActiveTab('invoices')}
             onShareReputation={() => setActiveTab('trust')}
             onNavigateTab={(tab) => setActiveTab(tab)}
-            onActionClick={(tx) => setActiveTab('invoices')}
+            onActionClick={() => setActiveTab('invoices')}
           />
         )}
 
