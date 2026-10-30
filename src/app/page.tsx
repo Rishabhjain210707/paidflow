@@ -11,16 +11,45 @@ export type UserRole = 'freelancer' | 'team_member' | 'client';
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'overview' | 'proposals' | 'invoices' | 'trust'>('overview');
   const [currentRole, setCurrentRole] = useState<UserRole>('freelancer');
-  const [transactions] = useState<Transaction[]>(mockTransactions || []);
-  const [proposals, setProposals] = useState<Proposal[]>(mockProposals || []);
 
-  // Modals & Menu State
+  // Safe default arrays to prevent prerendering undefined errors
+  const [transactions] = useState<Transaction[]>(() => (Array.isArray(mockTransactions) ? mockTransactions : []));
+  const [proposals, setProposals] = useState<Proposal[]>(() => (Array.isArray(mockProposals) && mockProposals.length > 0 ? mockProposals : [
+    {
+      id: 'prop_01',
+      title: 'CRED Mobile App Micro-Interactions & Tokens',
+      clientName: 'Kunal Shah',
+      clientCompany: 'CRED',
+      clientEmail: 'kunal@cred.club',
+      clientPhone: '+91 98765 00001',
+      totalAmount: 145000,
+      subtotal: 145000,
+      discount: 0,
+      gstApplicable: false,
+      status: 'Approved',
+      signedByClient: true,
+      validUntil: '2026-11-30',
+      milestones: [
+        {
+          id: 'ms_1',
+          title: 'Design System & Micro-Interactions',
+          description: 'Figma prototypes, spline assets, and animation curves.',
+          deliverableDate: '2026-11-10',
+          amount: 70000,
+          status: 'Completed',
+        },
+      ],
+    }
+  ]));
+
+  // Modal and Menu states
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [userEmail, setUserEmail] = useState('');
   const [userPassword, setUserPassword] = useState('');
   const [loginFeedback, setLoginFeedback] = useState<string | null>(null);
 
+  // Safe fallback proposal
   const defaultProposal: Proposal = proposals[0] || {
     id: 'prop_01',
     title: 'CRED Mobile App Micro-Interactions & Tokens',
@@ -62,7 +91,7 @@ export default function Home() {
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!userEmail) {
-      setLoginFeedback('Please enter an email address.');
+      setLoginFeedback('Please enter an email or VPA.');
       return;
     }
     setLoginFeedback(`Signed in successfully as ${userEmail.split('@')[0]}!`);
@@ -79,31 +108,30 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col text-slate-800 antialiased font-sans">
-      {/* 1. Header Bar: Role indicator + Top-Right Feature Menu & Login */}
+      {/* Header Bar */}
       <header className="bg-slate-900 border-b border-slate-800 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs relative z-40">
         <div className="flex items-center gap-2">
           <span className="font-bold text-indigo-400 uppercase tracking-wider text-[10px] bg-indigo-950 border border-indigo-800 px-2 py-0.5 rounded">
             PaidFlow Pro
           </span>
-          <span className="text-slate-300 hidden sm:inline">Active Session:</span>
+          <span className="text-slate-300 hidden sm:inline">Active:</span>
           <span className="font-semibold text-slate-100">
-            {currentRole === 'freelancer' ? 'Arjun Verma (Freelancer)' : currentRole === 'team_member' ? 'Rohan (Video Editor)' : 'Kunal Shah (CRED Client)'}
+            {currentRole === 'freelancer' ? 'Arjun Verma (Freelancer)' : currentRole === 'team_member' ? 'Rohan (Editor)' : 'Kunal Shah (Client)'}
           </span>
         </div>
 
-        {/* Right Action Icons: Login & Dropdown Menu */}
         <div className="flex items-center gap-2">
-          {/* Freelancer Login Trigger Button */}
+          {/* Freelancer Login Button */}
           <button
             type="button"
             onClick={() => setIsLoginModalOpen(true)}
-            className="px-3 py-1.5 rounded-lg bg-indigo-600/80 hover:bg-indigo-600 text-white font-medium transition-all shadow-xs flex items-center gap-1.5"
+            className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition-all shadow-xs flex items-center gap-1.5"
           >
             <span>👤</span>
             <span>Freelancer Login</span>
           </button>
 
-          {/* Top-Right Menu Trigger */}
+          {/* Top-Right Subdivided Menu */}
           <div className="relative">
             <button
               type="button"
@@ -114,11 +142,10 @@ export default function Home() {
               <span>Menu</span>
             </button>
 
-            {/* Subdivided Dropdown Drawer */}
             {isMenuOpen && (
               <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white text-slate-800 rounded-2xl shadow-2xl border border-slate-200 p-4 z-50 text-xs">
                 <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
-                  <span className="font-bold text-sm text-slate-900">Workspace Directory</span>
+                  <span className="font-bold text-sm text-slate-900">Workspace Features</span>
                   <button
                     type="button"
                     onClick={() => setIsMenuOpen(false)}
@@ -140,16 +167,16 @@ export default function Home() {
                         onClick={() => { setActiveTab('overview'); setIsMenuOpen(false); }}
                         className="w-full text-left p-2 rounded-lg hover:bg-slate-50 flex items-center justify-between"
                       >
-                        <span className="font-semibold text-slate-800">Active Projects & Deadlines</span>
-                        <span className="text-[10px] text-slate-400">View Cards →</span>
+                        <span className="font-semibold text-slate-800">Projects & Deadlines</span>
+                        <span className="text-[10px] text-slate-400">Cards →</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => { setActiveTab('proposals'); setIsMenuOpen(false); }}
                         className="w-full text-left p-2 rounded-lg hover:bg-slate-50 flex items-center justify-between"
                       >
-                        <span className="font-semibold text-slate-800">Deliverables & Version Approvals</span>
-                        <span className="text-[10px] text-slate-400">v1 / v2 / v3 →</span>
+                        <span className="font-semibold text-slate-800">Deliverables & Versions</span>
+                        <span className="text-[10px] text-slate-400">v1 / v2 →</span>
                       </button>
                     </div>
                   </div>
@@ -157,7 +184,7 @@ export default function Home() {
                   {/* Category 2: Financials & Risk Controls */}
                   <div className="pt-2 border-t border-slate-100">
                     <span className="text-[10px] uppercase font-bold text-emerald-600 tracking-wider block mb-1.5">
-                      2. Financials & Cash-Flow Risk
+                      2. Financials & Cash Risk
                     </span>
                     <div className="space-y-1">
                       <button
@@ -173,7 +200,7 @@ export default function Home() {
                         onClick={() => { setActiveTab('overview'); setIsMenuOpen(false); }}
                         className="w-full text-left p-2 rounded-lg hover:bg-slate-50 flex items-center justify-between"
                       >
-                        <span className="font-semibold text-slate-800">Client Delay Impact Simulator</span>
+                        <span className="font-semibold text-slate-800">Delay Impact Simulator</span>
                         <span className="text-[10px] text-slate-400">Runway Days →</span>
                       </button>
                       <button
@@ -181,13 +208,13 @@ export default function Home() {
                         onClick={() => { setActiveTab('overview'); setIsMenuOpen(false); }}
                         className="w-full text-left p-2 rounded-lg hover:bg-slate-50 flex items-center justify-between"
                       >
-                        <span className="font-semibold text-slate-800">Income Concentration Meter</span>
+                        <span className="font-semibold text-slate-800">Concentration Meter</span>
                         <span className="text-[10px] text-slate-400">Risk Gauge →</span>
                       </button>
                     </div>
                   </div>
 
-                  {/* Category 3: Trust & Reputation */}
+                  {/* Category 3: Trust & Reviews */}
                   <div className="pt-2 border-t border-slate-100">
                     <span className="text-[10px] uppercase font-bold text-amber-600 tracking-wider block mb-1.5">
                       3. Reputation & Verification
@@ -204,10 +231,10 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Category 4: Role Switcher / Demo Controls */}
+                  {/* Category 4: Role Switcher */}
                   <div className="pt-2 border-t border-slate-100 bg-slate-50 p-2.5 rounded-xl">
                     <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block mb-1.5">
-                      4. Switch Active Role
+                      4. Switch Perspective
                     </span>
                     <div className="grid grid-cols-3 gap-1.5 text-[11px]">
                       <button
@@ -243,7 +270,7 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Main Workspace Layout */}
+      {/* Main Layout */}
       <div className="flex-1 flex flex-col md:flex-row">
         {/* Sidebar */}
         <aside className="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-slate-200 p-5 shrink-0 flex flex-col justify-between">
@@ -393,7 +420,7 @@ export default function Home() {
               initialProposal={defaultProposal}
               onSaveProposal={(updated) => {
                 setProposals((prev) =>
-                  prev.map((p) => (p.id === updated.id ? updated : p))
+                  Array.isArray(prev) ? prev.map((p) => (p.id === updated.id ? updated : p)) : [updated]
                 );
               }}
             />
@@ -404,6 +431,7 @@ export default function Home() {
               <h2 className="text-lg font-bold text-slate-900 mb-2">UPI Invoicing & Settlements</h2>
               <p className="text-xs text-slate-500 mb-4">Zero fee instant UPI QR codes & milestone escrow links.</p>
               <button
+                type="button"
                 onClick={() => setActiveTab('overview')}
                 className="px-3 py-1.5 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-lg"
               >
@@ -417,6 +445,7 @@ export default function Home() {
               <h2 className="text-lg font-bold text-slate-900 mb-2">Verified Trust & Reviews</h2>
               <p className="text-xs text-slate-500 mb-4">4.92 / 5.0 score verified across 38 on-chain client UPI settlements.</p>
               <button
+                type="button"
                 onClick={() => setActiveTab('overview')}
                 className="px-3 py-1.5 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-lg"
               >
