@@ -29,6 +29,7 @@ export default function Home() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [userEmail, setUserEmail] = useState('');
+  const [userPassword, setUserPassword] = useState(''); // Fixed: Declared missing password state
   const [loginFeedback, setLoginFeedback] = useState<string | null>(null);
 
   // Safe fallback to guarantee activeProject is never undefined during prerender
@@ -128,7 +129,7 @@ export default function Home() {
     setTeamMembers((prev) =>
       (Array.isArray(prev) ? prev : []).map((m) =>
         m.id === memberId
-          ? { ...m, trustLevel: m.trustLevel === 'Trusted' ? 'Needs my approval' : 'Trusted' }
+          ? { ...m, trustMode: m.trustMode === 'trusted' ? 'approval_required' : 'trusted' }
           : m
       )
     );
@@ -141,11 +142,13 @@ export default function Home() {
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userEmail) {
+    const cleanEmail = (userEmail || '').trim();
+    if (!cleanEmail) {
       setLoginFeedback('Please enter your email or VPA handle.');
       return;
     }
-    setLoginFeedback(`Signed in as ${userEmail.split('@')[0]}!`);
+    const username = cleanEmail.includes('@') ? cleanEmail.split('@')[0] : cleanEmail;
+    setLoginFeedback(`Signed in as ${username}!`);
     setTimeout(() => {
       setIsLoginModalOpen(false);
       setLoginFeedback(null);
@@ -360,8 +363,8 @@ export default function Home() {
                 type="button"
                 onClick={() => setActiveTab('overview')}
                 className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors ${activeTab === 'overview'
-                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                   }`}
               >
                 <div className="flex items-center gap-2.5">
@@ -375,8 +378,8 @@ export default function Home() {
                 type="button"
                 onClick={() => setActiveTab('proposals')}
                 className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors ${activeTab === 'proposals'
-                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                   }`}
               >
                 <div className="flex items-center gap-2.5">
@@ -391,8 +394,8 @@ export default function Home() {
                   type="button"
                   onClick={() => setActiveTab('invoices')}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors ${activeTab === 'invoices'
-                      ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                     }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -409,8 +412,8 @@ export default function Home() {
                 type="button"
                 onClick={() => setActiveTab('trust')}
                 className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors ${activeTab === 'trust'
-                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                   }`}
               >
                 <div className="flex items-center gap-2.5">
@@ -446,10 +449,14 @@ export default function Home() {
           {activeTab === 'overview' && (
             <OverviewDashboard
               projects={safeProjects}
-              currentRole={currentRole}
-              onSelectProject={handleSelectProject}
+              currentUserRole={currentRole}
               teamMembers={teamMembers}
-              onToggleTrust={handleToggleTrust}
+              onNavigateTab={(tab) => setActiveTab(tab as any)}
+              onUpdateProject={(updated) => {
+                setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+              }}
+              onToggleTrustMode={handleToggleTrust}
+              onAddBillableScope={(amount) => handleAddBillableScope(activeProject.id, amount)}
             />
           )}
 
@@ -503,16 +510,13 @@ export default function Home() {
       {isDetailModalOpen && (
         <ProjectDetailModal
           project={activeProject}
-          currentRole={currentRole}
-          activityLogs={Array.isArray(activityLogs) ? activityLogs : []}
-          teamMembers={Array.isArray(teamMembers) ? teamMembers : []}
+          isOpen={isDetailModalOpen}
+          currentUserRole={currentRole}
+          isTeamMemberTrusted={teamMembers.find((m) => m.id === 'member_rohan')?.trustMode === 'trusted'}
           onClose={() => setIsDetailModalOpen(false)}
-          onUpdateStatus={(delivId, newStatus, feedback) =>
-            handleUpdateDeliverableStatus(activeProject.id, delivId, newStatus, feedback)
-          }
-          onUpdateLink={(delivId, link) =>
-            handleUpdateDeliverableLink(activeProject.id, delivId, link)
-          }
+          onUpdateProject={(updated) => {
+            setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+          }}
           onAddBillableScope={(amount) => handleAddBillableScope(activeProject.id, amount)}
         />
       )}
