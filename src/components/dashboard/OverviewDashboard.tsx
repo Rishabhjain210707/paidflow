@@ -108,16 +108,18 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   const isRohanTrusted = rohanMember?.trustMode === 'trusted';
 
   // Safe project filtering by role
+  // Safe project filtering by role
   const visibleProjects = safeProjects.filter((p) => {
     if (!p) return false;
     const clientName = (p.clientName || '').toLowerCase();
     const clientCompany = (p.clientCompany || '').toLowerCase();
 
     if (safeRole === 'client') {
-      return clientName.includes('kunal') || clientCompany.includes('cred');
+      return clientName.includes('kunal') || clientCompany.includes('cred') || p.id === 'p1';
     }
     if (safeRole === 'team_member') {
-      return p.assignedTeamMemberId === 'member_rohan' || p.id === 'proj_cred_video';
+      // Shows projects assigned to Rohan or the main project p1
+      return p.assignedTeamMemberId === 'member_rohan' || p.id === 'p1' || p.id === 'proj_cred_video';
     }
     return true;
   });
@@ -484,8 +486,8 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                         </span>
                         <span
                           className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full ${isHighRisk
-                              ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                              : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                            : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                             }`}
                         >
                           {client.percentage}%
@@ -496,10 +498,10 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                     <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full ${client.percentage > 60
-                            ? 'bg-rose-500'
-                            : client.percentage >= 40
-                              ? 'bg-amber-500'
-                              : 'bg-emerald-500'
+                          ? 'bg-rose-500'
+                          : client.percentage >= 40
+                            ? 'bg-amber-500'
+                            : 'bg-emerald-500'
                           }`}
                         style={{ width: `${client.percentage}%` }}
                       />
@@ -563,10 +565,10 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
             <div
               className={`p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs ${delayDays >= 30
-                  ? 'bg-rose-50 border-rose-200 text-rose-900'
-                  : delayDays >= 15
-                    ? 'bg-amber-50 border-amber-200 text-amber-900'
-                    : 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                ? 'bg-rose-50 border-rose-200 text-rose-900'
+                : delayDays >= 15
+                  ? 'bg-amber-50 border-amber-200 text-amber-900'
+                  : 'bg-emerald-50 border-emerald-200 text-emerald-900'
                 }`}
             >
               <div className="flex items-center gap-2.5">
@@ -645,8 +647,8 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                       type="button"
                       onClick={() => onToggleTrustMode && onToggleTrustMode(member.id)}
                       className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all shadow-2xs ${isTrusted
-                          ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                          : 'bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300'
+                        ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                        : 'bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300'
                         }`}
                     >
                       <span>{isTrusted ? '✓ Trusted (Direct Push)' : '⏱ Needs My Approval'}</span>
@@ -692,8 +694,8 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                     type="button"
                     onClick={() => setStatusFilter(st)}
                     className={`px-2.5 py-1 rounded-md transition-colors ${statusFilter === st
-                        ? 'bg-white text-slate-900 shadow-2xs font-semibold'
-                        : 'text-slate-500 hover:text-slate-900'
+                      ? 'bg-white text-slate-900 shadow-2xs font-semibold'
+                      : 'text-slate-500 hover:text-slate-900'
                       }`}
                   >
                     {st === 'Review Window Open' ? 'Reviews' : st}

@@ -14,9 +14,94 @@ export default function Home() {
   const [currentRole, setCurrentRole] = useState<Role>('freelancer');
 
   // Safe initialization
-  const [projects, setProjects] = useState<Project[]>(() =>
-    Array.isArray(initialProjects) ? initialProjects : []
-  );
+  const [projects, setProjects] = useState<Project[]>(() => {
+    if (Array.isArray(initialProjects) && initialProjects.length > 0) {
+      return initialProjects;
+    }
+    // Hardcoded fallback data ensuring project cards always display
+    return [
+      {
+        id: 'p1',
+        title: 'Brand Refresh & Launch Motion Assets',
+        clientName: 'Kunal Shah',
+        clientCompany: 'CRED',
+        deadline: '2026-11-05',
+        budget: 185000,
+        totalBudget: 185000,
+        status: 'In Progress',
+        totalDeliverables: 3,
+        completedDeliverables: 1,
+        freeRevisionsTotal: 2,
+        freeRevisionsUsed: 1,
+        extraScopeAmount: 0,
+        assignedTeamMemberId: 'member_rohan',
+        deliverables: [
+          {
+            id: 'd1',
+            title: '30s Motion Teaser (4K ProRes)',
+            workLink: 'https://drive.google.com/file/d/demo-cred-teaser',
+            version: 'v2',
+            status: 'Submitted',
+            latestComment: 'Color grading matched to CRED neon palette.',
+          },
+          {
+            id: 'd2',
+            title: 'Interactive Token Assets (Lottie/JSON)',
+            workLink: '',
+            version: 'v1',
+            status: 'In Progress',
+          },
+          {
+            id: 'd3',
+            title: 'Design System Documentation',
+            workLink: '',
+            version: 'v1',
+            status: 'Approved',
+          },
+        ],
+      },
+      {
+        id: 'p2',
+        title: 'Mobile App Micro-Interactions',
+        clientName: 'Deepinder Goyal',
+        clientCompany: 'Zomato',
+        deadline: '2026-11-12',
+        budget: 95000,
+        totalBudget: 95000,
+        status: 'In Progress',
+        totalDeliverables: 2,
+        completedDeliverables: 1,
+        freeRevisionsTotal: 2,
+        freeRevisionsUsed: 0,
+        extraScopeAmount: 0,
+        deliverables: [
+          {
+            id: 'd4',
+            title: 'Order Status Animation Curves',
+            workLink: 'https://drive.google.com/file/d/demo-zomato',
+            version: 'v1',
+            status: 'Approved',
+          },
+        ],
+      },
+      {
+        id: 'p3',
+        title: 'SaaS Fintech Payment Flow Design',
+        clientName: 'Harshil Mathur',
+        clientCompany: 'Razorpay',
+        deadline: '2026-11-20',
+        budget: 120000,
+        totalBudget: 120000,
+        status: 'In Progress',
+        totalDeliverables: 4,
+        completedDeliverables: 2,
+        freeRevisionsTotal: 2,
+        freeRevisionsUsed: 2,
+        extraScopeAmount: 15000,
+        deliverables: [],
+      },
+    ];
+  });
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>(() =>
     Array.isArray(initialTeamMembers) ? initialTeamMembers : []
   );
