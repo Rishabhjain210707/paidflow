@@ -21,7 +21,7 @@ interface OverviewDashboardProps {
   onNewProposal: () => void;
   onQuickInvoice: () => void;
   onShareReputation: () => void;
-  onNavigateTab: (tab: any) => void;
+  onNavigateTab: (tab: string) => void;
   onActionClick: (tx: Transaction) => void;
 }
 
@@ -323,8 +323,8 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 <div className="flex items-center justify-between mb-2">
                   <span
                     className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${proj.signedByClient
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                        : 'bg-amber-50 text-amber-700 border-amber-200'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-amber-50 text-amber-700 border-amber-200'
                       }`}
                   >
                     {proj.signedByClient ? '✓ E-Signed & Active' : '⏱ Awaiting E-Sign'}
@@ -398,8 +398,8 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                   type="button"
                   onClick={() => setStatusFilter(st)}
                   className={`px-2.5 py-1 rounded-md transition-colors ${statusFilter === st
-                      ? 'bg-white text-slate-900 shadow-2xs font-semibold'
-                      : 'text-slate-500 hover:text-slate-900'
+                    ? 'bg-white text-slate-900 shadow-2xs font-semibold'
+                    : 'text-slate-500 hover:text-slate-900'
                     }`}
                 >
                   {st === 'Review Window Open' ? 'Reviews' : st}
@@ -617,4 +617,50 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2.5">
                   Scope Milestones ({selectedProject.milestones.length})
                 </h4>
-                <div className="
+                <div className="space-y-2.5">
+                  {selectedProject.milestones.map((m, idx) => (
+                    <div
+                      key={m.id}
+                      className="p-3 bg-white border border-slate-200 rounded-lg space-y-1 shadow-xs"
+                    >
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-semibold text-slate-900">
+                          {idx + 1}. {m.title}
+                        </span>
+                        <span className="font-bold text-slate-900">{formatINR(m.amount)}</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500">{m.description}</p>
+                      <div className="pt-1 flex items-center justify-between text-[10px] text-slate-400">
+                        <span>Delivery Target: {m.deliverableDate}</span>
+                        <span
+                          className={`px-1.5 py-0.5 rounded font-medium ${m.status === 'Completed'
+                            ? 'bg-emerald-50 text-emerald-700'
+                            : m.status === 'In Progress'
+                              ? 'bg-blue-50 text-blue-700'
+                              : 'bg-slate-100 text-slate-600'
+                            }`}
+                        >
+                          {m.status || 'Upcoming'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedProject(null)}
+                className="px-4 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
