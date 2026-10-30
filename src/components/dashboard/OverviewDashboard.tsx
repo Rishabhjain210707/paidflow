@@ -6,7 +6,6 @@ import {
   Project,
   TeamMember,
   UserRole,
-  ClientConcentration,
 } from '../../types';
 import {
   formatINR,
@@ -20,7 +19,7 @@ import { mockFreelancerProfile, mockClientConcentration } from '../../data/mockD
 import { ProjectDetailModal } from '../projects/ProjectDetailModal';
 
 interface OverviewDashboardProps {
-  metrics: {
+  metrics?: {
     totalSettledRevenue: number;
     settledGrowthPercent: string;
     pendingInvoicesCount: number;
@@ -31,26 +30,26 @@ interface OverviewDashboardProps {
     trustReviewsCount: number;
     onTimePaymentRate: number;
   };
-  transactions: Transaction[];
-  projects: Project[];
-  teamMembers: TeamMember[];
-  currentUserRole: UserRole;
-  onNewProposal: () => void;
-  onQuickInvoice: () => void;
-  onShareReputation: () => void;
-  onNavigateTab: (tab: string) => void;
-  onActionClick: (tx: Transaction) => void;
-  onUpdateProject: (updated: Project) => void;
-  onToggleTrustMode: (memberId: string) => void;
+  transactions?: Transaction[];
+  projects?: Project[];
+  teamMembers?: TeamMember[];
+  currentUserRole?: UserRole;
+  onNewProposal?: () => void;
+  onQuickInvoice?: () => void;
+  onShareReputation?: () => void;
+  onNavigateTab?: (tab: string) => void;
+  onActionClick?: (tx: Transaction) => void;
+  onUpdateProject?: (updated: Project) => void;
+  onToggleTrustMode?: (memberId: string) => void;
   onAddBillableScope?: (amount: number, description: string) => void;
 }
 
 export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   metrics,
-  transactions,
-  projects,
-  teamMembers,
-  currentUserRole,
+  transactions = [],
+  projects = [],
+  teamMembers = [],
+  currentUserRole = 'freelancer',
   onNewProposal,
   onQuickInvoice,
   onShareReputation,
@@ -67,14 +66,20 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
   // Client Delay Impact Simulator State
   const [delayDays, setDelayDays] = useState<number>(30);
-  const credDelayedAmount = 145000; // Tranche 2 pending for Kunal Shah
+  const credDelayedAmount = 145000;
   const delayImpact = calculateDelayImpact(credDelayedAmount, delayDays);
 
-  const filteredTransactions = (transactions || []).filter((tx) => {
+  const safeTransactions = Array.isArray(transactions) ? transactions : [];
+  const safeProjects = Array.isArray(projects) ? projects : [];
+  const safeTeamMembers = Array.isArray(teamMembers) ? teamMembers : [];
+  const safeRole = currentUserRole || 'freelancer';
+
+  const filteredTransactions = safeTransactions.filter((tx) => {
+    if (!tx) return false;
     const matchesSearch =
-      tx.clientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tx.projectTitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tx.invoiceNumber?.toLowerCase().includes(searchTerm.toLowerCase());
+      (tx.clientName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (tx.projectTitle || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (tx.invoiceNumber || '').toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
       statusFilter === 'All' ? true : tx.status === statusFilter;
@@ -98,16 +103,20 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
     }
   };
 
-  // Find team member trust mode
-  const rohanMember = teamMembers.find((m) => m.id === 'member_rohan');
+  // Safe team member trust mode lookup
+  const rohanMember = safeTeamMembers.find((m) => m?.id === 'member_rohan');
   const isRohanTrusted = rohanMember?.trustMode === 'trusted';
 
-  // Filter projects by role
-  const visibleProjects = projects.filter((p) => {
-    if (currentUserRole === 'client') {
-      return p.clientName.toLowerCase().includes('kunal') || p.clientCompany.toLowerCase().includes('cred');
+  // Safe project filtering by role
+  const visibleProjects = safeProjects.filter((p) => {
+    if (!p) return false;
+    const clientName = (p.clientName || '').toLowerCase();
+    const clientCompany = (p.clientCompany || '').toLowerCase();
+
+    if (safeRole === 'client') {
+      return clientName.includes('kunal') || clientCompany.includes('cred');
     }
-    if (currentUserRole === 'team_member') {
+    if (safeRole === 'team_member') {
       return p.assignedTeamMemberId === 'member_rohan' || p.id === 'proj_cred_video';
     }
     return true;
@@ -115,58 +124,58 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Role Banner Notification */}
-      {currentUserRole !== 'freelancer' && (
+      {/* Role Banner Notification with SAFE string replace */}
+      {safeRole !== 'freelancer' && (
         <div className="p-3.5 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-between text-xs">
           <div className="flex items-center gap-2 text-indigo-900 font-semibold">
             <Icons.User className="w-4 h-4 text-indigo-600" />
             <span>
-              {currentUserRole === 'team_member'
+              {safeRole === 'team_member'
                 ? 'Team Member Mode: You are viewing assigned video & motion deliverables. Financial metrics & client rates are hidden.'
                 : 'Client Portal Mode: Viewing CRED deliverables, milestone approvals, and UPI payment releases.'}
             </span>
           </div>
           <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-white text-indigo-700 border border-indigo-200">
-            {currentUserRole.replace('_', ' ')}
+            {String(safeRole).replace('_', ' ')}
           </span>
         </div>
       )}
 
-      {/* Top Welcome Ribbon (Hidden or simplified for Team Member) */}
+      {/* Top Welcome Ribbon */}
       <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 text-white shadow-md relative overflow-hidden">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-1.5 max-w-xl">
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
-                {currentUserRole === 'team_member'
+                {safeRole === 'team_member'
                   ? 'Team Member Workspace'
-                  : currentUserRole === 'client'
-                  ? 'CRED Client Portal'
-                  : 'Verified Freelancer'}
+                  : safeRole === 'client'
+                    ? 'CRED Client Portal'
+                    : 'Verified Freelancer'}
               </span>
-              {currentUserRole === 'freelancer' && (
+              {safeRole === 'freelancer' && (
                 <span className="text-xs text-slate-300 font-mono">
                   VPA: {mockFreelancerProfile?.upiId || 'arjunverma@okhdfcbank'}
                 </span>
               )}
             </div>
             <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-              {currentUserRole === 'team_member'
+              {safeRole === 'team_member'
                 ? 'Welcome, Rohan Mehta 👋'
-                : currentUserRole === 'client'
-                ? 'Welcome back, Kunal Shah 👋'
-                : `Welcome back, ${mockFreelancerProfile?.name ? mockFreelancerProfile.name.split(' ')[0] : 'Arjun'} 👋`}
+                : safeRole === 'client'
+                  ? 'Welcome back, Kunal Shah 👋'
+                  : `Welcome back, ${mockFreelancerProfile?.name ? mockFreelancerProfile.name.split(' ')[0] : 'Arjun'} 👋`}
             </h2>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              {currentUserRole === 'team_member'
+              {safeRole === 'team_member'
                 ? 'You have 1 deliverable waiting for review on the CRED 30s Brand Video cut. Upload links to push new versions.'
-                : currentUserRole === 'client'
-                ? 'Review deliverables, request revisions, and release escrow milestone settlements with zero fees.'
-                : 'Your UPI settlement pipeline is running at zero fees. You have 3 pending invoices and 1 client deliverable awaiting review.'}
+                : safeRole === 'client'
+                  ? 'Review deliverables, request revisions, and release escrow milestone settlements with zero fees.'
+                  : 'Your UPI settlement pipeline is running at zero fees. You have 3 pending invoices and 1 client deliverable awaiting review.'}
             </p>
           </div>
 
-          {currentUserRole === 'freelancer' && (
+          {safeRole === 'freelancer' && (
             <div className="flex flex-wrap items-center gap-2.5 sm:self-center">
               <button
                 type="button"
@@ -199,8 +208,8 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         </div>
       </div>
 
-      {/* Top 4 Metric Cards - Strictly hidden / confidential for Team Member! */}
-      {currentUserRole !== 'team_member' ? (
+      {/* Top 4 Metric Cards */}
+      {safeRole !== 'team_member' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs">
             <div className="flex items-center justify-between">
@@ -266,7 +275,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           </div>
 
           <div
-            onClick={() => onNavigateTab('trust')}
+            onClick={() => onNavigateTab && onNavigateTab('trust')}
             className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs hover:border-indigo-300 cursor-pointer transition-colors group"
           >
             <div className="flex items-center justify-between">
@@ -294,7 +303,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           </div>
         </div>
       ) : (
-        /* Team Member Specific Quick Tasks Ribbon */
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs">
             <span className="text-xs font-semibold text-slate-500 block">Assigned Scopes</span>
@@ -343,11 +351,9 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {visibleProjects.map((proj) => {
             const deadlineStatus = getDeadlineStatus(proj.deadline);
-            const progress = Math.round(
-              proj.totalDeliverables > 0
-                ? (proj.completedDeliverables / proj.totalDeliverables) * 100
-                : 0
-            );
+            const totalDeliv = proj.totalDeliverables || proj.deliverables?.length || 1;
+            const completedDeliv = proj.completedDeliverables || proj.deliverables?.filter(d => d.status === 'Approved').length || 0;
+            const progress = Math.round((completedDeliv / totalDeliv) * 100);
 
             return (
               <div
@@ -356,13 +362,11 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 className="bg-white rounded-2xl border border-slate-200 hover:border-indigo-500 p-5 transition-all duration-200 hover:shadow-md cursor-pointer flex flex-col justify-between group space-y-4"
               >
                 <div>
-                  {/* Top Badges: Status and Deadline Threshold */}
                   <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-                      {proj.status}
+                      {proj.status || 'Active'}
                     </span>
 
-                    {/* Deadline Alert Badges */}
                     {deadlineStatus.color === 'red' && (
                       <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
                         <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
@@ -393,7 +397,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                     <span>{proj.clientCompany}</span>
                   </div>
 
-                  {/* Progress Bar (Feature 1) */}
                   <div className="mt-3.5 space-y-1">
                     <div className="flex items-center justify-between text-[11px]">
                       <span className="font-semibold text-slate-600">Progress</span>
@@ -406,20 +409,20 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                       />
                     </div>
                     <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
-                      <span>{proj.completedDeliverables}/{proj.totalDeliverables} Deliverables Done</span>
+                      <span>{completedDeliv}/{totalDeliv} Deliverables Done</span>
                       <span>Target: {formatDate(proj.deadline)}</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                  {currentUserRole !== 'team_member' ? (
+                  {safeRole !== 'team_member' ? (
                     <div>
                       <span className="text-[10px] text-slate-400 block uppercase font-semibold">
                         Total Scope Budget
                       </span>
                       <span className="text-sm font-extrabold text-slate-900">
-                        {formatINR(proj.totalBudget)}
+                        {formatINR(proj.totalBudget || proj.budget)}
                       </span>
                     </div>
                   ) : (
@@ -428,7 +431,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                         Deliverable Tasks
                       </span>
                       <span className="text-xs font-bold text-slate-700">
-                        {proj.deliverables.length} Work Items
+                        {proj.deliverables?.length || 0} Work Items
                       </span>
                     </div>
                   )}
@@ -443,10 +446,9 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         </div>
       </div>
 
-      {/* FEATURE 6: Client Concentration Meter & Delay Impact Simulator (Freelancer View Only) */}
-      {currentUserRole === 'freelancer' && (
+      {/* FEATURE 6: Client Concentration Meter & Delay Impact Simulator */}
+      {safeRole === 'freelancer' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Concentration Meter (5 Cols) */}
           <div className="lg:col-span-5 bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
             <div>
               <div className="flex items-center gap-2">
@@ -461,7 +463,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             </div>
 
             <div className="space-y-3.5 pt-1">
-              {mockClientConcentration.map((client) => {
+              {(mockClientConcentration || []).map((client) => {
                 const isHighRisk = client.riskLevel === 'high';
 
                 return (
@@ -481,27 +483,24 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                           {formatINR(client.totalRevenue, true)}
                         </span>
                         <span
-                          className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full ${
-                            isHighRisk
+                          className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full ${isHighRisk
                               ? 'bg-rose-50 text-rose-700 border border-rose-200'
                               : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                          }`}
+                            }`}
                         >
                           {client.percentage}%
                         </span>
                       </div>
                     </div>
 
-                    {/* Concentration Bar */}
                     <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full ${
-                          client.percentage > 60
+                        className={`h-full rounded-full ${client.percentage > 60
                             ? 'bg-rose-500'
                             : client.percentage >= 40
-                            ? 'bg-amber-500'
-                            : 'bg-emerald-500'
-                        }`}
+                              ? 'bg-amber-500'
+                              : 'bg-emerald-500'
+                          }`}
                         style={{ width: `${client.percentage}%` }}
                       />
                     </div>
@@ -518,7 +517,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             </div>
           </div>
 
-          {/* Delay Impact Simulator Card (7 Cols) */}
           <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
             <div className="flex items-center justify-between">
               <div>
@@ -537,7 +535,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               </span>
             </div>
 
-            {/* Slider Control */}
             <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-semibold text-slate-700">Simulate Payment Delay:</span>
@@ -564,21 +561,18 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               </div>
             </div>
 
-            {/* Dynamic Alert Banner */}
             <div
-              className={`p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs ${
-                delayDays >= 30
+              className={`p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs ${delayDays >= 30
                   ? 'bg-rose-50 border-rose-200 text-rose-900'
                   : delayDays >= 15
-                  ? 'bg-amber-50 border-amber-200 text-amber-900'
-                  : 'bg-emerald-50 border-emerald-200 text-emerald-900'
-              }`}
+                    ? 'bg-amber-50 border-amber-200 text-amber-900'
+                    : 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                }`}
             >
               <div className="flex items-center gap-2.5">
                 <Icons.AlertTriangle
-                  className={`w-5 h-5 shrink-0 ${
-                    delayDays >= 30 ? 'text-rose-600' : 'text-amber-600'
-                  }`}
+                  className={`w-5 h-5 shrink-0 ${delayDays >= 30 ? 'text-rose-600' : 'text-amber-600'
+                    }`}
                 />
                 <p className="leading-relaxed">
                   If <strong>Kunal Shah (CRED)</strong> delays payment by{' '}
@@ -602,7 +596,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       )}
 
       {/* FEATURE 3: Team Members List & Trust Toggle Section */}
-      {currentUserRole === 'freelancer' && (
+      {safeRole === 'freelancer' && (
         <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <div>
@@ -617,12 +611,13 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               </p>
             </div>
             <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-bold">
-              {teamMembers.length} Members Active
+              {safeTeamMembers.length} Members Active
             </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {teamMembers.map((member) => {
+            {safeTeamMembers.map((member) => {
+              if (!member) return null;
               const isTrusted = member.trustMode === 'trusted';
 
               return (
@@ -640,21 +635,19 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                       <h4 className="font-bold text-slate-900 text-xs">{member.name}</h4>
                       <p className="text-[11px] text-slate-500">{member.role}</p>
                       <span className="text-[10px] text-indigo-600 font-medium">
-                        {member.activeTasksCount} Active Deliverable Tasks
+                        {member.activeTasksCount || 1} Active Deliverable Tasks
                       </span>
                     </div>
                   </div>
 
-                  {/* Trust Toggle Switch */}
                   <div className="flex flex-col items-end gap-1">
                     <button
                       type="button"
-                      onClick={() => onToggleTrustMode(member.id)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all shadow-2xs ${
-                        isTrusted
+                      onClick={() => onToggleTrustMode && onToggleTrustMode(member.id)}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all shadow-2xs ${isTrusted
                           ? 'bg-emerald-600 text-white hover:bg-emerald-700'
                           : 'bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300'
-                      }`}
+                        }`}
                     >
                       <span>{isTrusted ? '✓ Trusted (Direct Push)' : '⏱ Needs My Approval'}</span>
                     </button>
@@ -668,7 +661,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       )}
 
       {/* Recent Transactions Table */}
-      {currentUserRole !== 'team_member' && (
+      {safeRole !== 'team_member' && (
         <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
           <div className="p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
@@ -698,11 +691,10 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                     key={st}
                     type="button"
                     onClick={() => setStatusFilter(st)}
-                    className={`px-2.5 py-1 rounded-md transition-colors ${
-                      statusFilter === st
+                    className={`px-2.5 py-1 rounded-md transition-colors ${statusFilter === st
                         ? 'bg-white text-slate-900 shadow-2xs font-semibold'
                         : 'text-slate-500 hover:text-slate-900'
-                    }`}
+                      }`}
                   >
                     {st === 'Review Window Open' ? 'Reviews' : st}
                   </button>
@@ -819,7 +811,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                           {isReviewOpen ? (
                             <button
                               type="button"
-                              onClick={() => onActionClick(tx)}
+                              onClick={() => onActionClick && onActionClick(tx)}
                               className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition-colors"
                             >
                               <span>Rate & Unlock</span>
@@ -835,7 +827,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                               </button>
                               <button
                                 type="button"
-                                onClick={() => onActionClick(tx)}
+                                onClick={() => onActionClick && onActionClick(tx)}
                                 className="px-2.5 py-1 text-xs font-medium rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-colors"
                               >
                                 Remind
@@ -844,7 +836,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                           ) : (
                             <button
                               type="button"
-                              onClick={() => onActionClick(tx)}
+                              onClick={() => onActionClick && onActionClick(tx)}
                               className="px-2.5 py-1 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
                             >
                               Receipt
@@ -863,7 +855,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             <span>Escrow release backed by NPCI & RBI compliant UPI 2.0 handle.</span>
             <button
               type="button"
-              onClick={() => onNavigateTab('invoices')}
+              onClick={() => onNavigateTab && onNavigateTab('invoices')}
               className="text-indigo-600 hover:underline font-medium text-xs"
             >
               Manage All Invoices →
@@ -873,18 +865,20 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       )}
 
       {/* Interactive Project Detail Modal */}
-      <ProjectDetailModal
-        project={selectedProject}
-        isOpen={!!selectedProject}
-        onClose={() => setSelectedProject(null)}
-        currentUserRole={currentUserRole}
-        isTeamMemberTrusted={isRohanTrusted}
-        onUpdateProject={(updated) => {
-          setSelectedProject(updated);
-          onUpdateProject(updated);
-        }}
-        onAddBillableScope={onAddBillableScope}
-      />
+      {selectedProject && (
+        <ProjectDetailModal
+          project={selectedProject}
+          isOpen={!!selectedProject}
+          onClose={() => setSelectedProject(null)}
+          currentUserRole={safeRole}
+          isTeamMemberTrusted={isRohanTrusted}
+          onUpdateProject={(updated) => {
+            setSelectedProject(updated);
+            if (onUpdateProject) onUpdateProject(updated);
+          }}
+          onAddBillableScope={onAddBillableScope}
+        />
+      )}
     </div>
   );
 };
