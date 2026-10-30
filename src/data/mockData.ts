@@ -52,7 +52,7 @@ export const mockProjects: Project[] = [
     clientName: 'Kunal Shah',
     clientCompany: 'CRED Technologies',
     clientAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-    clientPhone: '+91 98200 11223',
+    clientPhone: '+91 90798 79010',
     totalBudget: 1250000, // ₹12.5 Lakhs (Over 60% concentration!)
     settledAmount: 500000,
     deadline: '2026-11-01', // Within 2 days of simulated today (2026-10-30) -> "At risk"
@@ -454,7 +454,7 @@ export const mockInitialProposal: Proposal = {
   title: 'CRED Pulse: 30s Brand Video & Interactive Motion Teaser',
   clientName: 'Kunal Shah',
   clientEmail: 'kunal@cred.club',
-  clientPhone: '+91 98200 11223',
+  clientPhone: '+91 90798 79010',
   clientCompany: 'CRED Technologies Pvt Ltd',
   createdAt: '2026-10-30',
   validUntil: '2026-11-15',
@@ -492,7 +492,7 @@ export const mockInitialInvoice: Invoice = {
   id: 'inv_1042',
   invoiceNumber: 'INV-2026-1042',
   clientName: 'Kunal Shah (CRED Technologies)',
-  clientPhone: '+91 98200 11223',
+  clientPhone: '+91 90798 79010',
   clientVpa: 'kunal@cred',
   freelancerVpa: '9079879010@fam',
   dueDate: '2026-11-04',

@@ -122,7 +122,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = (props) => {
   const handleSendNudgeWhatsApp = () => {
     const origin = typeof window !== 'undefined' ? window.location.origin : getAppBaseUrl();
     const text = `Hi Kunal, hope you're having a great week! Just following up on the pending milestone tranche for CRED Pulse (${formatINR(credDelayedAmount)}). The DaVinci color grade & audio stems are ready for your review: ${origin}/pay/inv_1042_t2?amount=${credDelayedAmount}&title=Tranche+2%3A+50%25+on+Final+Delivery&inv=INV-2026-1042`;
-    const url = generateWhatsAppShareUrl('+919820011223', text);
+    const url = generateWhatsAppShareUrl('+919079879010', text);
     if (typeof window !== 'undefined') {
       window.open(url, '_blank');
     }

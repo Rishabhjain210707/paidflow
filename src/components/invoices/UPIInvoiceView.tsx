@@ -40,7 +40,7 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
     ...mockInitialInvoice,
     invoiceNumber: invoiceNumber || mockInitialInvoice.invoiceNumber,
     clientName: clientName || mockInitialInvoice.clientName,
-    clientPhone: propClientPhone || mockInitialInvoice.clientPhone || '+91 98200 11223',
+    clientPhone: propClientPhone || mockInitialInvoice.clientPhone || '+91 90798 79010',
     clientVpa: clientVPA || mockInitialInvoice.clientVpa,
     totalPayable: totalAmount || mockInitialInvoice.totalPayable,
     subtotal: totalAmount || mockInitialInvoice.subtotal,
@@ -48,7 +48,7 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
 
   const [invoice, setInvoice] = useState<Invoice>(baseInvoice);
   const [clientPhone, setClientPhone] = useState<string>(
-    baseInvoice.clientPhone || propClientPhone || '+91 98200 11223'
+    baseInvoice.clientPhone || propClientPhone || '+91 90798 79010'
   );
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedVpa, setCopiedVpa] = useState(false);
@@ -392,7 +392,7 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
           mockFreelancerProfile.name
         } (UPI: ${invoice.freelancerVpa})`;
 
-    const targetPhone = clientPhone || invoice.clientPhone || '+91 98200 11223';
+    const targetPhone = clientPhone || invoice.clientPhone || '+91 90798 79010';
     const url = generateWhatsAppShareUrl(targetPhone, message);
     if (typeof window !== 'undefined') {
       window.open(url, '_blank');
@@ -1078,7 +1078,7 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
                 type="tel"
                 value={clientPhone}
                 onChange={(e) => setClientPhone(e.target.value)}
-                placeholder="+91 98200 11223"
+                placeholder="+91 90798 79010"
                 className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-800 focus:outline-none focus:border-indigo-500"
               />
             </div>

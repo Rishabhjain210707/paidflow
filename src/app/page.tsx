@@ -282,7 +282,7 @@ export default function Home() {
         delayedCredAmount
       )}) is past the payment agreement window. Please clear the payment immediately to avoid pausing production handoff: ${checkoutLink}`;
     }
-    return generateWhatsAppShareUrl('+919820011223', msg);
+    return generateWhatsAppShareUrl('+919079879010', msg);
   };
 
   // All deliverables flattened across all projects
@@ -1527,7 +1527,7 @@ export default function Home() {
                 clientName: activeProject.clientName,
                 clientCompany: activeProject.clientCompany,
                 clientEmail: 'client@example.com',
-                clientPhone: activeProject.clientPhone || '+91 98200 11223',
+                clientPhone: activeProject.clientPhone || '+91 90798 79010',
                 createdAt: '2026-10-30',
                 currency: 'INR',
                 gstRate: 18,
