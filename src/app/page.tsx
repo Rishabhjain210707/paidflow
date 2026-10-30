@@ -1,203 +1,221 @@
 'use client';
 
 import React, { useState } from 'react';
-import { TabType, Transaction, Proposal, Invoice, ClientReviewItem } from '../types';
-import { Sidebar } from '../components/layout/Sidebar';
-import { Header } from '../components/layout/Header';
-import { MobileNav } from '../components/layout/MobileNav';
 import { OverviewDashboard } from '../components/dashboard/OverviewDashboard';
 import { ProposalCreator } from '../components/proposals/ProposalCreator';
 import { UPIInvoiceView } from '../components/invoices/UPIInvoiceView';
 import { TrustReviewView } from '../components/trust/TrustReviewView';
-import { NewProposalModal } from '../components/modals/NewProposalModal';
-import { QuickUPIInvoiceModal } from '../components/modals/QuickUPIInvoiceModal';
-import { ShareReputationModal } from '../components/modals/ShareReputationModal';
-import {
-  mockMetrics,
-  mockTransactions,
-  mockInitialProposal,
-  mockInitialInvoice,
-  mockTrustMetrics,
-  mockPendingClientReviews,
-} from '../data/mockData';
-import { formatINR } from '../utils/formatters';
+import { mockTransactions, mockProposals } from '../data/mockData';
+import { Proposal, Transaction } from '../types';
 
-export default function PaidFlowApp() {
-  const [activeTab, setActiveTab] = useState<TabType>('overview');
+export default function Home() {
+  const [activeTab, setActiveTab] = useState<'overview' | 'proposals' | 'invoices' | 'trust'>('overview');
+  const [transactions, setTransactions] = useState<Transaction[]>(mockTransactions || []);
+  const [proposals, setProposals] = useState<Proposal[]>(mockProposals || []);
+  const [activeProposalIndex, setActiveProposalIndex] = useState(0);
 
-  // Core Data State
-  const [metrics, setMetrics] = useState(mockMetrics);
-  const [transactions, setTransactions] = useState<Transaction[]>(mockTransactions);
-  const [currentProposal, setCurrentProposal] = useState<Proposal>(mockInitialProposal);
-  const [currentInvoice, setCurrentInvoice] = useState<Invoice>(mockInitialInvoice);
-  const [reviewsQueue, setReviewsQueue] = useState<ClientReviewItem[]>(mockPendingClientReviews);
-  const [trustMetrics, setTrustMetrics] = useState(mockTrustMetrics);
-
-  // Modal Triggers
-  const [isNewProposalModalOpen, setIsNewProposalModalOpen] = useState(false);
-  const [isQuickInvoiceModalOpen, setIsQuickInvoiceModalOpen] = useState(false);
-  const [isShareReputationModalOpen, setIsShareReputationModalOpen] = useState(false);
-  const [toastNotification, setToastNotification] = useState<string | null>(null);
-
-  const showToast = (message: string) => {
-    setToastNotification(message);
-    setTimeout(() => setToastNotification(null), 3500);
+  const defaultProposal: Proposal = proposals[activeProposalIndex] || {
+    id: 'prop_current',
+    title: 'Next.js SaaS MVP & Stripe/UPI Integration',
+    clientName: 'Aditya Mathur',
+    clientCompany: 'TechFlow Systems',
+    clientEmail: 'aditya@techflow.dev',
+    clientPhone: '+91 98765 43210',
+    totalAmount: 95000,
+    subtotal: 95000,
+    discount: 0,
+    gstApplicable: false,
+    status: 'Pending',
+    signedByClient: false,
+    validUntil: '2026-11-20',
+    milestones: [
+      {
+        id: 'ms_1',
+        title: 'Milestone 1: UI/UX & High-Fidelity Wireframes',
+        description: 'Complete dashboard wireframes, responsive mobile views, and theme tokens.',
+        deliverableDate: '2026-11-08',
+        amount: 45000,
+        status: 'Upcoming',
+      },
+      {
+        id: 'ms_2',
+        title: 'Milestone 2: Frontend Architecture & API Wire-up',
+        description: 'App router scaffolding, Tailwind components, and UPI callback webhooks.',
+        deliverableDate: '2026-11-22',
+        amount: 50000,
+        status: 'Upcoming',
+      },
+    ],
   };
 
-  // Handlers
-  const handleCreateNewProposal = (data: Partial<Proposal>) => {
-    const updated: Proposal = {
-      ...currentProposal,
-      id: 'prop_' + Math.floor(1000 + Math.random() * 9000),
-      title: data.title || 'Custom Client Engagement',
-      clientName: data.clientName || 'Partner Client',
-      clientPhone: data.clientPhone || '+91 98112 34567',
-      subtotal: data.subtotal || 75000,
-      totalAmount: data.totalAmount || 88500,
-      signedByClient: false,
-      status: 'Sent',
-    };
-    setCurrentProposal(updated);
-    setActiveTab('proposals');
-    showToast(`✓ Proposal created for ${updated.clientName}`);
-  };
-
-  const handleQuickInvoiceCreated = (invoiceData: any) => {
-    const newTx: Transaction = {
-      id: 'tx_' + Math.floor(100 + Math.random() * 900),
-      invoiceNumber: invoiceData.invNumber,
-      clientName: invoiceData.clientName,
-      clientAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
-      projectTitle: invoiceData.taskDescription,
-      amount: invoiceData.totalAmount,
-      paymentMethod: 'UPI',
-      status: 'Pending',
-      date: new Date().toISOString().split('T')[0],
-      vpa: 'client@upi',
-    };
-
-    setTransactions([newTx, ...transactions]);
-    setMetrics((prev) => ({
-      ...prev,
-      pendingInvoicesCount: prev.pendingInvoicesCount + 1,
-      pendingInvoicesAmount: prev.pendingInvoicesAmount + invoiceData.totalAmount,
-    }));
-
-    showToast(`✓ UPI Invoice ${invoiceData.invNumber} issued for ${formatINR(invoiceData.totalAmount)}`);
-  };
-
-  const handlePaymentSettled = (settledInvoice: Invoice) => {
-    setMetrics((prev) => ({
-      ...prev,
-      totalSettledRevenue: prev.totalSettledRevenue + settledInvoice.totalPayable,
-      pendingInvoicesCount: Math.max(0, prev.pendingInvoicesCount - 1),
-      pendingInvoicesAmount: Math.max(0, prev.pendingInvoicesAmount - settledInvoice.totalPayable),
-    }));
-
-    showToast(`💰 Instant UPI Settlement Received: ${formatINR(settledInvoice.totalPayable)} credited`);
-  };
-
-  const handleTransactionAction = (tx: Transaction) => {
-    if (tx.status === 'Review Window Open') {
-      setActiveTab('trust');
-    } else if (tx.status === 'Pending') {
-      showToast(`WhatsApp reminder prepared for ${tx.clientName} (${formatINR(tx.amount)})`);
-    } else {
-      showToast(`Receipt for ${tx.invoiceNumber} downloaded`);
-    }
+  const metrics = {
+    totalSettledRevenue: 1485000,
+    settledGrowthPercent: '+18.4%',
+    pendingInvoicesCount: 3,
+    pendingInvoicesAmount: 182500,
+    activeProjectsCount: proposals.length || 3,
+    verifiedTrustScore: 4.92,
+    maxTrustScore: 5.0,
+    trustReviewsCount: 38,
+    onTimePaymentRate: 98,
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex font-sans antialiased">
-      {/* Toast popup */}
-      {toastNotification && (
-        <div className="fixed top-5 right-5 z-50 bg-slate-900 text-white text-xs font-semibold py-2.5 px-4 rounded-xl shadow-xl flex items-center gap-2 border border-slate-700 animate-in fade-in slide-in-from-top-3">
-          <span>{toastNotification}</span>
-        </div>
-      )}
+    <main className="min-h-screen bg-slate-100 flex flex-col md:flex-row text-slate-800 antialiased font-sans">
+      {/* Left Sidebar */}
+      <aside className="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-slate-200 p-5 shrink-0 flex flex-col justify-between">
+        <div className="space-y-6">
+          {/* Logo */}
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+              ₹
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="font-extrabold text-slate-900 tracking-tight text-base">PaidFlow</span>
+                <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  SOLO PRO
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400">Fintech for Freelancers</p>
+            </div>
+          </div>
 
-      {/* Desktop Sidebar Navigation */}
-      <Sidebar
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        onNewProposal={() => setIsNewProposalModalOpen(true)}
-        onQuickInvoice={() => setIsQuickInvoiceModalOpen(true)}
-      />
+          {/* Quick Action Buttons */}
+          <div className="space-y-2">
+            <button
+              onClick={() => setActiveTab('invoices')}
+              className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center justify-center gap-2 transition-all active:scale-[0.99]"
+            >
+              <span>+ Quick UPI Invoice</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('proposals')}
+              className="w-full py-2.5 px-3 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all"
+            >
+              <span>✎ New Proposal & Scope</span>
+            </button>
+          </div>
+
+          {/* Navigation Links */}
+          <nav className="space-y-1">
+            <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase px-3 block mb-2">
+              Workspace
+            </span>
+
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors ${activeTab === 'overview'
+                ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="text-sm">⊞</span>
+                <span>Overview</span>
+              </div>
+              <span className="text-[10px] text-slate-400 font-normal">Live</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('proposals')}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors ${activeTab === 'proposals'
+                ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="text-sm">📄</span>
+                <span>Proposals & E-Sign</span>
+              </div>
+              <span className="text-[10px] text-slate-400 font-normal">E-Sign</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('invoices')}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors ${activeTab === 'invoices'
+                ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="text-sm">💳</span>
+                <span>UPI Invoicing</span>
+              </div>
+              <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded font-medium">
+                Instant
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('trust')}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors ${activeTab === 'trust'
+                ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="text-sm">🛡</span>
+                <span>Trust & Reputation</span>
+              </div>
+              <span className="text-[10px] text-slate-400 font-mono">4.9 ★</span>
+            </button>
+          </nav>
+        </div>
+
+        {/* Profile Footer */}
+        <div className="pt-4 border-t border-slate-100 mt-6 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-xs">
+              AV
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-900 leading-tight">Arjun Verma</p>
+              <p className="text-[10px] text-slate-400">arjunverma@okhdfcbank</p>
+            </div>
+          </div>
+          <span className="w-2 h-2 rounded-full bg-emerald-500" title="UPI Rail Online" />
+        </div>
+      </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 pb-20 lg:pb-8">
-        <Header
-          activeTab={activeTab}
-          onOpenShareReputation={() => setIsShareReputationModalOpen(true)}
-          onQuickInvoice={() => setIsQuickInvoiceModalOpen(true)}
-          onNewProposal={() => setIsNewProposalModalOpen(true)}
-        />
+      <section className="flex-1 p-4 md:p-8 overflow-y-auto max-w-7xl">
+        {activeTab === 'overview' && (
+          <OverviewDashboard
+            metrics={metrics}
+            transactions={transactions}
+            onNewProposal={() => setActiveTab('proposals')}
+            onQuickInvoice={() => setActiveTab('invoices')}
+            onShareReputation={() => setActiveTab('trust')}
+            onNavigateTab={(tab) => setActiveTab(tab)}
+            onActionClick={(tx) => setActiveTab('invoices')}
+          />
+        )}
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
-          {activeTab === 'overview' && (
-            <OverviewDashboard
-              metrics={metrics}
-              transactions={transactions}
-              onNewProposal={() => setIsNewProposalModalOpen(true)}
-              onQuickInvoice={() => setIsQuickInvoiceModalOpen(true)}
-              onShareReputation={() => setIsShareReputationModalOpen(true)}
-              onNavigateTab={(tab) => setActiveTab(tab)}
-              onActionClick={handleTransactionAction}
-            />
-          )}
+        {activeTab === 'proposals' && (
+          <ProposalCreator
+            initialProposal={defaultProposal}
+            onSaveProposal={(updated) => {
+              setProposals((prev) =>
+                prev.map((p) => (p.id === updated.id ? updated : p))
+              );
+            }}
+          />
+        )}
 
-          {activeTab === 'proposals' && (
-            <ProposalCreator
-              initialProposal={currentProposal}
-              onSaveProposal={(updated) => {
-                setCurrentProposal(updated);
-                showToast('✓ Scope & milestones saved successfully');
-              }}
-            />
-          )}
+        {activeTab === 'invoices' && (
+          <UPIInvoiceView
+            transactions={transactions}
+            onBackToDashboard={() => setActiveTab('overview')}
+          />
+        )}
 
-          {activeTab === 'invoices' && (
-            <UPIInvoiceView
-              initialInvoice={currentInvoice}
-              onPaymentSettled={handlePaymentSettled}
-            />
-          )}
-
-          {activeTab === 'trust' && (
-            <TrustReviewView
-              metrics={trustMetrics}
-              reviewsQueue={reviewsQueue}
-              onShareProfile={() => setIsShareReputationModalOpen(true)}
-            />
-          )}
-        </main>
-      </div>
-
-      {/* Mobile Bottom Navigation */}
-      <MobileNav
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        onQuickInvoice={() => setIsQuickInvoiceModalOpen(true)}
-      />
-
-      {/* Interactive Modals */}
-      <NewProposalModal
-        isOpen={isNewProposalModalOpen}
-        onClose={() => setIsNewProposalModalOpen(false)}
-        onCreate={handleCreateNewProposal}
-      />
-
-      <QuickUPIInvoiceModal
-        isOpen={isQuickInvoiceModalOpen}
-        onClose={() => setIsQuickInvoiceModalOpen(false)}
-        onInvoiceCreated={handleQuickInvoiceCreated}
-      />
-
-      <ShareReputationModal
-        isOpen={isShareReputationModalOpen}
-        onClose={() => setIsShareReputationModalOpen(false)}
-      />
-    </div>
+        {activeTab === 'trust' && (
+          <TrustReviewView
+            onBackToOverview={() => setActiveTab('overview')}
+          />
+        )}
+      </section>
+    </main>
   );
 }
-
