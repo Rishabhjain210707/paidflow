@@ -17,7 +17,7 @@ export const QuickUPIInvoiceModal: React.FC<QuickUPIInvoiceModalProps> = ({
   onInvoiceCreated,
 }) => {
   const [clientName, setClientName] = useState('');
-  const [clientPhone, setClientPhone] = useState('+91 98765 43210');
+  const [clientPhone, setClientPhone] = useState('+91 98200 11223');
   const [taskDescription, setTaskDescription] = useState('Design Sprint & Frontend Components');
   const [amount, setAmount] = useState('45000');
   const [addGst, setAddGst] = useState(false);

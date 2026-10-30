@@ -492,6 +492,7 @@ export const mockInitialInvoice: Invoice = {
   id: 'inv_1042',
   invoiceNumber: 'INV-2026-1042',
   clientName: 'Kunal Shah (CRED Technologies)',
+  clientPhone: '+91 98200 11223',
   clientVpa: 'kunal@cred',
   freelancerVpa: '9079879010@fam',
   dueDate: '2026-11-04',

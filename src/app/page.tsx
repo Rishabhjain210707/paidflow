@@ -1527,7 +1527,7 @@ export default function Home() {
                 clientName: activeProject.clientName,
                 clientCompany: activeProject.clientCompany,
                 clientEmail: 'client@example.com',
-                clientPhone: '+91 98765 00000',
+                clientPhone: activeProject.clientPhone || '+91 98200 11223',
                 createdAt: '2026-10-30',
                 currency: 'INR',
                 gstRate: 18,

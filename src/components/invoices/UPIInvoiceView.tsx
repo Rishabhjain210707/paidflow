@@ -10,6 +10,7 @@ interface UPIInvoiceViewProps {
   initialInvoice?: Invoice;
   invoiceNumber?: string;
   clientName?: string;
+  clientPhone?: string;
   clientVPA?: string;
   totalAmount?: number;
   initialTranches?: any[];
@@ -25,6 +26,7 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
     initialInvoice,
     invoiceNumber,
     clientName,
+    clientPhone: propClientPhone,
     clientVPA,
     totalAmount,
     initialTranches,
@@ -38,12 +40,16 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
     ...mockInitialInvoice,
     invoiceNumber: invoiceNumber || mockInitialInvoice.invoiceNumber,
     clientName: clientName || mockInitialInvoice.clientName,
+    clientPhone: propClientPhone || mockInitialInvoice.clientPhone || '+91 98200 11223',
     clientVpa: clientVPA || mockInitialInvoice.clientVpa,
     totalPayable: totalAmount || mockInitialInvoice.totalPayable,
     subtotal: totalAmount || mockInitialInvoice.subtotal,
   };
 
   const [invoice, setInvoice] = useState<Invoice>(baseInvoice);
+  const [clientPhone, setClientPhone] = useState<string>(
+    baseInvoice.clientPhone || propClientPhone || '+91 98200 11223'
+  );
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedVpa, setCopiedVpa] = useState(false);
   const [copiedTrancheId, setCopiedTrancheId] = useState<string | null>(null);
@@ -386,7 +392,8 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
           mockFreelancerProfile.name
         } (UPI: ${invoice.freelancerVpa})`;
 
-    const url = generateWhatsAppShareUrl('9876543210', message);
+    const targetPhone = clientPhone || invoice.clientPhone || '+91 98200 11223';
+    const url = generateWhatsAppShareUrl(targetPhone, message);
     if (typeof window !== 'undefined') {
       window.open(url, '_blank');
     }
@@ -666,7 +673,11 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
                   Billed To
                 </span>
                 <p className="font-bold text-slate-900 text-sm mt-0.5">{invoice.clientName}</p>
-                <p className="text-slate-500 mt-1">Client UPI ID: {invoice.clientVpa}</p>
+                <p className="text-slate-500 mt-0.5">
+                  WhatsApp:{' '}
+                  <span className="font-mono text-emerald-700 font-semibold">{clientPhone}</span>
+                </p>
+                <p className="text-slate-500 mt-0.5">Client UPI ID: {invoice.clientVpa}</p>
                 <div className="mt-2 text-slate-400">
                   <span>Due Date: </span>
                   <span className="font-medium text-slate-700">{invoice.dueDate}</span>
@@ -1055,6 +1066,21 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
                   )}
                 </button>
               </div>
+            </div>
+
+            {/* Client WhatsApp Number Input */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-slate-700">Client WhatsApp Phone</span>
+                <span className="text-[10px] text-emerald-700 font-mono font-medium">Synced with Kunal Shah</span>
+              </div>
+              <input
+                type="tel"
+                value={clientPhone}
+                onChange={(e) => setClientPhone(e.target.value)}
+                placeholder="+91 98200 11223"
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-800 focus:outline-none focus:border-indigo-500"
+              />
             </div>
 
             {/* Direct Send to WhatsApp Button */}

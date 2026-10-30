@@ -87,6 +87,7 @@ export interface Invoice {
   id: string;
   invoiceNumber: string;
   clientName: string;
+  clientPhone?: string;
   clientVpa: string;
   freelancerVpa: string;
   dueDate: string;
