@@ -1,5 +1,8 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+
 import React, { useState } from 'react';
 import { OverviewDashboard } from '../components/dashboard/OverviewDashboard';
 import { ProposalCreator } from '../components/proposals/ProposalCreator';
@@ -12,45 +15,12 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'overview' | 'proposals' | 'invoices' | 'trust'>('overview');
   const [currentRole, setCurrentRole] = useState<UserRole>('freelancer');
 
-  // Safe default arrays to prevent prerendering undefined errors
-  const [transactions] = useState<Transaction[]>(() => (Array.isArray(mockTransactions) ? mockTransactions : []));
-  const [proposals, setProposals] = useState<Proposal[]>(() => (Array.isArray(mockProposals) && mockProposals.length > 0 ? mockProposals : [
-    {
-      id: 'prop_01',
-      title: 'CRED Mobile App Micro-Interactions & Tokens',
-      clientName: 'Kunal Shah',
-      clientCompany: 'CRED',
-      clientEmail: 'kunal@cred.club',
-      clientPhone: '+91 98765 00001',
-      totalAmount: 145000,
-      subtotal: 145000,
-      discount: 0,
-      gstApplicable: false,
-      status: 'Approved',
-      signedByClient: true,
-      validUntil: '2026-11-30',
-      milestones: [
-        {
-          id: 'ms_1',
-          title: 'Design System & Micro-Interactions',
-          description: 'Figma prototypes, spline assets, and animation curves.',
-          deliverableDate: '2026-11-10',
-          amount: 70000,
-          status: 'Completed',
-        },
-      ],
-    }
-  ]));
+  // Hardened fallback array initialization to prevent undefined .find()
+  const [transactions] = useState<Transaction[]>(() => {
+    return Array.isArray(mockTransactions) ? mockTransactions : [];
+  });
 
-  // Modal and Menu states
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [userEmail, setUserEmail] = useState('');
-  const [userPassword, setUserPassword] = useState('');
-  const [loginFeedback, setLoginFeedback] = useState<string | null>(null);
-
-  // Safe fallback proposal
-  const defaultProposal: Proposal = proposals[0] || {
+  const fallbackProposal: Proposal = {
     id: 'prop_01',
     title: 'CRED Mobile App Micro-Interactions & Tokens',
     clientName: 'Kunal Shah',
@@ -76,6 +46,21 @@ export default function Home() {
     ],
   };
 
+  const [proposals, setProposals] = useState<Proposal[]>(() => {
+    return Array.isArray(mockProposals) && mockProposals.length > 0
+      ? mockProposals
+      : [fallbackProposal];
+  });
+
+  // Modal and Menu states
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
+  const [userPassword, setUserPassword] = useState('');
+  const [loginFeedback, setLoginFeedback] = useState<string | null>(null);
+
+  const defaultProposal: Proposal = (proposals && proposals[0]) ? proposals[0] : fallbackProposal;
+
   const metrics = {
     totalSettledRevenue: 1485000,
     settledGrowthPercent: '+18.4%',
@@ -91,7 +76,7 @@ export default function Home() {
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!userEmail) {
-      setLoginFeedback('Please enter an email or VPA.');
+      setLoginFeedback('Please enter your email or VPA handle.');
       return;
     }
     setLoginFeedback(`Signed in successfully as ${userEmail.split('@')[0]}!`);
@@ -108,20 +93,20 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col text-slate-800 antialiased font-sans">
-      {/* Header Bar */}
+      {/* 1. Header Bar: Status + Top-Right Feature Menu & Login */}
       <header className="bg-slate-900 border-b border-slate-800 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs relative z-40">
         <div className="flex items-center gap-2">
           <span className="font-bold text-indigo-400 uppercase tracking-wider text-[10px] bg-indigo-950 border border-indigo-800 px-2 py-0.5 rounded">
             PaidFlow Pro
           </span>
-          <span className="text-slate-300 hidden sm:inline">Active:</span>
+          <span className="text-slate-300 hidden sm:inline">Active View:</span>
           <span className="font-semibold text-slate-100">
-            {currentRole === 'freelancer' ? 'Arjun Verma (Freelancer)' : currentRole === 'team_member' ? 'Rohan (Editor)' : 'Kunal Shah (Client)'}
+            {currentRole === 'freelancer' ? 'Arjun Verma (Freelancer)' : currentRole === 'team_member' ? 'Rohan (Video Editor)' : 'Kunal Shah (CRED Client)'}
           </span>
         </div>
 
+        {/* Right Actions: Login Button + ☰ Menu Dropdown */}
         <div className="flex items-center gap-2">
-          {/* Freelancer Login Button */}
           <button
             type="button"
             onClick={() => setIsLoginModalOpen(true)}
@@ -131,7 +116,6 @@ export default function Home() {
             <span>Freelancer Login</span>
           </button>
 
-          {/* Top-Right Subdivided Menu */}
           <div className="relative">
             <button
               type="button"
@@ -142,10 +126,11 @@ export default function Home() {
               <span>Menu</span>
             </button>
 
+            {/* Subdivided Floating Menu */}
             {isMenuOpen && (
               <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white text-slate-800 rounded-2xl shadow-2xl border border-slate-200 p-4 z-50 text-xs">
                 <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
-                  <span className="font-bold text-sm text-slate-900">Workspace Features</span>
+                  <span className="font-bold text-sm text-slate-900">Workspace Directory</span>
                   <button
                     type="button"
                     onClick={() => setIsMenuOpen(false)}
@@ -234,7 +219,7 @@ export default function Home() {
                   {/* Category 4: Role Switcher */}
                   <div className="pt-2 border-t border-slate-100 bg-slate-50 p-2.5 rounded-xl">
                     <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block mb-1.5">
-                      4. Switch Perspective
+                      4. Switch Active Role
                     </span>
                     <div className="grid grid-cols-3 gap-1.5 text-[11px]">
                       <button
@@ -401,7 +386,7 @@ export default function Home() {
           </div>
         </aside>
 
-        {/* Content Pane */}
+        {/* Content Section */}
         <section className="flex-1 p-4 md:p-8 overflow-y-auto max-w-7xl">
           {activeTab === 'overview' && (
             <OverviewDashboard
