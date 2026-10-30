@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Icons } from './Icons';
+import * as Icons from '../ui/Icons';
 
 interface SignatureCanvasProps {
   onSignatureCapture: (dataUrl: string) => void;
@@ -153,4 +153,3 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
     </div>
   );
 };
-
