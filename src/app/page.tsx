@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { initialProjects, initialTeamMembers, initialActivityLogs, mockTransactions } from '../data/mockData';
-import { Project, Role, ActivityLog, TeamMember } from '../types';
+import { Project, Role, ActivityLog, TeamMember, Transaction } from '../types';
 import { OverviewDashboard } from '../components/dashboard/OverviewDashboard';
 import { ProjectDetailModal } from '../components/projects/ProjectDetailModal';
 import { ProposalCreator } from '../components/proposals/ProposalCreator';
@@ -13,98 +13,105 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'overview' | 'proposals' | 'invoices' | 'trust'>('overview');
   const [currentRole, setCurrentRole] = useState<Role>('freelancer');
 
-  // Safe initialization
+  // Hardened initial data fallbacks ensuring project cards and transactions always render
+  const defaultProjects: Project[] = [
+    {
+      id: 'p1',
+      title: 'Brand Refresh & Launch Motion Assets',
+      clientName: 'Kunal Shah',
+      clientCompany: 'CRED',
+      deadline: '2026-11-05',
+      budget: 185000,
+      totalBudget: 185000,
+      status: 'In Progress',
+      totalDeliverables: 3,
+      completedDeliverables: 1,
+      freeRevisionsTotal: 2,
+      freeRevisionsUsed: 1,
+      extraScopeAmount: 0,
+      assignedTeamMemberId: 'member_rohan',
+      deliverables: [
+        {
+          id: 'd1',
+          title: '30s Motion Teaser (4K ProRes)',
+          workLink: 'https://drive.google.com/file/d/demo-cred-teaser',
+          version: 'v2',
+          status: 'Submitted',
+          latestComment: 'Color grading matched to CRED neon palette.',
+        },
+        {
+          id: 'd2',
+          title: 'Interactive Token Assets (Lottie/JSON)',
+          workLink: '',
+          version: 'v1',
+          status: 'In Progress',
+        },
+        {
+          id: 'd3',
+          title: 'Design System Documentation',
+          workLink: '',
+          version: 'v1',
+          status: 'Approved',
+        },
+      ],
+    },
+    {
+      id: 'p2',
+      title: 'Mobile App Micro-Interactions',
+      clientName: 'Deepinder Goyal',
+      clientCompany: 'Zomato',
+      deadline: '2026-11-12',
+      budget: 95000,
+      totalBudget: 95000,
+      status: 'In Progress',
+      totalDeliverables: 2,
+      completedDeliverables: 1,
+      freeRevisionsTotal: 2,
+      freeRevisionsUsed: 0,
+      extraScopeAmount: 0,
+      deliverables: [
+        {
+          id: 'd4',
+          title: 'Order Status Animation Curves',
+          workLink: 'https://drive.google.com/file/d/demo-zomato',
+          version: 'v1',
+          status: 'Approved',
+        },
+      ],
+    },
+    {
+      id: 'p3',
+      title: 'SaaS Fintech Payment Flow Design',
+      clientName: 'Harshil Mathur',
+      clientCompany: 'Razorpay',
+      deadline: '2026-11-20',
+      budget: 120000,
+      totalBudget: 120000,
+      status: 'In Progress',
+      totalDeliverables: 4,
+      completedDeliverables: 2,
+      freeRevisionsTotal: 2,
+      freeRevisionsUsed: 2,
+      extraScopeAmount: 15000,
+      deliverables: [],
+    },
+  ];
+
   const [projects, setProjects] = useState<Project[]>(() => {
     if (Array.isArray(initialProjects) && initialProjects.length > 0) {
       return initialProjects;
     }
-    // Hardcoded fallback data ensuring project cards always display
-    return [
-      {
-        id: 'p1',
-        title: 'Brand Refresh & Launch Motion Assets',
-        clientName: 'Kunal Shah',
-        clientCompany: 'CRED',
-        deadline: '2026-11-05',
-        budget: 185000,
-        totalBudget: 185000,
-        status: 'In Progress',
-        totalDeliverables: 3,
-        completedDeliverables: 1,
-        freeRevisionsTotal: 2,
-        freeRevisionsUsed: 1,
-        extraScopeAmount: 0,
-        assignedTeamMemberId: 'member_rohan',
-        deliverables: [
-          {
-            id: 'd1',
-            title: '30s Motion Teaser (4K ProRes)',
-            workLink: 'https://drive.google.com/file/d/demo-cred-teaser',
-            version: 'v2',
-            status: 'Submitted',
-            latestComment: 'Color grading matched to CRED neon palette.',
-          },
-          {
-            id: 'd2',
-            title: 'Interactive Token Assets (Lottie/JSON)',
-            workLink: '',
-            version: 'v1',
-            status: 'In Progress',
-          },
-          {
-            id: 'd3',
-            title: 'Design System Documentation',
-            workLink: '',
-            version: 'v1',
-            status: 'Approved',
-          },
-        ],
-      },
-      {
-        id: 'p2',
-        title: 'Mobile App Micro-Interactions',
-        clientName: 'Deepinder Goyal',
-        clientCompany: 'Zomato',
-        deadline: '2026-11-12',
-        budget: 95000,
-        totalBudget: 95000,
-        status: 'In Progress',
-        totalDeliverables: 2,
-        completedDeliverables: 1,
-        freeRevisionsTotal: 2,
-        freeRevisionsUsed: 0,
-        extraScopeAmount: 0,
-        deliverables: [
-          {
-            id: 'd4',
-            title: 'Order Status Animation Curves',
-            workLink: 'https://drive.google.com/file/d/demo-zomato',
-            version: 'v1',
-            status: 'Approved',
-          },
-        ],
-      },
-      {
-        id: 'p3',
-        title: 'SaaS Fintech Payment Flow Design',
-        clientName: 'Harshil Mathur',
-        clientCompany: 'Razorpay',
-        deadline: '2026-11-20',
-        budget: 120000,
-        totalBudget: 120000,
-        status: 'In Progress',
-        totalDeliverables: 4,
-        completedDeliverables: 2,
-        freeRevisionsTotal: 2,
-        freeRevisionsUsed: 2,
-        extraScopeAmount: 15000,
-        deliverables: [],
-      },
-    ];
+    return defaultProjects;
   });
+
+  const [transactions] = useState<Transaction[]>(() => {
+    return Array.isArray(mockTransactions) ? mockTransactions : [];
+  });
+
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>(() =>
     Array.isArray(initialTeamMembers) ? initialTeamMembers : []
   );
+
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>(() =>
     Array.isArray(initialActivityLogs) ? initialActivityLogs : []
   );
@@ -114,23 +121,23 @@ export default function Home() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [userEmail, setUserEmail] = useState('');
-  const [userPassword, setUserPassword] = useState(''); // Fixed: Declared missing password state
+  const [userPassword, setUserPassword] = useState('');
   const [loginFeedback, setLoginFeedback] = useState<string | null>(null);
 
-  // Safe fallback to guarantee activeProject is never undefined during prerender
-  const safeProjects = Array.isArray(projects) && projects.length > 0 ? projects : (Array.isArray(initialProjects) ? initialProjects : []);
-  const activeProject = safeProjects.find((p) => p && p.id === activeProjectId) || safeProjects[0] || {
-    id: 'p1',
-    title: 'Brand Refresh & Launch Assets',
-    clientName: 'Kunal Shah',
-    clientCompany: 'CRED',
-    deadline: '2026-11-05',
-    budget: 185000,
-    freeRevisionsTotal: 2,
-    freeRevisionsUsed: 1,
-    extraScopeAmount: 0,
-    deliverables: [],
+  const metrics = {
+    totalSettledRevenue: 1485000,
+    settledGrowthPercent: '+18.4%',
+    pendingInvoicesCount: 3,
+    pendingInvoicesAmount: 182500,
+    activeProjectsCount: projects.length,
+    verifiedTrustScore: 4.92,
+    maxTrustScore: 5.0,
+    trustReviewsCount: 38,
+    onTimePaymentRate: 98,
   };
+
+  const safeProjects = Array.isArray(projects) && projects.length > 0 ? projects : defaultProjects;
+  const activeProject = safeProjects.find((p) => p && p.id === activeProjectId) || safeProjects[0];
 
   const addActivityLog = (projectId: string, person: string, role: Role, action: string, deliverableId?: string) => {
     const newLog: ActivityLog = {
@@ -204,6 +211,7 @@ export default function Home() {
           ...project,
           extraScopeAmount: (project.extraScopeAmount || 0) + amount,
           budget: project.budget + amount,
+          totalBudget: (project.totalBudget || project.budget) + amount,
         };
       })
     );
@@ -533,12 +541,19 @@ export default function Home() {
         <section className="flex-1 p-4 md:p-8 overflow-y-auto max-w-7xl">
           {activeTab === 'overview' && (
             <OverviewDashboard
+              metrics={metrics}
+              transactions={transactions}
               projects={safeProjects}
               currentUserRole={currentRole}
               teamMembers={teamMembers}
+              onSelectProject={handleSelectProject}
               onNavigateTab={(tab) => setActiveTab(tab as any)}
+              onNewProposal={() => setActiveTab('proposals')}
+              onQuickInvoice={() => setActiveTab('invoices')}
+              onShareReputation={() => setActiveTab('trust')}
+              onActionClick={() => setActiveTab('invoices')}
               onUpdateProject={(updated) => {
-                setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+                setProjects((prev) => (Array.isArray(prev) ? prev.map((p) => (p.id === updated.id ? updated : p)) : [updated]));
               }}
               onToggleTrustMode={handleToggleTrust}
               onAddBillableScope={(amount) => handleAddBillableScope(activeProject.id, amount)}
@@ -600,7 +615,7 @@ export default function Home() {
           isTeamMemberTrusted={teamMembers.find((m) => m.id === 'member_rohan')?.trustMode === 'trusted'}
           onClose={() => setIsDetailModalOpen(false)}
           onUpdateProject={(updated) => {
-            setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+            setProjects((prev) => (Array.isArray(prev) ? prev.map((p) => (p.id === updated.id ? updated : p)) : [updated]));
           }}
           onAddBillableScope={(amount) => handleAddBillableScope(activeProject.id, amount)}
         />
@@ -623,7 +638,7 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => setIsLoginModalOpen(false)}
-                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg transition-colors"
+                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg transition-colors font-bold text-base"
               >
                 ✕
               </button>
