@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { Proposal, MilestoneItem } from '../../types';
 import { formatINR, generateWhatsAppShareUrl } from '../../utils/formatters';
@@ -17,8 +19,7 @@ export const ProposalCreator: React.FC<ProposalCreatorProps> = ({
   const [proposal, setProposal] = useState<Proposal>(initialProposal);
   const [copiedLink, setCopiedLink] = useState(false);
   const [isSignedByClient, setIsSignedByClient] = useState(proposal.signedByClient);
-  const [signatureData, setSignatureData] = useState<string | null>(null);
-  const [activePreviewDevice, setActivePreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
+  const [, setSignatureData] = useState<string | null>(null);
 
   // Milestone management
   const handleMilestoneChange = (id: string, field: keyof MilestoneItem, value: any) => {
@@ -80,26 +81,34 @@ export const ProposalCreator: React.FC<ProposalCreatorProps> = ({
 
   const handleApproveSignature = () => {
     setIsSignedByClient(true);
-    setProposal((prev) => ({
-      ...prev,
+    const updated: Proposal = {
+      ...proposal,
       signedByClient: true,
       status: 'Approved',
       clientSignedAt: new Date().toISOString(),
-    }));
+    };
+    setProposal(updated);
+    if (onSaveProposal) {
+      onSaveProposal(updated);
+    }
   };
 
   const proposalShareUrl = `https://paidflow.me/p/${proposal.id}`;
 
   const handleCopyLink = () => {
-    navigator.clipboard?.writeText?.(proposalShareUrl);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2000);
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(proposalShareUrl);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    }
   };
 
   const handleSendWhatsApp = () => {
     const text = `Hi ${proposal.clientName}, Arjun has shared the verified project scope and milestone proposal "${proposal.title}" for review & e-sign: ${proposalShareUrl}`;
     const url = generateWhatsAppShareUrl(proposal.clientPhone, text);
-    window.open(url, '_blank');
+    if (typeof window !== 'undefined') {
+      window.open(url, '_blank');
+    }
   };
 
   return (
@@ -128,6 +137,7 @@ export const ProposalCreator: React.FC<ProposalCreatorProps> = ({
 
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={handleCopyLink}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors"
           >
@@ -145,6 +155,7 @@ export const ProposalCreator: React.FC<ProposalCreatorProps> = ({
           </button>
 
           <button
+            type="button"
             onClick={handleSendWhatsApp}
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm transition-colors"
           >
@@ -156,7 +167,7 @@ export const ProposalCreator: React.FC<ProposalCreatorProps> = ({
 
       {/* Main Split Grid: Left Form Builder & Right Live Preview */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Side: Interactive Scope Form (7 Cols) */}
+        {/* Left Side: Interactive Scope Form (6 Cols) */}
         <div className="lg:col-span-6 space-y-5">
           {/* Section: Project & Client Essentials */}
           <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-4">
@@ -363,7 +374,7 @@ export const ProposalCreator: React.FC<ProposalCreatorProps> = ({
                 <div>
                   <div className="flex items-center gap-1.5">
                     <span className="text-slate-800 font-medium">18% Indian GST</span>
-                    <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded font-mono">
+                    <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-mono">
                       SAC: 998314
                     </span>
                   </div>
@@ -374,23 +385,23 @@ export const ProposalCreator: React.FC<ProposalCreatorProps> = ({
                 <button
                   type="button"
                   onClick={handleGstToggle}
-                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${
-                    proposal.gstApplicable ? 'bg-indigo-600' : 'bg-slate-300'
-                  }`}
+                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${proposal.gstApplicable ? 'bg-indigo-600' : 'bg-slate-300'
+                    }`}
                 >
                   <div
-                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
-                      proposal.gstApplicable ? 'translate-x-5' : 'translate-x-0'
-                    }`}
+                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${proposal.gstApplicable ? 'translate-x-5' : 'translate-x-0'
+                      }`}
                   />
                 </button>
               </div>
 
               {proposal.gstApplicable && (
                 <div className="flex items-center justify-between text-slate-500 pl-2">
-                  <span>GST (18% on {formatINR(proposal.subtotal - proposal.discount)})</span>
+                  <span>
+                    GST (18% on {formatINR(Math.max(0, proposal.subtotal - proposal.discount))})
+                  </span>
                   <span className="font-medium text-slate-700">
-                    {formatINR((proposal.subtotal - proposal.discount) * 0.18)}
+                    {formatINR(Math.max(0, proposal.subtotal - proposal.discount) * 0.18)}
                   </span>
                 </div>
               )}
@@ -418,7 +429,7 @@ export const ProposalCreator: React.FC<ProposalCreatorProps> = ({
           </div>
         </div>
 
-        {/* Right Side: Live Client View & E-Sign Signature Pad (5 Cols) */}
+        {/* Right Side: Live Client View & E-Sign Signature Pad (6 Cols) */}
         <div className="lg:col-span-6 space-y-4">
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-1.5">
@@ -488,7 +499,7 @@ export const ProposalCreator: React.FC<ProposalCreatorProps> = ({
               </span>
 
               <div className="space-y-2.5">
-                {proposal.milestones.map((m, idx) => (
+                {proposal.milestones.map((m) => (
                   <div
                     key={m.id}
                     className="p-3 rounded-lg border border-slate-200/90 bg-slate-50/50 space-y-1"
@@ -522,7 +533,9 @@ export const ProposalCreator: React.FC<ProposalCreatorProps> = ({
               {proposal.gstApplicable && (
                 <div className="flex justify-between text-slate-600">
                   <span>GST (18%)</span>
-                  <span>{formatINR((proposal.subtotal - proposal.discount) * 0.18)}</span>
+                  <span>
+                    {formatINR(Math.max(0, proposal.subtotal - proposal.discount) * 0.18)}
+                  </span>
                 </div>
               )}
               <div className="pt-2 border-t border-slate-200 flex justify-between font-bold text-sm text-slate-900">
@@ -545,7 +558,19 @@ export const ProposalCreator: React.FC<ProposalCreatorProps> = ({
                 onClick={handleApproveSignature}
                 className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white text-xs font-bold rounded-xl shadow-md transition-all"
               >
-                <Icons.PenTool className="w-4 h-4" />
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                  />
+                </svg>
                 <span>Simulate Client E-Sign & Approve</span>
               </button>
             ) : (
@@ -560,4 +585,3 @@ export const ProposalCreator: React.FC<ProposalCreatorProps> = ({
     </div>
   );
 };
-
