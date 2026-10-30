@@ -1,76 +1,142 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-export const dynamicParams = true;
-
 import React, { useState } from 'react';
+import { initialProjects, initialTeamMembers, initialActivityLogs, mockTransactions } from '../data/mockData';
+import { Project, Role, ActivityLog, TeamMember } from '../types';
 import { OverviewDashboard } from '../components/dashboard/OverviewDashboard';
+import { ProjectDetailModal } from '../components/projects/ProjectDetailModal';
 import { ProposalCreator } from '../components/proposals/ProposalCreator';
-import { mockTransactions, mockProposals } from '../data/mockData';
-import { Proposal, Transaction } from '../types';
-
-export type UserRole = 'freelancer' | 'team_member' | 'client';
+import { UPIInvoiceView } from '../components/invoices/UPIInvoiceView';
+import { TrustReviewView } from '../components/trust/TrustReviewView';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'overview' | 'proposals' | 'invoices' | 'trust'>('overview');
-  const [currentRole, setCurrentRole] = useState<UserRole>('freelancer');
+  const [currentRole, setCurrentRole] = useState<Role>('freelancer');
 
-  // Hardened fallback array initialization to prevent undefined .find()
-  const [transactions] = useState<Transaction[]>(() => {
-    return Array.isArray(mockTransactions) ? mockTransactions : [];
-  });
+  // Safe initialization
+  const [projects, setProjects] = useState<Project[]>(() =>
+    Array.isArray(initialProjects) ? initialProjects : []
+  );
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(() =>
+    Array.isArray(initialTeamMembers) ? initialTeamMembers : []
+  );
+  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>(() =>
+    Array.isArray(initialActivityLogs) ? initialActivityLogs : []
+  );
 
-  const fallbackProposal: Proposal = {
-    id: 'prop_01',
-    title: 'CRED Mobile App Micro-Interactions & Tokens',
-    clientName: 'Kunal Shah',
-    clientCompany: 'CRED',
-    clientEmail: 'kunal@cred.club',
-    clientPhone: '+91 98765 00001',
-    totalAmount: 145000,
-    subtotal: 145000,
-    discount: 0,
-    gstApplicable: false,
-    status: 'Approved',
-    signedByClient: true,
-    validUntil: '2026-11-30',
-    milestones: [
-      {
-        id: 'ms_1',
-        title: 'Design System & Micro-Interactions',
-        description: 'Figma prototypes, spline assets, and animation curves.',
-        deliverableDate: '2026-11-10',
-        amount: 70000,
-        status: 'Completed',
-      },
-    ],
-  };
-
-  const [proposals, setProposals] = useState<Proposal[]>(() => {
-    return Array.isArray(mockProposals) && mockProposals.length > 0
-      ? mockProposals
-      : [fallbackProposal];
-  });
-
-  // Modal and Menu states
+  const [activeProjectId, setActiveProjectId] = useState<string>('p1');
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [userEmail, setUserEmail] = useState('');
-  const [userPassword, setUserPassword] = useState('');
   const [loginFeedback, setLoginFeedback] = useState<string | null>(null);
 
-  const defaultProposal: Proposal = (proposals && proposals[0]) ? proposals[0] : fallbackProposal;
+  // Safe fallback to guarantee activeProject is never undefined during prerender
+  const safeProjects = Array.isArray(projects) && projects.length > 0 ? projects : (Array.isArray(initialProjects) ? initialProjects : []);
+  const activeProject = safeProjects.find((p) => p && p.id === activeProjectId) || safeProjects[0] || {
+    id: 'p1',
+    title: 'Brand Refresh & Launch Assets',
+    clientName: 'Kunal Shah',
+    clientCompany: 'CRED',
+    deadline: '2026-11-05',
+    budget: 185000,
+    freeRevisionsTotal: 2,
+    freeRevisionsUsed: 1,
+    extraScopeAmount: 0,
+    deliverables: [],
+  };
 
-  const metrics = {
-    totalSettledRevenue: 1485000,
-    settledGrowthPercent: '+18.4%',
-    pendingInvoicesCount: 3,
-    pendingInvoicesAmount: 182500,
-    activeProjectsCount: 3,
-    verifiedTrustScore: 4.92,
-    maxTrustScore: 5.0,
-    trustReviewsCount: 38,
-    onTimePaymentRate: 98,
+  const addActivityLog = (projectId: string, person: string, role: Role, action: string, deliverableId?: string) => {
+    const newLog: ActivityLog = {
+      id: `log-${Date.now()}`,
+      projectId,
+      timestamp: new Date().toISOString(),
+      person,
+      role,
+      action,
+      deliverableId,
+    };
+    setActivityLogs((prev) => [newLog, ...(Array.isArray(prev) ? prev : [])]);
+  };
+
+  const handleUpdateDeliverableStatus = (projectId: string, deliverableId: string, newStatus: any, feedback?: string) => {
+    setProjects((prevProjects) =>
+      (Array.isArray(prevProjects) ? prevProjects : []).map((project) => {
+        if (project.id !== projectId) return project;
+
+        let revisionsUsed = project.freeRevisionsUsed;
+        if (newStatus === 'Changes Requested') {
+          revisionsUsed += 1;
+        }
+
+        const updatedDeliverables = (project.deliverables || []).map((deliv) => {
+          if (deliv.id !== deliverableId) return deliv;
+          return {
+            ...deliv,
+            status: newStatus,
+            latestComment: feedback || deliv.latestComment,
+          };
+        });
+
+        return {
+          ...project,
+          deliverables: updatedDeliverables,
+          freeRevisionsUsed: revisionsUsed,
+        };
+      })
+    );
+
+    const person = currentRole === 'freelancer' ? 'Arjun (Lead)' : currentRole === 'team_member' ? 'Rohan (Editor)' : 'Kunal Shah (Client)';
+    addActivityLog(projectId, person, currentRole, `Status updated to "${newStatus}"`, deliverableId);
+  };
+
+  const handleUpdateDeliverableLink = (projectId: string, deliverableId: string, link: string) => {
+    setProjects((prevProjects) =>
+      (Array.isArray(prevProjects) ? prevProjects : []).map((project) => {
+        if (project.id !== projectId) return project;
+        const updatedDeliverables = (project.deliverables || []).map((deliv) => {
+          if (deliv.id !== deliverableId) return deliv;
+          return {
+            ...deliv,
+            workLink: link,
+            version: (deliv.version === 'v1' ? 'v2' : deliv.version === 'v2' ? 'v3' : 'v3') as any,
+            status: 'Submitted' as any,
+          };
+        });
+        return { ...project, deliverables: updatedDeliverables };
+      })
+    );
+    const person = currentRole === 'freelancer' ? 'Arjun (Lead)' : 'Rohan (Editor)';
+    addActivityLog(projectId, person, currentRole, `Submitted new version link for deliverable`, deliverableId);
+  };
+
+  const handleAddBillableScope = (projectId: string, amount: number) => {
+    setProjects((prevProjects) =>
+      (Array.isArray(prevProjects) ? prevProjects : []).map((project) => {
+        if (project.id !== projectId) return project;
+        return {
+          ...project,
+          extraScopeAmount: (project.extraScopeAmount || 0) + amount,
+          budget: project.budget + amount,
+        };
+      })
+    );
+    addActivityLog(projectId, 'SoloFlow Bot', 'freelancer', `Added billable scope of ₹${amount.toLocaleString('en-IN')} for extra revision`);
+  };
+
+  const handleToggleTrust = (memberId: string) => {
+    setTeamMembers((prev) =>
+      (Array.isArray(prev) ? prev : []).map((m) =>
+        m.id === memberId
+          ? { ...m, trustLevel: m.trustLevel === 'Trusted' ? 'Needs my approval' : 'Trusted' }
+          : m
+      )
+    );
+  };
+
+  const handleSelectProject = (id: string) => {
+    setActiveProjectId(id);
+    setIsDetailModalOpen(true);
   };
 
   const handleLoginSubmit = (e: React.FormEvent) => {
@@ -79,33 +145,27 @@ export default function Home() {
       setLoginFeedback('Please enter your email or VPA handle.');
       return;
     }
-    setLoginFeedback(`Signed in successfully as ${userEmail.split('@')[0]}!`);
+    setLoginFeedback(`Signed in as ${userEmail.split('@')[0]}!`);
     setTimeout(() => {
       setIsLoginModalOpen(false);
       setLoginFeedback(null);
-    }, 1200);
-  };
-
-  const handleQuickLoginAs = (role: UserRole) => {
-    setCurrentRole(role);
-    setIsLoginModalOpen(false);
+    }, 1000);
   };
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col text-slate-800 antialiased font-sans">
-      {/* 1. Header Bar: Status + Top-Right Feature Menu & Login */}
+      {/* Top Header */}
       <header className="bg-slate-900 border-b border-slate-800 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs relative z-40">
         <div className="flex items-center gap-2">
           <span className="font-bold text-indigo-400 uppercase tracking-wider text-[10px] bg-indigo-950 border border-indigo-800 px-2 py-0.5 rounded">
-            PaidFlow Pro
+            SoloFlow
           </span>
           <span className="text-slate-300 hidden sm:inline">Active View:</span>
           <span className="font-semibold text-slate-100">
-            {currentRole === 'freelancer' ? 'Arjun Verma (Freelancer)' : currentRole === 'team_member' ? 'Rohan (Video Editor)' : 'Kunal Shah (CRED Client)'}
+            {currentRole === 'freelancer' ? 'Arjun (Freelancer Lead)' : currentRole === 'team_member' ? 'Rohan (Editor)' : 'Kunal Shah (CRED Client)'}
           </span>
         </div>
 
-        {/* Right Actions: Login Button + ☰ Menu Dropdown */}
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -126,11 +186,10 @@ export default function Home() {
               <span>Menu</span>
             </button>
 
-            {/* Subdivided Floating Menu */}
             {isMenuOpen && (
               <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white text-slate-800 rounded-2xl shadow-2xl border border-slate-200 p-4 z-50 text-xs">
                 <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
-                  <span className="font-bold text-sm text-slate-900">Workspace Directory</span>
+                  <span className="font-bold text-sm text-slate-900">Workspace Features</span>
                   <button
                     type="button"
                     onClick={() => setIsMenuOpen(false)}
@@ -141,7 +200,6 @@ export default function Home() {
                 </div>
 
                 <div className="space-y-4 max-h-[75vh] overflow-y-auto pr-1">
-                  {/* Category 1: Delivery & Scopes */}
                   <div>
                     <span className="text-[10px] uppercase font-bold text-indigo-600 tracking-wider block mb-1.5">
                       1. Delivery & Scopes
@@ -157,7 +215,7 @@ export default function Home() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => { setActiveTab('proposals'); setIsMenuOpen(false); }}
+                        onClick={() => { setActiveTab('overview'); setIsDetailModalOpen(true); setIsMenuOpen(false); }}
                         className="w-full text-left p-2 rounded-lg hover:bg-slate-50 flex items-center justify-between"
                       >
                         <span className="font-semibold text-slate-800">Deliverables & Versions</span>
@@ -166,7 +224,6 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Category 2: Financials & Risk Controls */}
                   <div className="pt-2 border-t border-slate-100">
                     <span className="text-[10px] uppercase font-bold text-emerald-600 tracking-wider block mb-1.5">
                       2. Financials & Cash Risk
@@ -177,8 +234,8 @@ export default function Home() {
                         onClick={() => { setActiveTab('invoices'); setIsMenuOpen(false); }}
                         className="w-full text-left p-2 rounded-lg hover:bg-slate-50 flex items-center justify-between"
                       >
-                        <span className="font-semibold text-slate-800">UPI Instant Invoicing</span>
-                        <span className="text-[10px] text-slate-400">Zero Fees →</span>
+                        <span className="font-semibold text-slate-800">Advance & Milestone Invoices</span>
+                        <span className="text-[10px] text-slate-400">Split Tranches →</span>
                       </button>
                       <button
                         type="button"
@@ -193,13 +250,12 @@ export default function Home() {
                         onClick={() => { setActiveTab('overview'); setIsMenuOpen(false); }}
                         className="w-full text-left p-2 rounded-lg hover:bg-slate-50 flex items-center justify-between"
                       >
-                        <span className="font-semibold text-slate-800">Concentration Meter</span>
-                        <span className="text-[10px] text-slate-400">Risk Gauge →</span>
+                        <span className="font-semibold text-slate-800">Client Concentration Gauge</span>
+                        <span className="text-[10px] text-slate-400">Risk Meter →</span>
                       </button>
                     </div>
                   </div>
 
-                  {/* Category 3: Trust & Reviews */}
                   <div className="pt-2 border-t border-slate-100">
                     <span className="text-[10px] uppercase font-bold text-amber-600 tracking-wider block mb-1.5">
                       3. Reputation & Verification
@@ -211,15 +267,14 @@ export default function Home() {
                         className="w-full text-left p-2 rounded-lg hover:bg-slate-50 flex items-center justify-between"
                       >
                         <span className="font-semibold text-slate-800">Verified Client Reviews</span>
-                        <span className="text-[10px] text-slate-400">4.92 / 5.0 ★ →</span>
+                        <span className="text-[10px] text-slate-400">4.9 ★ →</span>
                       </button>
                     </div>
                   </div>
 
-                  {/* Category 4: Role Switcher */}
                   <div className="pt-2 border-t border-slate-100 bg-slate-50 p-2.5 rounded-xl">
                     <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block mb-1.5">
-                      4. Switch Active Role
+                      4. Switch Perspective
                     </span>
                     <div className="grid grid-cols-3 gap-1.5 text-[11px]">
                       <button
@@ -255,7 +310,7 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Main Layout */}
+      {/* Main Container */}
       <div className="flex-1 flex flex-col md:flex-row">
         {/* Sidebar */}
         <aside className="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-slate-200 p-5 shrink-0 flex flex-col justify-between">
@@ -266,7 +321,7 @@ export default function Home() {
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <span className="font-extrabold text-slate-900 tracking-tight text-base">PaidFlow</span>
+                  <span className="font-extrabold text-slate-900 tracking-tight text-base">SoloFlow</span>
                   <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
                     {currentRole === 'freelancer' ? 'LEAD' : currentRole === 'team_member' ? 'COLLAB' : 'CLIENT'}
                   </span>
@@ -281,9 +336,9 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={() => setActiveTab('invoices')}
-                    className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center justify-center gap-2 transition-all active:scale-[0.99]"
+                    className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center justify-center gap-2 transition-all"
                   >
-                    <span>+ Quick UPI Invoice</span>
+                    <span>+ Quick Split Invoice</span>
                   </button>
                 )}
                 <button
@@ -326,7 +381,7 @@ export default function Home() {
               >
                 <div className="flex items-center gap-2.5">
                   <span>📄</span>
-                  <span>{currentRole === 'client' ? 'Sign & Approve Scopes' : 'Deliverables & Scope'}</span>
+                  <span>Scopes & Contracts</span>
                 </div>
                 <span className="text-[10px] text-slate-400 font-normal">Active</span>
               </button>
@@ -375,71 +430,92 @@ export default function Home() {
               </div>
               <div>
                 <p className="text-xs font-bold text-slate-900 leading-tight">
-                  {currentRole === 'freelancer' ? 'Arjun Verma' : currentRole === 'team_member' ? 'Rohan (Editor)' : 'Kunal Shah'}
+                  {currentRole === 'freelancer' ? 'Arjun (Lead)' : currentRole === 'team_member' ? 'Rohan (Editor)' : 'Kunal Shah'}
                 </p>
                 <p className="text-[10px] text-slate-400">
-                  {currentRole === 'freelancer' ? 'arjunverma@okhdfcbank' : currentRole === 'team_member' ? 'rohan.edit@gmail.com' : 'kunal@cred.club'}
+                  {currentRole === 'freelancer' ? 'Lead Freelancer' : currentRole === 'team_member' ? 'Video Editor' : 'CRED Client'}
                 </p>
               </div>
             </div>
-            <span className="w-2 h-2 rounded-full bg-emerald-500" title="Session Active" />
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
           </div>
         </aside>
 
-        {/* Content Section */}
+        {/* Content Pane */}
         <section className="flex-1 p-4 md:p-8 overflow-y-auto max-w-7xl">
           {activeTab === 'overview' && (
             <OverviewDashboard
-              metrics={metrics}
-              transactions={transactions}
-              onNewProposal={() => setActiveTab('proposals')}
-              onQuickInvoice={() => setActiveTab('invoices')}
-              onShareReputation={() => setActiveTab('trust')}
-              onNavigateTab={(tab) => setActiveTab(tab as any)}
-              onActionClick={() => setActiveTab('invoices')}
+              projects={safeProjects}
+              currentRole={currentRole}
+              onSelectProject={handleSelectProject}
+              teamMembers={teamMembers}
+              onToggleTrust={handleToggleTrust}
             />
           )}
 
           {activeTab === 'proposals' && (
             <ProposalCreator
-              initialProposal={defaultProposal}
-              onSaveProposal={(updated) => {
-                setProposals((prev) =>
-                  Array.isArray(prev) ? prev.map((p) => (p.id === updated.id ? updated : p)) : [updated]
-                );
+              initialProposal={{
+                id: activeProject.id,
+                title: activeProject.title,
+                clientName: activeProject.clientName,
+                clientCompany: activeProject.clientCompany,
+                clientEmail: 'client@example.com',
+                clientPhone: '+91 98765 00000',
+                totalAmount: activeProject.budget,
+                subtotal: activeProject.budget,
+                discount: 0,
+                gstApplicable: false,
+                status: 'Approved',
+                signedByClient: true,
+                validUntil: activeProject.deadline,
+                milestones: (activeProject.deliverables || []).map((d) => ({
+                  id: d.id,
+                  title: d.title,
+                  description: d.workLink || 'Deliverable link asset',
+                  deliverableDate: activeProject.deadline,
+                  amount: Math.round(activeProject.budget / (activeProject.deliverables?.length || 1)),
+                  status: d.status === 'Approved' ? 'Completed' : 'In Progress',
+                })),
               }}
+              onSaveProposal={() => { }}
             />
           )}
 
           {activeTab === 'invoices' && (
-            <div className="bg-white p-6 rounded-2xl border border-slate-200">
-              <h2 className="text-lg font-bold text-slate-900 mb-2">UPI Invoicing & Settlements</h2>
-              <p className="text-xs text-slate-500 mb-4">Zero fee instant UPI QR codes & milestone escrow links.</p>
-              <button
-                type="button"
-                onClick={() => setActiveTab('overview')}
-                className="px-3 py-1.5 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-lg"
-              >
-                ← Back to Overview
-              </button>
-            </div>
+            <UPIInvoiceView
+              invoiceNumber="INV-2026-001"
+              clientName={activeProject.clientName}
+              clientVPA="kunal@cred.club"
+              totalAmount={activeProject.budget}
+              initialTranches={[
+                { id: 'tr_1', title: '50% Advance Commitment', amount: Math.round(activeProject.budget / 2), isPaid: true, dueDate: 'Paid (Immediate)' },
+                { id: 'tr_2', title: 'Final Delivery & Copyright Release', amount: Math.round(activeProject.budget / 2), isPaid: false, dueDate: activeProject.deadline },
+              ]}
+            />
           )}
 
-          {activeTab === 'trust' && (
-            <div className="bg-white p-6 rounded-2xl border border-slate-200">
-              <h2 className="text-lg font-bold text-slate-900 mb-2">Verified Trust & Reviews</h2>
-              <p className="text-xs text-slate-500 mb-4">4.92 / 5.0 score verified across 38 on-chain client UPI settlements.</p>
-              <button
-                type="button"
-                onClick={() => setActiveTab('overview')}
-                className="px-3 py-1.5 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-lg"
-              >
-                ← Back to Overview
-              </button>
-            </div>
-          )}
+          {activeTab === 'trust' && <TrustReviewView />}
         </section>
       </div>
+
+      {/* Project Detail Modal */}
+      {isDetailModalOpen && (
+        <ProjectDetailModal
+          project={activeProject}
+          currentRole={currentRole}
+          activityLogs={Array.isArray(activityLogs) ? activityLogs : []}
+          teamMembers={Array.isArray(teamMembers) ? teamMembers : []}
+          onClose={() => setIsDetailModalOpen(false)}
+          onUpdateStatus={(delivId, newStatus, feedback) =>
+            handleUpdateDeliverableStatus(activeProject.id, delivId, newStatus, feedback)
+          }
+          onUpdateLink={(delivId, link) =>
+            handleUpdateDeliverableLink(activeProject.id, delivId, link)
+          }
+          onAddBillableScope={(amount) => handleAddBillableScope(activeProject.id, amount)}
+        />
+      )}
 
       {/* Freelancer Login Modal */}
       {isLoginModalOpen && (
@@ -507,21 +583,21 @@ export default function Home() {
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     type="button"
-                    onClick={() => handleQuickLoginAs('freelancer')}
+                    onClick={() => { setCurrentRole('freelancer'); setIsLoginModalOpen(false); }}
                     className="p-2 text-center rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-100 text-[11px] font-semibold transition-colors"
                   >
                     Arjun (Lead)
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleQuickLoginAs('team_member')}
+                    onClick={() => { setCurrentRole('team_member'); setIsLoginModalOpen(false); }}
                     className="p-2 text-center rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-100 text-[11px] font-semibold transition-colors"
                   >
                     Rohan (Editor)
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleQuickLoginAs('client')}
+                    onClick={() => { setCurrentRole('client'); setIsLoginModalOpen(false); }}
                     className="p-2 text-center rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-100 text-[11px] font-semibold transition-colors"
                   >
                     Kunal (Client)
