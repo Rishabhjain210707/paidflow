@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { Invoice, InvoiceItem } from '../../types';
 import { formatINR, generateUPILink, generateWhatsAppShareUrl } from '../../utils/formatters';
@@ -92,21 +94,27 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = ({
   };
 
   const handleCopyLink = () => {
-    navigator.clipboard?.writeText?.(invoice.shortUrl);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2200);
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(invoice.shortUrl);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2200);
+    }
   };
 
   const handleCopyVpa = () => {
-    navigator.clipboard?.writeText?.(invoice.freelancerVpa);
-    setCopiedVpa(true);
-    setTimeout(() => setCopiedVpa(false), 2200);
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(invoice.freelancerVpa);
+      setCopiedVpa(true);
+      setTimeout(() => setCopiedVpa(false), 2200);
+    }
   };
 
   const handleSendWhatsApp = () => {
     const message = `Hello ${invoice.clientName},\n\nHere is your verified UPI payment invoice ${invoice.invoiceNumber} for ${formatINR(invoice.totalPayable)}.\n\nPay securely with zero platform fee via UPI:\n${invoice.shortUrl}\n\nFreelancer: ${mockFreelancerProfile.name} (UPI: ${invoice.freelancerVpa})`;
     const url = generateWhatsAppShareUrl('9876543210', message);
-    window.open(url, '_blank');
+    if (typeof window !== 'undefined') {
+      window.open(url, '_blank');
+    }
   };
 
   const handleSimulatePayment = () => {

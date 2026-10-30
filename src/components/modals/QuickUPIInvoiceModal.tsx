@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { Icons } from '../ui/Icons';
 import { formatINR, generateUPILink, generateWhatsAppShareUrl } from '../../utils/formatters';
@@ -30,15 +32,19 @@ export const QuickUPIInvoiceModal: React.FC<QuickUPIInvoiceModalProps> = ({
   const generatedShortUrl = `https://pflow.in/pay/${invNumber.toLowerCase()}`;
 
   const handleCopyLink = () => {
-    navigator.clipboard?.writeText?.(generatedShortUrl);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2000);
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(generatedShortUrl);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    }
   };
 
   const handleSendWhatsApp = () => {
     const text = `Hi ${clientName || 'there'}, please find your UPI invoice ${invNumber} for ${formatINR(totalAmount)} here: ${generatedShortUrl}`;
     const url = generateWhatsAppShareUrl(clientPhone, text);
-    window.open(url, '_blank');
+    if (typeof window !== 'undefined') {
+      window.open(url, '_blank');
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {

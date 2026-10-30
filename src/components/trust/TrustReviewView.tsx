@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { TrustScoreMetrics, ClientReviewItem } from '../../types';
 import { formatINR } from '../../utils/formatters';

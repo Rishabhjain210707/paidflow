@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { Icons } from '../ui/Icons';
 import { mockFreelancerProfile, mockMetrics } from '../../data/mockData';
@@ -20,15 +22,19 @@ export const ShareReputationModal: React.FC<ShareReputationModalProps> = ({
   const badgeEmbedCode = `<a href="${profileUrl}" target="_blank"><img src="https://paidflow.me/badge/verified-${mockFreelancerProfile.name.toLowerCase().replace(' ', '')}.svg" alt="PaidFlow Verified Freelancer 4.9★" /></a>`;
 
   const handleCopyLink = () => {
-    navigator.clipboard?.writeText?.(profileUrl);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2000);
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(profileUrl);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    }
   };
 
   const handleCopyBadge = () => {
-    navigator.clipboard?.writeText?.(badgeEmbedCode);
-    setCopiedBadgeCode(true);
-    setTimeout(() => setCopiedBadgeCode(false), 2000);
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(badgeEmbedCode);
+      setCopiedBadgeCode(true);
+      setTimeout(() => setCopiedBadgeCode(false), 2000);
+    }
   };
 
   return (

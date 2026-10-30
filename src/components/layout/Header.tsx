@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { TabType } from '../../types';
 import { Icons } from '../ui/Icons';

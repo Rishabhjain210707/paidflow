@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { Icons } from '../ui/Icons';
 import { Proposal } from '../../types';

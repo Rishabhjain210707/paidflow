@@ -1,5 +1,7 @@
+'use client';
+
 import React, { useRef, useState, useEffect } from 'react';
-import * as Icons from '../ui/Icons';
+import { Icons } from '../ui/Icons';
 
 interface SignatureCanvasProps {
   onSignatureCapture: (dataUrl: string) => void;
@@ -15,9 +17,12 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasDrawn, setHasDrawn] = useState(false);
-  const [signedName, setSignedName] = useState('Aditya Mathur');
+  const [signedName] = useState('Aditya Mathur');
 
   useEffect(() => {
+    // Client-side only initialization
+    if (typeof window === 'undefined') return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -37,15 +42,16 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     const rect = canvas.getBoundingClientRect();
-    if ('touches' in e) {
+    if ('touches' in e && e.touches.length > 0) {
       return {
         x: e.touches[0].clientX - rect.left,
         y: e.touches[0].clientY - rect.top,
       };
     }
+    const mouseEvent = e as React.MouseEvent<HTMLCanvasElement>;
     return {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
+      x: mouseEvent.clientX - rect.left,
+      y: mouseEvent.clientY - rect.top,
     };
   };
 
@@ -80,7 +86,11 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
     setIsDrawing(false);
     const canvas = canvasRef.current;
     if (canvas) {
-      onSignatureCapture(canvas.toDataURL());
+      try {
+        onSignatureCapture(canvas.toDataURL());
+      } catch {
+        // Fallback if data URL extraction is blocked
+      }
     }
   };
 
