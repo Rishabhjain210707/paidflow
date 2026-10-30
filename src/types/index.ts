@@ -1,5 +1,7 @@
 export type TabType = 'overview' | 'proposals' | 'invoices' | 'trust' | 'projects';
 
+export type UserRole = 'freelancer' | 'team_member' | 'client';
+
 export type TransactionStatus = 'Paid' | 'Pending' | 'Review Window Open';
 
 export interface Transaction {
@@ -14,6 +16,8 @@ export interface Transaction {
   date: string;
   upiRef?: string;
   vpa?: string;
+  trancheLabel?: string;
+  dueDate?: string;
 }
 
 export interface MilestoneItem {
@@ -55,6 +59,21 @@ export interface InvoiceItem {
   amount: number;
 }
 
+export type PaymentStructure = 'full' | 'advance_delivery' | 'milestones';
+
+export interface InvoiceTranche {
+  id: string;
+  label: string; // e.g. "Tranche 1: 50% Advance Lock"
+  percentage: number;
+  amount: number;
+  dueDate: string;
+  shortUrl: string;
+  upiIntentUrl: string;
+  status: 'Paid' | 'Pending';
+  settledAt?: string;
+  upiRef?: string;
+}
+
 export interface Invoice {
   id: string;
   invoiceNumber: string;
@@ -72,6 +91,8 @@ export interface Invoice {
   upiIntentUrl: string;
   qrCodeUrl?: string;
   status: 'Paid' | 'Pending' | 'Overdue';
+  paymentStructure: PaymentStructure;
+  tranches: InvoiceTranche[];
 }
 
 export interface ClientReviewItem {
@@ -110,3 +131,94 @@ export interface TrustScoreMetrics {
   };
 }
 
+// ================= HACKATHON ROADMAP NEW TYPES =================
+
+export type DeliverableStatus =
+  | 'Draft'
+  | 'Submitted'
+  | 'Freelancer Approved'
+  | 'Sent to Client'
+  | 'Approved'
+  | 'Changes Requested';
+
+export interface DeliverableVersion {
+  version: string; // e.g. 'v1', 'v2', 'v3'
+  link: string; // e.g. 'https://youtu.be/unlisted_cut_v2'
+  submittedBy: string;
+  submittedAt: string;
+  notes: string;
+}
+
+export interface DeliverableComment {
+  id: string;
+  author: string;
+  authorRole: UserRole;
+  avatar: string;
+  text: string;
+  timestamp: string;
+}
+
+export interface DeliverableItem {
+  id: string;
+  title: string;
+  type: string; // e.g. "Hero Ad Video Cut", "Figma Design System", "Sound Design & Mix"
+  workLink: string;
+  currentVersion: string;
+  versions: DeliverableVersion[];
+  status: DeliverableStatus;
+  assignedToName: string;
+  assignedToRole: string;
+  freeRevisionsLimit: number; // default 2
+  revisionsUsed: number;
+  billableRevisionsCount: number;
+  comments: DeliverableComment[];
+}
+
+export interface ActivityLogItem {
+  id: string;
+  projectId: string;
+  deliverableId?: string;
+  person: string;
+  role: string;
+  action: string;
+  detail?: string;
+  timestamp: string;
+  badgeType: 'submission' | 'approval' | 'changes' | 'payment' | 'scope';
+}
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  role: string; // e.g. "Video Editor & Motion Designer"
+  avatar: string;
+  trustMode: 'trusted' | 'needs_approval';
+  assignedProjectIds: string[];
+  activeTasksCount: number;
+}
+
+export interface Project {
+  id: string;
+  title: string;
+  clientName: string;
+  clientCompany: string;
+  clientAvatar: string;
+  clientPhone: string;
+  totalBudget: number;
+  settledAmount: number;
+  deadline: string; // ISO date 'YYYY-MM-DD'
+  status: 'In Progress' | 'Completed' | 'Pending Review';
+  totalDeliverables: number;
+  completedDeliverables: number;
+  deliverables: DeliverableItem[];
+  activityLog: ActivityLogItem[];
+  assignedTeamMemberId?: string;
+}
+
+export interface ClientConcentration {
+  clientName: string;
+  clientAvatar: string;
+  clientCompany: string;
+  totalRevenue: number;
+  percentage: number;
+  riskLevel: 'healthy' | 'moderate' | 'high';
+}

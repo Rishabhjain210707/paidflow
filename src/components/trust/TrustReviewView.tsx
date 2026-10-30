@@ -5,18 +5,20 @@ import { TrustScoreMetrics, ClientReviewItem } from '../../types';
 import { formatINR } from '../../utils/formatters';
 import { Icons } from '../ui/Icons';
 import { ClientReviewModal } from './ClientReviewModal';
-import { mockFreelancerProfile } from '../../data/mockData';
+import { mockFreelancerProfile, mockTrustMetrics, mockPendingClientReviews } from '../../data/mockData';
 
 interface TrustReviewViewProps {
-  metrics: TrustScoreMetrics;
-  reviewsQueue: ClientReviewItem[];
-  onShareProfile: () => void;
+  metrics?: TrustScoreMetrics;
+  reviewsQueue?: ClientReviewItem[];
+  onShareProfile?: () => void;
+  onBackToOverview?: () => void;
 }
 
 export const TrustReviewView: React.FC<TrustReviewViewProps> = ({
-  metrics: initialMetrics,
-  reviewsQueue: initialQueue,
+  metrics: initialMetrics = mockTrustMetrics,
+  reviewsQueue: initialQueue = mockPendingClientReviews,
   onShareProfile,
+  onBackToOverview,
 }) => {
   const [metrics, setMetrics] = useState<TrustScoreMetrics>(initialMetrics);
   const [reviews, setReviews] = useState<ClientReviewItem[]>(initialQueue);
@@ -121,7 +123,15 @@ export const TrustReviewView: React.FC<TrustReviewViewProps> = ({
             </div>
 
             <button
-              onClick={onShareProfile}
+              onClick={() => {
+                if (onShareProfile) {
+                  onShareProfile();
+                } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                  navigator.clipboard.writeText(mockFreelancerProfile.reputationUrl);
+                  setToastMessage('Copied reputation profile link to clipboard!');
+                  setTimeout(() => setToastMessage(null), 3000);
+                }
+              }}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition-colors shrink-0"
             >
               <Icons.Share2 className="w-3.5 h-3.5" />

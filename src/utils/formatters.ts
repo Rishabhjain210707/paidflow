@@ -1,6 +1,6 @@
 /**
  * Utility functions for Indian Rupee (INR) formatting, date formatting,
- * and UPI payment string generation.
+ * deadline calculations, and UPI payment string generation.
  */
 
 export function formatINR(amount: number, compact: boolean = false): string {
@@ -48,6 +48,65 @@ export function formatDate(dateStr: string): string {
   }
 }
 
+/**
+ * Calculates deadline alert status:
+ * - If past simulated current date (2026-10-30): 'Overdue' (Red)
+ * - If within 3 days (between 2026-10-30 and 2026-11-02): 'At risk' (Amber)
+ * - Otherwise: 'On track' (Emerald)
+ */
+export function getDeadlineStatus(deadlineStr: string, simulatedTodayStr: string = '2026-10-30'): {
+  label: 'Overdue' | 'At risk' | 'On track';
+  color: 'red' | 'amber' | 'emerald';
+  daysDiff: number;
+} {
+  try {
+    const deadline = new Date(deadlineStr).getTime();
+    const today = new Date(simulatedTodayStr).getTime();
+    const diffDays = Math.round((deadline - today) / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) {
+      return { label: 'Overdue', color: 'red', daysDiff: diffDays };
+    }
+    if (diffDays <= 3) {
+      return { label: 'At risk', color: 'amber', daysDiff: diffDays };
+    }
+    return { label: 'On track', color: 'emerald', daysDiff: diffDays };
+  } catch {
+    return { label: 'On track', color: 'emerald', daysDiff: 10 };
+  }
+}
+
+/**
+ * Cash Runway Simulator:
+ * Baseline balance: ₹1,20,000, monthly burn ₹60,000 (₹2,000/day)
+ * If Kunal delays payment of `delayedAmount` by `delayDays`,
+ * calculate remaining runway days.
+ */
+export function calculateDelayImpact(
+  delayedAmount: number,
+  delayDays: number,
+  baselineBalance: number = 120000,
+  monthlyBurn: number = 60000
+): {
+  baseRunwayDays: number;
+  projectedRunwayDays: number;
+  netImpactText: string;
+} {
+  const dailyBurn = monthlyBurn / 30; // ₹2,000 / day
+  const baseRunwayDays = Math.round(baselineBalance / dailyBurn); // 60 days
+
+  // If delayed, cash inflow is postponed. During delayDays, freelancer only has base balance minus daily burn.
+  // After delayDays, runway drops by the burnt cash without replenishment.
+  const cashRemainingAtDelayEnd = Math.max(0, baselineBalance - delayDays * dailyBurn);
+  const projectedRunwayDays = Math.round(cashRemainingAtDelayEnd / dailyBurn);
+
+  return {
+    baseRunwayDays,
+    projectedRunwayDays,
+    netImpactText: `drops from ${baseRunwayDays} days to ${projectedRunwayDays} days`,
+  };
+}
+
 export function generateUPILink(params: {
   vpa: string;
   name: string;
@@ -69,4 +128,3 @@ export function generateWhatsAppShareUrl(phone: string, text: string): string {
   }
   return `https://api.whatsapp.com/send?text=${encodedText}`;
 }
-

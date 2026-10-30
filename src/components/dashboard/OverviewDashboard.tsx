@@ -1,9 +1,23 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Transaction, Proposal } from '../../types';
-import { formatINR, formatDate } from '../../utils/formatters';
-import { mockFreelancerProfile } from '../../data/mockData';
+import {
+  Transaction,
+  Project,
+  TeamMember,
+  UserRole,
+  ClientConcentration,
+} from '../../types';
+import {
+  formatINR,
+  formatDate,
+  getDeadlineStatus,
+  calculateDelayImpact,
+  generateWhatsAppShareUrl,
+} from '../../utils/formatters';
+import { Icons } from '../ui/Icons';
+import { mockFreelancerProfile, mockClientConcentration } from '../../data/mockData';
+import { ProjectDetailModal } from '../projects/ProjectDetailModal';
 
 interface OverviewDashboardProps {
   metrics: {
@@ -18,120 +32,43 @@ interface OverviewDashboardProps {
     onTimePaymentRate: number;
   };
   transactions: Transaction[];
+  projects: Project[];
+  teamMembers: TeamMember[];
+  currentUserRole: UserRole;
   onNewProposal: () => void;
   onQuickInvoice: () => void;
   onShareReputation: () => void;
   onNavigateTab: (tab: string) => void;
   onActionClick: (tx: Transaction) => void;
+  onUpdateProject: (updated: Project) => void;
+  onToggleTrustMode: (memberId: string) => void;
+  onAddBillableScope?: (amount: number, description: string) => void;
 }
 
 export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   metrics,
   transactions,
+  projects,
+  teamMembers,
+  currentUserRole,
   onNewProposal,
   onQuickInvoice,
   onShareReputation,
   onNavigateTab,
   onActionClick,
+  onUpdateProject,
+  onToggleTrustMode,
+  onAddBillableScope,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [copiedTxId, setCopiedTxId] = useState<string | null>(null);
-  const [selectedProject, setSelectedProject] = useState<Proposal | null>(null);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
-  const projects: Proposal[] = [
-    {
-      id: 'prop_01',
-      title: 'CRED Mobile App Micro-Interactions & Tokens',
-      clientName: 'Kunal Shah',
-      clientCompany: 'CRED',
-      clientEmail: 'kunal@cred.club',
-      clientPhone: '+91 98765 00001',
-      totalAmount: 145000,
-      subtotal: 145000,
-      discount: 0,
-      gstApplicable: false,
-      status: 'Approved',
-      signedByClient: true,
-      validUntil: '2026-11-30',
-      milestones: [
-        {
-          id: 'm1',
-          title: 'Design System & Micro-Interactions',
-          description: 'Figma prototypes, spline assets, and animation curves.',
-          deliverableDate: '2026-11-10',
-          amount: 70000,
-          status: 'Completed',
-        },
-        {
-          id: 'm2',
-          title: 'React Native Components Integration',
-          description: 'Production-ready code handoff and test coverage.',
-          deliverableDate: '2026-11-25',
-          amount: 75000,
-          status: 'In Progress',
-        },
-      ],
-    },
-    {
-      id: 'prop_02',
-      title: 'Fintech Dashboard Redesign & Multi-Currency Flow',
-      clientName: 'Neha Singhal',
-      clientCompany: 'Finly.io',
-      clientEmail: 'neha@finly.io',
-      clientPhone: '+91 98765 00002',
-      totalAmount: 85000,
-      subtotal: 85000,
-      discount: 0,
-      gstApplicable: true,
-      status: 'Approved',
-      signedByClient: true,
-      validUntil: '2026-12-05',
-      milestones: [
-        {
-          id: 'm3',
-          title: 'Dashboard UX Architecture',
-          description: 'Wireframes and client reviews for real-time INR/USD ledger.',
-          deliverableDate: '2026-11-15',
-          amount: 45000,
-          status: 'Completed',
-        },
-        {
-          id: 'm4',
-          title: 'Frontend Next.js Implementation',
-          description: 'Responsive Tailwind layout with clean state management.',
-          deliverableDate: '2026-12-01',
-          amount: 40000,
-          status: 'Upcoming',
-        },
-      ],
-    },
-    {
-      id: 'prop_03',
-      title: 'B2B SaaS Onboarding Flow & Landing Page',
-      clientName: 'Vikramaditya Rao',
-      clientCompany: 'ScaleStack Tech',
-      clientEmail: 'vikram@scalestack.io',
-      clientPhone: '+91 98765 00003',
-      totalAmount: 97500,
-      subtotal: 97500,
-      discount: 0,
-      gstApplicable: false,
-      status: 'Pending',
-      signedByClient: false,
-      validUntil: '2026-11-20',
-      milestones: [
-        {
-          id: 'm5',
-          title: 'Landing Page & Interactive Demo',
-          description: 'Conversion-optimized hero, interactive product calculator.',
-          deliverableDate: '2026-11-18',
-          amount: 97500,
-          status: 'Upcoming',
-        },
-      ],
-    },
-  ];
+  // Client Delay Impact Simulator State
+  const [delayDays, setDelayDays] = useState<number>(30);
+  const credDelayedAmount = 145000; // Tranche 2 pending for Kunal Shah
+  const delayImpact = calculateDelayImpact(credDelayedAmount, delayDays);
 
   const filteredTransactions = (transactions || []).filter((tx) => {
     const matchesSearch =
@@ -153,514 +90,801 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
     }
   };
 
+  const handleSendNudgeWhatsApp = () => {
+    const text = `Hi Kunal, hope you're having a great week! Just following up on the pending milestone tranche for CRED Pulse (${formatINR(credDelayedAmount)}). The DaVinci color grade & audio stems are ready for your review: https://pflow.in/pay/inv_1042_t2`;
+    const url = generateWhatsAppShareUrl('+919820011223', text);
+    if (typeof window !== 'undefined') {
+      window.open(url, '_blank');
+    }
+  };
+
+  // Find team member trust mode
+  const rohanMember = teamMembers.find((m) => m.id === 'member_rohan');
+  const isRohanTrusted = rohanMember?.trustMode === 'trusted';
+
+  // Filter projects by role
+  const visibleProjects = projects.filter((p) => {
+    if (currentUserRole === 'client') {
+      return p.clientName.toLowerCase().includes('kunal') || p.clientCompany.toLowerCase().includes('cred');
+    }
+    if (currentUserRole === 'team_member') {
+      return p.assignedTeamMemberId === 'member_rohan' || p.id === 'proj_cred_video';
+    }
+    return true;
+  });
+
   return (
     <div className="space-y-6">
-      {/* Quick Action Ribbon */}
+      {/* Role Banner Notification */}
+      {currentUserRole !== 'freelancer' && (
+        <div className="p-3.5 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2 text-indigo-900 font-semibold">
+            <Icons.User className="w-4 h-4 text-indigo-600" />
+            <span>
+              {currentUserRole === 'team_member'
+                ? 'Team Member Mode: You are viewing assigned video & motion deliverables. Financial metrics & client rates are hidden.'
+                : 'Client Portal Mode: Viewing CRED deliverables, milestone approvals, and UPI payment releases.'}
+            </span>
+          </div>
+          <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-white text-indigo-700 border border-indigo-200">
+            {currentUserRole.replace('_', ' ')}
+          </span>
+        </div>
+      )}
+
+      {/* Top Welcome Ribbon (Hidden or simplified for Team Member) */}
       <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 text-white shadow-md relative overflow-hidden">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-1.5 max-w-xl">
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
-                Verified Freelancer
+                {currentUserRole === 'team_member'
+                  ? 'Team Member Workspace'
+                  : currentUserRole === 'client'
+                  ? 'CRED Client Portal'
+                  : 'Verified Freelancer'}
               </span>
-              <span className="text-xs text-slate-300 font-mono">
-                VPA: {mockFreelancerProfile?.upiId || 'arjunverma@okhdfcbank'}
-              </span>
+              {currentUserRole === 'freelancer' && (
+                <span className="text-xs text-slate-300 font-mono">
+                  VPA: {mockFreelancerProfile?.upiId || 'arjunverma@okhdfcbank'}
+                </span>
+              )}
             </div>
             <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-              Welcome back, {mockFreelancerProfile?.name ? mockFreelancerProfile.name.split(' ')[0] : 'Arjun'} 👋
+              {currentUserRole === 'team_member'
+                ? 'Welcome, Rohan Mehta 👋'
+                : currentUserRole === 'client'
+                ? 'Welcome back, Kunal Shah 👋'
+                : `Welcome back, ${mockFreelancerProfile?.name ? mockFreelancerProfile.name.split(' ')[0] : 'Arjun'} 👋`}
             </h2>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Your UPI settlement pipeline is running at zero fees. You have{' '}
-              <strong className="text-emerald-300 font-semibold">{metrics?.pendingInvoicesCount ?? 0} invoices</strong>{' '}
-              eligible for auto-reminders.
+              {currentUserRole === 'team_member'
+                ? 'You have 1 deliverable waiting for review on the CRED 30s Brand Video cut. Upload links to push new versions.'
+                : currentUserRole === 'client'
+                ? 'Review deliverables, request revisions, and release escrow milestone settlements with zero fees.'
+                : 'Your UPI settlement pipeline is running at zero fees. You have 3 pending invoices and 1 client deliverable awaiting review.'}
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5 sm:self-center">
-            <button
-              type="button"
-              onClick={onNewProposal}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white text-xs font-semibold backdrop-blur-sm border border-white/15 transition-all shadow-sm"
-            >
-              <span>+ New Proposal</span>
-            </button>
+          {currentUserRole === 'freelancer' && (
+            <div className="flex flex-wrap items-center gap-2.5 sm:self-center">
+              <button
+                type="button"
+                onClick={onNewProposal}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white text-xs font-semibold backdrop-blur-sm border border-white/15 transition-all shadow-sm"
+              >
+                <Icons.Plus className="w-3.5 h-3.5" />
+                <span>+ New Proposal</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={onQuickInvoice}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white text-xs font-semibold transition-all shadow-sm"
-            >
-              <span>+ Quick UPI Invoice</span>
-            </button>
+              <button
+                type="button"
+                onClick={onQuickInvoice}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white text-xs font-semibold transition-all shadow-sm"
+              >
+                <Icons.Rupee className="w-3.5 h-3.5" />
+                <span>+ Quick UPI Invoice</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={onShareReputation}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 active:scale-95 text-slate-900 text-xs font-semibold transition-all shadow-sm"
-            >
-              <span>Share Reputation</span>
-            </button>
-          </div>
+              <button
+                type="button"
+                onClick={onShareReputation}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 active:scale-95 text-slate-900 text-xs font-semibold transition-all shadow-sm"
+              >
+                <Icons.Share2 className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Share Reputation</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Top 4 Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-              Total Settled Revenue
-            </span>
-            <span className="text-emerald-600 font-bold text-sm">₹</span>
-          </div>
-          <div className="mt-3">
-            <div className="text-2xl font-bold text-slate-900 tracking-tight">
-              {formatINR(metrics?.totalSettledRevenue || 1485000)}
-            </div>
-            <div className="mt-1 flex items-center gap-1.5 text-xs">
-              <span className="text-emerald-700 font-semibold">
-                {metrics?.settledGrowthPercent || '+18.4%'}
+      {/* Top 4 Metric Cards - Strictly hidden / confidential for Team Member! */}
+      {currentUserRole !== 'team_member' ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                Total Settled Revenue
               </span>
-              <span className="text-slate-400">vs last 30 days</span>
+              <span className="text-emerald-600 font-bold text-sm">₹</span>
+            </div>
+            <div className="mt-3">
+              <div className="text-2xl font-bold text-slate-900 tracking-tight">
+                {formatINR(metrics?.totalSettledRevenue || 1485000)}
+              </div>
+              <div className="mt-1 flex items-center gap-1.5 text-xs">
+                <span className="text-emerald-700 font-semibold">
+                  {metrics?.settledGrowthPercent || '+18.4%'}
+                </span>
+                <span className="text-slate-400">vs last 30 days</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                Pending UPI Invoices
+              </span>
+              <Icons.Clock className="w-4 h-4 text-amber-500" />
+            </div>
+            <div className="mt-3">
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold text-slate-900 tracking-tight">
+                  {formatINR(metrics?.pendingInvoicesAmount || 182500)}
+                </span>
+                <span className="text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                  {metrics?.pendingInvoicesCount || 3} Unsettled
+                </span>
+              </div>
+              <div className="mt-1 text-xs text-slate-400">
+                Avg clearance: <span className="text-slate-600 font-medium">3.4 hrs via UPI Intent</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                Active Projects
+              </span>
+              <Icons.FileText className="w-4 h-4 text-indigo-600" />
+            </div>
+            <div className="mt-3">
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold text-slate-900 tracking-tight">
+                  {visibleProjects.length}
+                </span>
+                <span className="text-xs text-slate-500">Scopes In Progress</span>
+              </div>
+              <div className="mt-1 text-xs text-emerald-600 font-medium flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span>All milestones on track</span>
+              </div>
+            </div>
+          </div>
+
+          <div
+            onClick={() => onNavigateTab('trust')}
+            className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs hover:border-indigo-300 cursor-pointer transition-colors group"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                Verified Trust Score
+              </span>
+              <Icons.ShieldCheck className="w-4 h-4 text-emerald-600" />
+            </div>
+            <div className="mt-3">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl font-bold text-slate-900 tracking-tight">
+                  {(metrics?.verifiedTrustScore || 4.9).toFixed(1)}
+                </span>
+                <span className="text-slate-400 font-medium text-sm">/ 5.0 ★</span>
+              </div>
+              <div className="mt-1 flex items-center justify-between text-xs">
+                <span className="text-emerald-700 font-semibold">
+                  {metrics?.trustReviewsCount || 38} Verified Reviews
+                </span>
+                <span className="text-indigo-600 group-hover:underline text-[11px] font-medium">
+                  View Pillars →
+                </span>
+              </div>
             </div>
           </div>
         </div>
-
-        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-              Pending UPI Invoices
-            </span>
-            <span className="text-amber-500 text-sm">⏱</span>
+      ) : (
+        /* Team Member Specific Quick Tasks Ribbon */
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs">
+            <span className="text-xs font-semibold text-slate-500 block">Assigned Scopes</span>
+            <span className="text-2xl font-bold text-slate-900 mt-1 block">1 Active Project</span>
+            <span className="text-[11px] text-indigo-600 mt-0.5 block">CRED 30s Brand Video</span>
           </div>
-          <div className="mt-3">
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-slate-900 tracking-tight">
-                {formatINR(metrics?.pendingInvoicesAmount || 182500)}
-              </span>
-              <span className="text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
-                {metrics?.pendingInvoicesCount || 3} Unsettled
-              </span>
-            </div>
-            <div className="mt-1 text-xs text-slate-400">
-              Avg clearance: <span className="text-slate-600 font-medium">3.4 hrs via UPI Intent</span>
-            </div>
+          <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs">
+            <span className="text-xs font-semibold text-slate-500 block">Review Pipeline</span>
+            <span className="text-2xl font-bold text-amber-600 mt-1 block">v2 Submitted</span>
+            <span className="text-[11px] text-slate-400 mt-0.5 block">Awaiting lead approval</span>
+          </div>
+          <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs">
+            <span className="text-xs font-semibold text-slate-500 block">Trust Level</span>
+            <span className="text-sm font-bold text-slate-900 mt-1 block flex items-center gap-1.5">
+              {isRohanTrusted ? (
+                <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                  ✓ Trusted Direct Push
+                </span>
+              ) : (
+                <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                  ⏱ Lead Approval Required
+                </span>
+              )}
+            </span>
+            <span className="text-[10px] text-slate-400 mt-1 block">
+              {isRohanTrusted ? 'Pushes straight to client' : 'Arjun reviews before client'}
+            </span>
           </div>
         </div>
+      )}
 
-        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-              Active Projects
-            </span>
-            <span className="text-indigo-600 text-sm">📄</span>
-          </div>
-          <div className="mt-3">
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-slate-900 tracking-tight">
-                {metrics?.activeProjectsCount || projects.length}
-              </span>
-              <span className="text-xs text-slate-500">Scopes In Progress</span>
-            </div>
-            <div className="mt-1 text-xs text-emerald-600 font-medium">
-              ● All milestones on track
-            </div>
-          </div>
-        </div>
-
-        <div
-          onClick={() => onNavigateTab('trust')}
-          className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs hover:border-indigo-300 cursor-pointer transition-colors group"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-              Verified Trust Score
-            </span>
-            <span className="text-emerald-600 text-sm">🛡</span>
-          </div>
-          <div className="mt-3">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-slate-900 tracking-tight">
-                {(metrics?.verifiedTrustScore || 4.9).toFixed(1)}
-              </span>
-              <span className="text-slate-400 font-medium text-sm">/ 5.0 ★</span>
-            </div>
-            <div className="mt-1 flex items-center justify-between text-xs">
-              <span className="text-emerald-700 font-semibold">
-                {metrics?.trustReviewsCount || 38} Verified Reviews
-              </span>
-              <span className="text-indigo-600 group-hover:underline text-[11px] font-medium">
-                View Pillars →
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Clickable Active Project Cards */}
+      {/* FEATURE 1: Enhanced Clickable Active Project Cards */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-base font-bold text-slate-900">Active Projects & Scopes</h3>
             <p className="text-xs text-slate-500">
-              Click any project card to review milestones, escrow releases, and contract details.
+              Click any project card to inspect deliverables, version links, review comments & audit log.
             </p>
           </div>
           <span className="text-xs text-indigo-600 font-semibold bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100">
-            {projects.length} Active
+            {visibleProjects.length} Active
           </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {projects.map((proj) => (
-            <div
-              key={proj.id}
-              onClick={() => setSelectedProject(proj)}
-              className="bg-white rounded-xl border border-slate-200 hover:border-indigo-500 p-4 transition-all duration-200 hover:shadow-md cursor-pointer flex flex-col justify-between group"
-            >
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${proj.signedByClient
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      : 'bg-amber-50 text-amber-700 border-amber-200'
-                      }`}
-                  >
-                    {proj.signedByClient ? '✓ E-Signed & Active' : '⏱ Awaiting E-Sign'}
-                  </span>
-                  <span className="text-[11px] text-slate-400 font-mono">
-                    {proj.milestones.length} Milestones
-                  </span>
-                </div>
+          {visibleProjects.map((proj) => {
+            const deadlineStatus = getDeadlineStatus(proj.deadline);
+            const progress = Math.round(
+              proj.totalDeliverables > 0
+                ? (proj.completedDeliverables / proj.totalDeliverables) * 100
+                : 0
+            );
 
-                <h4 className="font-bold text-slate-900 text-sm group-hover:text-indigo-600 transition-colors line-clamp-2">
-                  {proj.title}
-                </h4>
-
-                <div className="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
-                  <span className="font-medium text-slate-700">{proj.clientName}</span>
-                  {proj.clientCompany && (
-                    <>
-                      <span>•</span>
-                      <span>{proj.clientCompany}</span>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] text-slate-400 block uppercase font-semibold">
-                    Budget
-                  </span>
-                  <span className="text-sm font-bold text-slate-900">
-                    {formatINR(proj.totalAmount)}
-                  </span>
-                </div>
-                <span className="text-xs font-semibold text-indigo-600 group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-1">
-                  View Details →
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Recent Transactions Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-        <div className="p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold text-slate-900">Recent Transactions</h3>
-              <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-medium">
-                {filteredTransactions.length} Invoices
-              </span>
-            </div>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Instant UPI milestone releases, pending settlements, and review windows.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2.5">
-            <input
-              type="text"
-              placeholder="Search client, project..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 w-48 sm:w-56"
-            />
-
-            <div className="flex items-center bg-slate-100 p-0.5 rounded-lg text-xs font-medium">
-              {['All', 'Paid', 'Pending', 'Review Window Open'].map((st) => (
-                <button
-                  key={st}
-                  type="button"
-                  onClick={() => setStatusFilter(st)}
-                  className={`px-2.5 py-1 rounded-md transition-colors ${statusFilter === st
-                    ? 'bg-white text-slate-900 shadow-2xs font-semibold'
-                    : 'text-slate-500 hover:text-slate-900'
-                    }`}
-                >
-                  {st === 'Review Window Open' ? 'Reviews' : st}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50/70 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-semibold">
-              <tr>
-                <th className="py-3 px-5">Client & Organization</th>
-                <th className="py-3 px-4">Project Title & Invoice</th>
-                <th className="py-3 px-4">Amount (INR)</th>
-                <th className="py-3 px-4">Payment Rail</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-5 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredTransactions.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-8 text-center text-slate-400">
-                    No transactions match the selected filter.
-                  </td>
-                </tr>
-              ) : (
-                filteredTransactions.map((tx) => {
-                  const isPaid = tx.status === 'Paid';
-                  const isPending = tx.status === 'Pending';
-                  const isReviewOpen = tx.status === 'Review Window Open';
-
-                  return (
-                    <tr key={tx.id} className="hover:bg-slate-50/80 transition-colors group">
-                      <td className="py-4 px-5">
-                        <div className="flex items-center gap-3">
-                          {tx.clientAvatar ? (
-                            <img
-                              src={tx.clientAvatar}
-                              alt={tx.clientName}
-                              className="w-8 h-8 rounded-full object-cover ring-1 ring-slate-200"
-                            />
-                          ) : (
-                            <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
-                              {tx.clientName ? tx.clientName[0] : 'C'}
-                            </div>
-                          )}
-                          <div>
-                            <span className="font-semibold text-slate-900 block">
-                              {tx.clientName}
-                            </span>
-                            <span className="text-[11px] text-slate-400">{tx.vpa}</span>
-                          </div>
-                        </div>
-                      </td>
-
-                      <td className="py-4 px-4 max-w-xs">
-                        <span className="font-medium text-slate-800 line-clamp-1 block">
-                          {tx.projectTitle}
-                        </span>
-                        <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400">
-                          <span className="font-mono">{tx.invoiceNumber}</span>
-                          <span>•</span>
-                          <span>{formatDate(tx.date)}</span>
-                        </div>
-                      </td>
-
-                      <td className="py-4 px-4 whitespace-nowrap">
-                        <span className="text-sm font-bold text-slate-900">
-                          {formatINR(tx.amount)}
-                        </span>
-                        {tx.upiRef && (
-                          <span className="block text-[10px] text-slate-400 font-mono">
-                            Ref: {tx.upiRef.split('/')[1] || tx.upiRef}
-                          </span>
-                        )}
-                      </td>
-
-                      <td className="py-4 px-4 whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-semibold text-[11px] border border-slate-200">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                          <span>UPI Auto-Pay</span>
-                        </span>
-                      </td>
-
-                      <td className="py-4 px-4 whitespace-nowrap">
-                        {isPaid && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            ✓ <span>Paid</span>
-                          </span>
-                        )}
-                        {isPending && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                            ⏱ <span>Pending</span>
-                          </span>
-                        )}
-                        {isReviewOpen && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                            ★ <span>Review Window Open</span>
-                          </span>
-                        )}
-                      </td>
-
-                      <td className="py-4 px-5 text-right whitespace-nowrap">
-                        {isReviewOpen ? (
-                          <button
-                            type="button"
-                            onClick={() => onActionClick(tx)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition-colors"
-                          >
-                            <span>Rate & Unlock</span>
-                          </button>
-                        ) : isPending ? (
-                          <div className="inline-flex items-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => handleCopyLink(tx.id)}
-                              className="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
-                            >
-                              {copiedTxId === tx.id ? 'Copied!' : 'Copy Link'}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => onActionClick(tx)}
-                              className="px-2.5 py-1 text-xs font-medium rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-colors"
-                            >
-                              Remind
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => onActionClick(tx)}
-                            className="px-2.5 py-1 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
-                          >
-                            Receipt
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="p-3.5 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-          <span>Escrow release backed by NPCI & RBI compliant UPI 2.0 handle.</span>
-          <button
-            type="button"
-            onClick={() => onNavigateTab('invoices')}
-            className="text-indigo-600 hover:underline font-medium text-xs"
-          >
-            Manage All Invoices →
-          </button>
-        </div>
-      </div>
-
-      {/* Project Details Modal */}
-      {selectedProject && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="p-5 border-b border-slate-100 flex items-start justify-between bg-slate-50/70">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded border border-indigo-100">
-                    Project Scope Detail
-                  </span>
-                  <span className="text-xs text-slate-400 font-mono">ID: {selectedProject.id}</span>
-                </div>
-                <h3 className="text-base font-bold text-slate-900">{selectedProject.title}</h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Client: <strong className="text-slate-800">{selectedProject.clientName}</strong>
-                  {selectedProject.clientCompany && ` (${selectedProject.clientCompany})`} • Valid until {selectedProject.validUntil}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedProject(null)}
-                className="text-slate-400 hover:text-slate-700 bg-white hover:bg-slate-100 p-1.5 rounded-lg border border-slate-200 transition-colors"
+            return (
+              <div
+                key={proj.id}
+                onClick={() => setSelectedProject(proj)}
+                className="bg-white rounded-2xl border border-slate-200 hover:border-indigo-500 p-5 transition-all duration-200 hover:shadow-md cursor-pointer flex flex-col justify-between group space-y-4"
               >
-                ✕
-              </button>
-            </div>
+                <div>
+                  {/* Top Badges: Status and Deadline Threshold */}
+                  <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                      {proj.status}
+                    </span>
 
-            <div className="p-5 overflow-y-auto space-y-4">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-100 text-xs">
-                <div>
-                  <span className="text-slate-400 block text-[11px]">Total Commitment</span>
-                  <span className="text-base font-bold text-slate-900">
-                    {formatINR(selectedProject.totalAmount)}
-                  </span>
+                    {/* Deadline Alert Badges */}
+                    {deadlineStatus.color === 'red' && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                        <span>Overdue</span>
+                      </span>
+                    )}
+                    {deadlineStatus.color === 'amber' && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                        <span>At risk ({deadlineStatus.daysDiff}d left)</span>
+                      </span>
+                    )}
+                    {deadlineStatus.color === 'emerald' && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        <span>On track</span>
+                      </span>
+                    )}
+                  </div>
+
+                  <h4 className="font-bold text-slate-900 text-sm group-hover:text-indigo-600 transition-colors line-clamp-2">
+                    {proj.title}
+                  </h4>
+
+                  <div className="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
+                    <span className="font-semibold text-slate-700">{proj.clientName}</span>
+                    <span>•</span>
+                    <span>{proj.clientCompany}</span>
+                  </div>
+
+                  {/* Progress Bar (Feature 1) */}
+                  <div className="mt-3.5 space-y-1">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="font-semibold text-slate-600">Progress</span>
+                      <span className="font-bold text-indigo-700">{progress}%</span>
+                    </div>
+                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                      <div
+                        className="bg-indigo-600 h-full rounded-full transition-all duration-300"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
+                      <span>{proj.completedDeliverables}/{proj.totalDeliverables} Deliverables Done</span>
+                      <span>Target: {formatDate(proj.deadline)}</span>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-slate-400 block text-[11px]">E-Sign Status</span>
-                  <span
-                    className={`font-semibold inline-block mt-0.5 ${selectedProject.signedByClient ? 'text-emerald-700' : 'text-amber-700'
-                      }`}
-                  >
-                    {selectedProject.signedByClient ? '✓ Sealed & Binding' : '⏱ Pending Signature'}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-slate-400 block text-[11px]">Settlement Channel</span>
-                  <span className="font-semibold text-slate-800 inline-block mt-0.5">
-                    UPI Instant P2P
+
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                  {currentUserRole !== 'team_member' ? (
+                    <div>
+                      <span className="text-[10px] text-slate-400 block uppercase font-semibold">
+                        Total Scope Budget
+                      </span>
+                      <span className="text-sm font-extrabold text-slate-900">
+                        {formatINR(proj.totalBudget)}
+                      </span>
+                    </div>
+                  ) : (
+                    <div>
+                      <span className="text-[10px] text-slate-400 block uppercase font-semibold">
+                        Deliverable Tasks
+                      </span>
+                      <span className="text-xs font-bold text-slate-700">
+                        {proj.deliverables.length} Work Items
+                      </span>
+                    </div>
+                  )}
+
+                  <span className="text-xs font-semibold text-indigo-600 group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-1">
+                    Inspect Deliverables →
                   </span>
                 </div>
               </div>
+            );
+          })}
+        </div>
+      </div>
 
-              <div>
-                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2.5">
-                  Scope Milestones ({selectedProject.milestones.length})
-                </h4>
-                <div className="space-y-2.5">
-                  {selectedProject.milestones.map((m, idx) => (
-                    <div
-                      key={m.id}
-                      className="p-3 bg-white border border-slate-200 rounded-lg space-y-1 shadow-xs"
-                    >
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-semibold text-slate-900">
-                          {idx + 1}. {m.title}
-                        </span>
-                        <span className="font-bold text-slate-900">{formatINR(m.amount)}</span>
+      {/* FEATURE 6: Client Concentration Meter & Delay Impact Simulator (Freelancer View Only) */}
+      {currentUserRole === 'freelancer' && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Concentration Meter (5 Cols) */}
+          <div className="lg:col-span-5 bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <Icons.TrendingUp className="w-4 h-4 text-indigo-600" />
+                <h3 className="text-sm font-bold text-slate-900">
+                  Client Revenue Concentration
+                </h3>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Calculates dependency risk. Over 60% with a single client raises cashflow fragility.
+              </p>
+            </div>
+
+            <div className="space-y-3.5 pt-1">
+              {mockClientConcentration.map((client) => {
+                const isHighRisk = client.riskLevel === 'high';
+
+                return (
+                  <div key={client.clientName} className="space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <img
+                          src={client.clientAvatar}
+                          alt={client.clientName}
+                          className="w-5 h-5 rounded-full object-cover ring-1 ring-slate-200"
+                        />
+                        <span className="font-bold text-slate-800">{client.clientName}</span>
+                        <span className="text-[10px] text-slate-400">({client.clientCompany})</span>
                       </div>
-                      <p className="text-[11px] text-slate-500">{m.description}</p>
-                      <div className="pt-1 flex items-center justify-between text-[10px] text-slate-400">
-                        <span>Delivery Target: {m.deliverableDate}</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-extrabold text-slate-900">
+                          {formatINR(client.totalRevenue, true)}
+                        </span>
                         <span
-                          className={`px-1.5 py-0.5 rounded font-medium ${m.status === 'Completed'
-                            ? 'bg-emerald-50 text-emerald-700'
-                            : m.status === 'In Progress'
-                              ? 'bg-blue-50 text-blue-700'
-                              : 'bg-slate-100 text-slate-600'
-                            }`}
+                          className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full ${
+                            isHighRisk
+                              ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                              : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          }`}
                         >
-                          {m.status || 'Upcoming'}
+                          {client.percentage}%
                         </span>
                       </div>
                     </div>
-                  ))}
+
+                    {/* Concentration Bar */}
+                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${
+                          client.percentage > 60
+                            ? 'bg-rose-500'
+                            : client.percentage >= 40
+                            ? 'bg-amber-500'
+                            : 'bg-emerald-500'
+                        }`}
+                        style={{ width: `${client.percentage}%` }}
+                      />
+                    </div>
+
+                    {isHighRisk && (
+                      <div className="p-2 rounded-lg bg-rose-50 border border-rose-200 flex items-center gap-1.5 text-[11px] text-rose-900">
+                        <Icons.AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                        <span>High concentration risk: 66.5% tied to Kunal Shah!</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Delay Impact Simulator Card (7 Cols) */}
+          <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Icons.Sliders className="w-4 h-4 text-indigo-600" />
+                  <h3 className="text-sm font-bold text-slate-900">
+                    Client Delay Impact Simulator
+                  </h3>
                 </div>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Simulate cash runway impact if your highest-paying client delays milestone settlement.
+                </p>
+              </div>
+              <span className="text-xs font-semibold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
+                CRED: {formatINR(credDelayedAmount)}
+              </span>
+            </div>
+
+            {/* Slider Control */}
+            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-slate-700">Simulate Payment Delay:</span>
+                <span className="text-sm font-bold text-indigo-600 font-mono">
+                  {delayDays} Days Delay
+                </span>
+              </div>
+
+              <input
+                type="range"
+                min="0"
+                max="45"
+                step="5"
+                value={delayDays}
+                onChange={(e) => setDelayDays(Number(e.target.value))}
+                className="w-full accent-indigo-600 cursor-pointer"
+              />
+
+              <div className="flex justify-between text-[10px] text-slate-400 font-mono">
+                <span>0 Days (Instant)</span>
+                <span>15 Days</span>
+                <span>30 Days (Standard delay)</span>
+                <span>45 Days (Severe)</span>
               </div>
             </div>
 
-            <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end">
+            {/* Dynamic Alert Banner */}
+            <div
+              className={`p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs ${
+                delayDays >= 30
+                  ? 'bg-rose-50 border-rose-200 text-rose-900'
+                  : delayDays >= 15
+                  ? 'bg-amber-50 border-amber-200 text-amber-900'
+                  : 'bg-emerald-50 border-emerald-200 text-emerald-900'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <Icons.AlertTriangle
+                  className={`w-5 h-5 shrink-0 ${
+                    delayDays >= 30 ? 'text-rose-600' : 'text-amber-600'
+                  }`}
+                />
+                <p className="leading-relaxed">
+                  If <strong>Kunal Shah (CRED)</strong> delays payment by{' '}
+                  <strong>{delayDays} days</strong>, your cash runway{' '}
+                  <strong className="underline">{delayImpact.netImpactText}</strong>.
+                  (Base Balance: ₹1.2L • Burn: ₹60k/mo).
+                </p>
+              </div>
+
               <button
                 type="button"
-                onClick={() => setSelectedProject(null)}
-                className="px-4 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 rounded-lg transition-colors"
+                onClick={handleSendNudgeWhatsApp}
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-colors shrink-0"
               >
-                Close
+                <Icons.WhatsApp className="w-3.5 h-3.5 fill-white" />
+                <span>Send Polite Nudge</span>
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* FEATURE 3: Team Members List & Trust Toggle Section */}
+      {currentUserRole === 'freelancer' && (
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <Icons.Users className="w-4 h-4 text-indigo-600" />
+                <h3 className="text-sm font-bold text-slate-900">
+                  Team Members & Trust Approvals
+                </h3>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Manage team delegation. Members marked &apos;Trusted&apos; can push deliverable links directly to the client portal.
+              </p>
+            </div>
+            <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-bold">
+              {teamMembers.length} Members Active
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {teamMembers.map((member) => {
+              const isTrusted = member.trustMode === 'trusted';
+
+              return (
+                <div
+                  key={member.id}
+                  className="p-4 rounded-xl border border-slate-200 bg-slate-50/60 flex items-center justify-between gap-3 hover:border-slate-300 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={member.avatar}
+                      alt={member.name}
+                      className="w-10 h-10 rounded-full object-cover ring-1 ring-slate-200"
+                    />
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-xs">{member.name}</h4>
+                      <p className="text-[11px] text-slate-500">{member.role}</p>
+                      <span className="text-[10px] text-indigo-600 font-medium">
+                        {member.activeTasksCount} Active Deliverable Tasks
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Trust Toggle Switch */}
+                  <div className="flex flex-col items-end gap-1">
+                    <button
+                      type="button"
+                      onClick={() => onToggleTrustMode(member.id)}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all shadow-2xs ${
+                        isTrusted
+                          ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                          : 'bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300'
+                      }`}
+                    >
+                      <span>{isTrusted ? '✓ Trusted (Direct Push)' : '⏱ Needs My Approval'}</span>
+                    </button>
+                    <span className="text-[10px] text-slate-400">Click to toggle permission</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Recent Transactions Table */}
+      {currentUserRole !== 'team_member' && (
+        <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+          <div className="p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-bold text-slate-900">Recent Transactions</h3>
+                <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-medium">
+                  {filteredTransactions.length} Invoices
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Instant UPI milestone releases, pending settlements, and review windows.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2.5">
+              <input
+                type="text"
+                placeholder="Search client, project..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 w-48 sm:w-56"
+              />
+
+              <div className="flex items-center bg-slate-100 p-0.5 rounded-lg text-xs font-medium">
+                {['All', 'Paid', 'Pending', 'Review Window Open'].map((st) => (
+                  <button
+                    key={st}
+                    type="button"
+                    onClick={() => setStatusFilter(st)}
+                    className={`px-2.5 py-1 rounded-md transition-colors ${
+                      statusFilter === st
+                        ? 'bg-white text-slate-900 shadow-2xs font-semibold'
+                        : 'text-slate-500 hover:text-slate-900'
+                    }`}
+                  >
+                    {st === 'Review Window Open' ? 'Reviews' : st}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-50/70 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-semibold">
+                <tr>
+                  <th className="py-3 px-5">Client & Organization</th>
+                  <th className="py-3 px-4">Project Title & Invoice</th>
+                  <th className="py-3 px-4">Amount (INR)</th>
+                  <th className="py-3 px-4">Payment Rail</th>
+                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-5 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredTransactions.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-slate-400">
+                      No transactions match the selected filter.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredTransactions.map((tx) => {
+                    const isPaid = tx.status === 'Paid';
+                    const isPending = tx.status === 'Pending';
+                    const isReviewOpen = tx.status === 'Review Window Open';
+
+                    return (
+                      <tr key={tx.id} className="hover:bg-slate-50/80 transition-colors group">
+                        <td className="py-4 px-5">
+                          <div className="flex items-center gap-3">
+                            {tx.clientAvatar ? (
+                              <img
+                                src={tx.clientAvatar}
+                                alt={tx.clientName}
+                                className="w-8 h-8 rounded-full object-cover ring-1 ring-slate-200"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
+                                {tx.clientName ? tx.clientName[0] : 'C'}
+                              </div>
+                            )}
+                            <div>
+                              <span className="font-semibold text-slate-900 block">
+                                {tx.clientName}
+                              </span>
+                              <span className="text-[11px] text-slate-400">{tx.vpa}</span>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="py-4 px-4 max-w-xs">
+                          <span className="font-medium text-slate-800 line-clamp-1 block">
+                            {tx.projectTitle}
+                          </span>
+                          <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400">
+                            <span className="font-mono">{tx.invoiceNumber}</span>
+                            {tx.trancheLabel && (
+                              <>
+                                <span>•</span>
+                                <span className="font-semibold text-indigo-600">
+                                  {tx.trancheLabel}
+                                </span>
+                              </>
+                            )}
+                            <span>•</span>
+                            <span>{formatDate(tx.date)}</span>
+                          </div>
+                        </td>
+
+                        <td className="py-4 px-4 whitespace-nowrap">
+                          <span className="text-sm font-bold text-slate-900">
+                            {formatINR(tx.amount)}
+                          </span>
+                          {tx.upiRef && (
+                            <span className="block text-[10px] text-slate-400 font-mono">
+                              Ref: {tx.upiRef.split('/')[1] || tx.upiRef}
+                            </span>
+                          )}
+                        </td>
+
+                        <td className="py-4 px-4 whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-semibold text-[11px] border border-slate-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            <span>UPI Auto-Pay</span>
+                          </span>
+                        </td>
+
+                        <td className="py-4 px-4 whitespace-nowrap">
+                          {isPaid && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              ✓ <span>Paid</span>
+                            </span>
+                          )}
+                          {isPending && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                              ⏱ <span>Pending</span>
+                            </span>
+                          )}
+                          {isReviewOpen && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                              ★ <span>Review Window Open</span>
+                            </span>
+                          )}
+                        </td>
+
+                        <td className="py-4 px-5 text-right whitespace-nowrap">
+                          {isReviewOpen ? (
+                            <button
+                              type="button"
+                              onClick={() => onActionClick(tx)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition-colors"
+                            >
+                              <span>Rate & Unlock</span>
+                            </button>
+                          ) : isPending ? (
+                            <div className="inline-flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleCopyLink(tx.id)}
+                                className="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+                              >
+                                {copiedTxId === tx.id ? 'Copied!' : 'Copy Link'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => onActionClick(tx)}
+                                className="px-2.5 py-1 text-xs font-medium rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-colors"
+                              >
+                                Remind
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => onActionClick(tx)}
+                              className="px-2.5 py-1 text-xs font-medium rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
+                            >
+                              Receipt
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="p-3.5 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+            <span>Escrow release backed by NPCI & RBI compliant UPI 2.0 handle.</span>
+            <button
+              type="button"
+              onClick={() => onNavigateTab('invoices')}
+              className="text-indigo-600 hover:underline font-medium text-xs"
+            >
+              Manage All Invoices →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Interactive Project Detail Modal */}
+      <ProjectDetailModal
+        project={selectedProject}
+        isOpen={!!selectedProject}
+        onClose={() => setSelectedProject(null)}
+        currentUserRole={currentUserRole}
+        isTeamMemberTrusted={isRohanTrusted}
+        onUpdateProject={(updated) => {
+          setSelectedProject(updated);
+          onUpdateProject(updated);
+        }}
+        onAddBillableScope={onAddBillableScope}
+      />
     </div>
   );
 };
