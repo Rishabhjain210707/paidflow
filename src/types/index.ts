@@ -1,4 +1,12 @@
-export type TabType = 'overview' | 'proposals' | 'invoices' | 'trust' | 'projects';
+export type TabType =
+  | 'overview'
+  | 'projects'
+  | 'deliverables'
+  | 'invoices'
+  | 'simulator'
+  | 'concentration'
+  | 'trust'
+  | 'proposals';
 
 export type UserRole = 'freelancer' | 'team_member' | 'client';
 export type Role = UserRole;

@@ -112,7 +112,9 @@ export function calculateDelayImpact(
   monthlyBurn: number = 60000
 ): {
   baseRunwayDays: number;
+  baselineRunwayDays: number;
   projectedRunwayDays: number;
+  runwayDaysAfterDelay: number;
   netImpactText: string;
 } {
   const safeDelayDays = Math.max(0, Number(delayDays) || 0);
@@ -124,7 +126,9 @@ export function calculateDelayImpact(
 
   return {
     baseRunwayDays,
+    baselineRunwayDays: baseRunwayDays,
     projectedRunwayDays,
+    runwayDaysAfterDelay: projectedRunwayDays,
     netImpactText: `drops from ${baseRunwayDays} days to ${projectedRunwayDays} days`,
   };
 }
