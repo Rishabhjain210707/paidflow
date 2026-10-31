@@ -249,6 +249,11 @@ export const Icons = {
       <path d="M7 7h.01M17 7h.01M7 17h.01" strokeWidth={2.5} strokeLinecap="round" />
     </DefaultSvg>
   ),
+  ChevronDown: ({ className = 'w-4 h-4', ...props }: IconProps) => (
+    <DefaultSvg className={className} {...props}>
+      <polyline points="6 9 12 15 18 9" />
+    </DefaultSvg>
+  ),
 };
 
 export const {
@@ -284,6 +289,7 @@ export const {
   Send,
   Dashboard,
   QrCode,
+  ChevronDown,
 } = Icons;
 
 export default Icons;

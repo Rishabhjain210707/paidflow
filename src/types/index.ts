@@ -6,7 +6,8 @@ export type TabType =
   | 'simulator'
   | 'concentration'
   | 'trust'
-  | 'proposals';
+  | 'proposals'
+  | 'team';
 
 export type UserRole = 'freelancer' | 'team_member' | 'client';
 export type Role = UserRole;

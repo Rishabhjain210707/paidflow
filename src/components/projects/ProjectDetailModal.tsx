@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { Project, DeliverableItem, UserRole, ActivityLogItem } from '../../types';
 import { formatINR, getDeadlineStatus } from '../../utils/formatters';
 import { Icons } from '../ui/Icons';
+import { PrerequisiteAssetsCard } from './PrerequisiteAssetsCard';
+import { ProjectChatCard } from './ProjectChatCard';
 
 interface ProjectDetailModalProps {
   project: Project | null;
@@ -24,7 +26,7 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
   onUpdateProject,
   onAddBillableScope,
 }) => {
-  const [activeTab, setActiveTab] = useState<'deliverables' | 'activity'>('deliverables');
+  const [activeTab, setActiveTab] = useState<'deliverables' | 'assets' | 'chat' | 'activity'>('deliverables');
   const [selectedDeliverableFilter, setSelectedDeliverableFilter] = useState<string>('all');
   const [newVersionInput, setNewVersionInput] = useState<{ [delId: string]: string }>({});
   const [newVersionNotes, setNewVersionNotes] = useState<{ [delId: string]: string }>({});
@@ -353,8 +355,8 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
             </span>
           </div>
 
-          {/* Sub-Tabs: Deliverables vs Activity Log */}
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg self-start sm:self-auto">
+          {/* Sub-Tabs: Deliverables, Assets, Chat, Activity Log */}
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg self-start sm:self-auto overflow-x-auto">
             <button
               onClick={() => setActiveTab('deliverables')}
               className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${
@@ -366,6 +368,29 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
               Deliverables ({project.deliverables.length})
             </button>
             <button
+              onClick={() => setActiveTab('assets')}
+              className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors flex items-center gap-1 ${
+                activeTab === 'assets'
+                  ? 'bg-white text-slate-900 shadow-2xs'
+                  : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <span>Assets</span>
+              <span className="text-[10px] px-1 rounded bg-emerald-100 text-emerald-800 font-bold">✓</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('chat')}
+              className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
+                activeTab === 'chat'
+                  ? 'bg-white text-slate-900 shadow-2xs'
+                  : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <Icons.MessageSquare className="w-3.5 h-3.5" />
+              <span>Chat & Files</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            </button>
+            <button
               onClick={() => setActiveTab('activity')}
               className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
                 activeTab === 'activity'
@@ -374,7 +399,7 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
               }`}
             >
               <Icons.History className="w-3.5 h-3.5" />
-              <span>Activity Log ({(project.activityLog || []).length})</span>
+              <span>Activity Log</span>
             </button>
           </div>
         </div>
@@ -751,6 +776,16 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
                 ))}
               </div>
             </div>
+          )}
+
+          {/* TAB 3: PREREQUISITE ASSETS */}
+          {activeTab === 'assets' && (
+            <PrerequisiteAssetsCard />
+          )}
+
+          {/* TAB 4: PROJECT CHAT & FILES */}
+          {activeTab === 'chat' && (
+            <ProjectChatCard currentUserRole={currentUserRole} />
           )}
         </div>
 

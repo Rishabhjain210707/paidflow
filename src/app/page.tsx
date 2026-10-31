@@ -26,6 +26,10 @@ import { ProjectDetailModal } from '../components/projects/ProjectDetailModal';
 import { ProposalCreator } from '../components/proposals/ProposalCreator';
 import { UPIInvoiceView } from '../components/invoices/UPIInvoiceView';
 import { TrustReviewView } from '../components/trust/TrustReviewView';
+import { QuickUPIInvoiceModal } from '../components/modals/QuickUPIInvoiceModal';
+import { CrewRolesView } from '../components/team/CrewRolesView';
+import { PrerequisiteAssetsCard } from '../components/projects/PrerequisiteAssetsCard';
+import { ProjectChatCard } from '../components/projects/ProjectChatCard';
 import { Icons } from '../components/ui/Icons';
 import {
   formatINR,
@@ -56,6 +60,8 @@ export default function Home() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const [isQuickInvoiceModalOpen, setIsQuickInvoiceModalOpen] = useState(false);
   const [showTeamDrawer, setShowTeamDrawer] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -319,501 +325,362 @@ export default function Home() {
         </div>
       )}
 
-      {/* TOP HEADER: Status + 3-Way Role Switcher + Menu */}
-      <header className="bg-slate-900 border-b border-slate-800 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs relative z-40">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-base shadow-xs">
-            ₹
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-extrabold text-white tracking-tight text-sm">PaidFlow</span>
-              <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded bg-indigo-950 text-indigo-300 border border-indigo-700">
-                Solo Pro
-              </span>
+      {/* ================= TOP HEADER (Row 1) ================= */}
+      <header className="bg-white border-b border-slate-200/80 sticky top-0 z-40 shadow-2xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3">
+          {/* Left: Brand Identity */}
+          <div
+            className="flex items-center gap-3 shrink-0 cursor-pointer"
+            onClick={() => setActiveTab('overview')}
+          >
+            <div className="w-9 h-9 rounded-xl bg-slate-950 text-white flex items-center justify-center font-extrabold text-base shadow-sm">
+              ₹
             </div>
-            <p className="text-[10px] text-slate-400 leading-none">Fintech for Freelancers & Creators</p>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-black text-slate-950 text-base sm:text-lg tracking-tight leading-none">
+                  PaidFlow
+                </span>
+                <span className="text-[10px] uppercase font-extrabold tracking-wider px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
+                  SOLO PRO
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 font-medium leading-none mt-1">Fintech & Scope Guard</p>
+            </div>
           </div>
-        </div>
 
-        {/* 3-Way Top-Level Perspective Switcher (Feature 3) */}
-        <div className="flex items-center gap-1 bg-slate-800/90 p-1 rounded-xl border border-slate-700">
-          <button
-            type="button"
-            onClick={() => {
-              setCurrentRole('freelancer');
-              showToast('Switched to Freelancer (Arjun - Lead) mode');
-            }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-              currentRole === 'freelancer'
-                ? 'bg-indigo-600 text-white shadow-xs font-bold'
-                : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
-            }`}
-          >
-            <Icons.User className="w-3.5 h-3.5" />
-            <span>Freelancer (Lead)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setCurrentRole('team_member');
-              showToast('Switched to Editor (Rohan - Member) mode. Financials hidden.');
-            }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-              currentRole === 'team_member'
-                ? 'bg-amber-600 text-white shadow-xs font-bold'
-                : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
-            }`}
-          >
-            <Icons.Play className="w-3.5 h-3.5" />
-            <span>Editor (Rohan)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setCurrentRole('client');
-              showToast('Switched to Client Portal (Kunal Shah - CRED)');
-            }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-              currentRole === 'client'
-                ? 'bg-emerald-600 text-white shadow-xs font-bold'
-                : 'text-slate-300 hover:text-white hover:bg-slate-700/60'
-            }`}
-          >
-            <Icons.Check className="w-3.5 h-3.5" />
-            <span>Client (Kunal - CRED)</span>
-          </button>
-        </div>
-
-        {/* Right Menu Button */}
-        <div className="flex items-center gap-2">
-          {currentRole === 'freelancer' && (
+          {/* Center: View as Perspective Switcher (Freelancer | Team (Riya) | Client (Kunal)) */}
+          <div className="hidden md:flex items-center gap-1 bg-slate-100/90 p-1 rounded-2xl border border-slate-200/70 shadow-2xs">
+            <span className="text-xs font-semibold text-slate-400 pl-3 pr-1 select-none">View as:</span>
             <button
               type="button"
-              onClick={() => setShowTeamDrawer(true)}
-              className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-medium border border-slate-700 transition-all flex items-center gap-1.5"
+              onClick={() => {
+                setCurrentRole('freelancer');
+                showToast('Switched to Freelancer (Arjun - Lead) mode');
+              }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                currentRole === 'freelancer'
+                  ? 'bg-white text-indigo-600 shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+              }`}
             >
-              <Icons.Users className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Team & Trust</span>
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              Freelancer
             </button>
-          )}
-
-          <div className="relative">
             <button
               type="button"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition-all flex items-center gap-1.5 shadow-xs"
+              onClick={() => {
+                setCurrentRole('team_member');
+                showToast('Switched to Team (Riya / Rohan - Editor) mode. Financials restricted.');
+              }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                currentRole === 'team_member'
+                  ? 'bg-white text-indigo-600 shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+              }`}
             >
-              <span>☰</span>
-              <span>Workspace Features</span>
+              Team (Riya)
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setCurrentRole('client');
+                showToast('Switched to Client (Kunal Shah - CRED) perspective');
+              }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                currentRole === 'client'
+                  ? 'bg-white text-indigo-600 shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+              }`}
+            >
+              Client (Kunal)
+            </button>
+          </div>
+
+          {/* Right: Quick Action Buttons & Profile Menu */}
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+            <button
+              type="button"
+              onClick={() => setIsQuickInvoiceModalOpen(true)}
+              className="bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-xs font-bold px-3.5 sm:px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+            >
+              <Icons.Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>Quick UPI Invoice</span>
             </button>
 
-            {/* Subdivided Floating Menu (Every item connects to its distinct dedicated page!) */}
-            {isMenuOpen && (
-              <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white text-slate-800 rounded-2xl shadow-2xl border border-slate-200 p-4 z-50 text-xs">
-                <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
-                  <span className="font-bold text-sm text-slate-900">Workspace Features</span>
-                  <button
-                    type="button"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="text-slate-400 hover:text-slate-700 font-bold p-1 rounded"
-                  >
-                    ✕
-                  </button>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('proposals');
+                showToast('Opened Proposals & E-Sign Creator');
+              }}
+              className="bg-slate-100 hover:bg-slate-200/80 active:scale-[0.98] text-slate-800 text-xs font-bold px-3 sm:px-3.5 py-2 rounded-xl flex items-center gap-1.5 border border-slate-200 transition-all cursor-pointer"
+            >
+              <Icons.Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>Proposal</span>
+            </button>
+
+            {/* Profile Dropdown Button */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                className="flex items-center gap-2 p-1 pl-1 pr-2 rounded-full border border-slate-200/90 bg-white hover:bg-slate-50 cursor-pointer shadow-2xs transition-colors"
+              >
+                <div className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 font-extrabold text-xs flex items-center justify-center shrink-0">
+                  AS
                 </div>
+                <span className="text-xs font-bold text-slate-800 hidden sm:inline">Arjun S.</span>
+                <Icons.ChevronDown
+                  className={`w-3.5 h-3.5 text-slate-400 transition-transform ${
+                    isUserDropdownOpen ? 'rotate-180' : ''
+                  }`}
+                />
+              </button>
 
-                <div className="space-y-4 max-h-[75vh] overflow-y-auto pr-1">
-                  {/* Category 1: Delivery & Scopes */}
-                  <div>
-                    <span className="text-[10px] uppercase font-bold text-indigo-600 tracking-wider block mb-1.5">
-                      1. DELIVERY & SCOPES
-                    </span>
-                    <div className="space-y-1">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setActiveTab('projects');
-                          setIsMenuOpen(false);
-                          showToast('Opened Projects & Deadlines Page');
-                        }}
-                        className={`w-full text-left p-2 rounded-lg flex items-center justify-between transition-colors ${
-                          activeTab === 'projects' ? 'bg-indigo-50 text-indigo-700 font-bold' : 'hover:bg-slate-50'
-                        }`}
-                      >
-                        <span className="font-semibold text-slate-800">Projects & Deadlines</span>
-                        <span className="text-[10px] text-slate-400">Cards →</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setActiveTab('deliverables');
-                          setIsMenuOpen(false);
-                          showToast('Opened Deliverables & Version Control Page');
-                        }}
-                        className={`w-full text-left p-2 rounded-lg flex items-center justify-between transition-colors ${
-                          activeTab === 'deliverables' ? 'bg-indigo-50 text-indigo-700 font-bold' : 'hover:bg-slate-50'
-                        }`}
-                      >
-                        <span className="font-semibold text-slate-800">Deliverables & Versions</span>
-                        <span className="text-[10px] text-slate-400">v1 / v2 →</span>
-                      </button>
+              {/* Profile Dropdown Menu */}
+              {isUserDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-72 bg-white text-slate-800 rounded-2xl shadow-xl border border-slate-200 p-3 z-50 animate-in fade-in slide-in-from-top-2 text-xs">
+                  <div className="p-2 border-b border-slate-100 mb-2">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs">
+                        AS
+                      </div>
+                      <div>
+                        <p className="font-bold text-slate-900 text-xs">Arjun Sharma</p>
+                        <p className="text-[11px] text-slate-500 font-mono">9079879010@fam</p>
+                      </div>
+                    </div>
+                    <div className="mt-2 text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-semibold inline-block border border-emerald-100">
+                      WhatsApp: +91 90798 79010
                     </div>
                   </div>
 
-                  {/* Category 2: Financials & Cash Risk */}
-                  <div className="pt-2 border-t border-slate-100">
-                    <span className="text-[10px] uppercase font-bold text-emerald-600 tracking-wider block mb-1.5">
-                      2. FINANCIALS & CASH RISK
+                  {/* Switch Role on Mobile */}
+                  <div className="md:hidden pb-2 mb-2 border-b border-slate-100">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                      Switch Perspective
                     </span>
-                    <div className="space-y-1">
+                    <div className="grid grid-cols-3 gap-1">
                       <button
-                        type="button"
-                        onClick={() => {
-                          setActiveTab('invoices');
-                          setIsMenuOpen(false);
-                          showToast('Opened Advance & Milestone Invoices Page');
-                        }}
-                        className={`w-full text-left p-2 rounded-lg flex items-center justify-between transition-colors ${
-                          activeTab === 'invoices' ? 'bg-emerald-50 text-emerald-800 font-bold' : 'hover:bg-slate-50'
-                        }`}
-                      >
-                        <span className="font-semibold text-slate-800">Advance & Milestone Invoices</span>
-                        <span className="text-[10px] text-slate-400">Split Tranches →</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setActiveTab('simulator');
-                          setIsMenuOpen(false);
-                          showToast('Opened Delay Impact Simulator Page');
-                        }}
-                        className={`w-full text-left p-2 rounded-lg flex items-center justify-between transition-colors ${
-                          activeTab === 'simulator' ? 'bg-indigo-50 text-indigo-700 font-bold' : 'hover:bg-slate-50'
-                        }`}
-                      >
-                        <span className="font-semibold text-slate-800">Delay Impact Simulator</span>
-                        <span className="text-[10px] text-slate-400">Runway Days →</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setActiveTab('concentration');
-                          setIsMenuOpen(false);
-                          showToast('Opened Client Concentration Risk Page');
-                        }}
-                        className={`w-full text-left p-2 rounded-lg flex items-center justify-between transition-colors ${
-                          activeTab === 'concentration' ? 'bg-rose-50 text-rose-700 font-bold' : 'hover:bg-slate-50'
-                        }`}
-                      >
-                        <span className="font-semibold text-slate-800">Client Concentration Gauge</span>
-                        <span className="text-[10px] text-slate-400">Risk Meter →</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Category 3: Reputation & Verification */}
-                  <div className="pt-2 border-t border-slate-100">
-                    <span className="text-[10px] uppercase font-bold text-amber-600 tracking-wider block mb-1.5">
-                      3. REPUTATION & VERIFICATION
-                    </span>
-                    <div className="space-y-1">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setActiveTab('trust');
-                          setIsMenuOpen(false);
-                          showToast('Opened Verified Client Reviews Page');
-                        }}
-                        className={`w-full text-left p-2 rounded-lg flex items-center justify-between transition-colors ${
-                          activeTab === 'trust' ? 'bg-amber-50 text-amber-800 font-bold' : 'hover:bg-slate-50'
-                        }`}
-                      >
-                        <span className="font-semibold text-slate-800">Verified Client Reviews</span>
-                        <span className="text-[10px] text-slate-400">4.9 ★ →</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setActiveTab('proposals');
-                          setIsMenuOpen(false);
-                          showToast('Opened Proposals & E-Sign Creator');
-                        }}
-                        className={`w-full text-left p-2 rounded-lg flex items-center justify-between transition-colors ${
-                          activeTab === 'proposals' ? 'bg-indigo-50 text-indigo-700 font-bold' : 'hover:bg-slate-50'
-                        }`}
-                      >
-                        <span className="font-semibold text-slate-800">Proposals & E-Sign Scope</span>
-                        <span className="text-[10px] text-slate-400">Signatures →</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Category 4: Switch Perspective */}
-                  <div className="pt-2 border-t border-slate-100 bg-slate-50 p-2.5 rounded-xl">
-                    <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block mb-1.5">
-                      4. SWITCH PERSPECTIVE
-                    </span>
-                    <div className="grid grid-cols-3 gap-1.5 text-[11px]">
-                      <button
-                        type="button"
                         onClick={() => {
                           setCurrentRole('freelancer');
-                          setIsMenuOpen(false);
-                          showToast('Switched to Freelancer (Arjun) perspective');
+                          setIsUserDropdownOpen(false);
                         }}
-                        className={`py-1.5 px-2 rounded-md font-medium text-center ${
-                          currentRole === 'freelancer' ? 'bg-indigo-600 text-white font-bold' : 'bg-white border text-slate-700'
+                        className={`py-1 rounded text-center font-semibold text-[11px] ${
+                          currentRole === 'freelancer' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700'
                         }`}
                       >
                         Freelancer
                       </button>
                       <button
-                        type="button"
                         onClick={() => {
                           setCurrentRole('team_member');
-                          setIsMenuOpen(false);
-                          showToast('Switched to Editor (Rohan) perspective');
+                          setIsUserDropdownOpen(false);
                         }}
-                        className={`py-1.5 px-2 rounded-md font-medium text-center ${
-                          currentRole === 'team_member' ? 'bg-amber-600 text-white font-bold' : 'bg-white border text-slate-700'
+                        className={`py-1 rounded text-center font-semibold text-[11px] ${
+                          currentRole === 'team_member' ? 'bg-amber-600 text-white' : 'bg-slate-100 text-slate-700'
                         }`}
                       >
-                        Editor
+                        Team
                       </button>
                       <button
-                        type="button"
                         onClick={() => {
                           setCurrentRole('client');
-                          setIsMenuOpen(false);
-                          showToast('Switched to Client (Kunal Shah) perspective');
+                          setIsUserDropdownOpen(false);
                         }}
-                        className={`py-1.5 px-2 rounded-md font-medium text-center ${
-                          currentRole === 'client' ? 'bg-emerald-600 text-white font-bold' : 'bg-white border text-slate-700'
+                        className={`py-1 rounded text-center font-semibold text-[11px] ${
+                          currentRole === 'client' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700'
                         }`}
                       >
                         Client
                       </button>
                     </div>
                   </div>
+
+                  {/* Fast Links */}
+                  <div className="space-y-1">
+                    <button
+                      onClick={() => {
+                        setShowTeamDrawer(true);
+                        setIsUserDropdownOpen(false);
+                      }}
+                      className="w-full text-left p-2 rounded-xl hover:bg-slate-50 font-semibold text-slate-700 flex items-center justify-between"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Icons.Users className="w-3.5 h-3.5 text-indigo-500" />
+                        <span>Team & Access (RBAC)</span>
+                      </span>
+                      <span className="text-[10px] text-slate-400">Roster →</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActiveTab('simulator');
+                        setIsUserDropdownOpen(false);
+                      }}
+                      className="w-full text-left p-2 rounded-xl hover:bg-slate-50 font-semibold text-slate-700 flex items-center justify-between"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Icons.Sliders className="w-3.5 h-3.5 text-amber-500" />
+                        <span>Client Delay Simulator</span>
+                      </span>
+                      <span className="text-[10px] text-slate-400">Runway →</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActiveTab('concentration');
+                        setIsUserDropdownOpen(false);
+                      }}
+                      className="w-full text-left p-2 rounded-xl hover:bg-slate-50 font-semibold text-slate-700 flex items-center justify-between"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Icons.AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
+                        <span>Client Concentration Risk</span>
+                      </span>
+                      <span className="text-[10px] text-rose-600 font-bold">66.5% RED →</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ================= SUB-NAVIGATION BAR (Row 2) ================= */}
+        <div className="border-t border-slate-100 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-1.5 flex items-center gap-1 sm:gap-2 overflow-x-auto scrollbar-none text-xs">
+            {/* Overview */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('overview')}
+              className={`px-3.5 py-1.5 rounded-xl font-bold transition-all shrink-0 ${
+                activeTab === 'overview'
+                  ? 'bg-indigo-50 text-indigo-700 shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+              }`}
+            >
+              Overview
+            </button>
+
+            {/* Active Gigs & Scope • */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('projects')}
+              className={`px-3.5 py-1.5 rounded-xl font-bold transition-all shrink-0 flex items-center gap-1.5 ${
+                activeTab === 'projects'
+                  ? 'bg-indigo-50 text-indigo-700 shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+              }`}
+            >
+              <span>Active Gigs & Scope</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            </button>
+
+            {/* Deliverables & Versions */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('deliverables')}
+              className={`px-3.5 py-1.5 rounded-xl font-bold transition-all shrink-0 ${
+                activeTab === 'deliverables'
+                  ? 'bg-indigo-50 text-indigo-700 shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+              }`}
+            >
+              Deliverables & Versions
+            </button>
+
+            {/* Proposals & E-Sign */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('proposals')}
+              className={`px-3.5 py-1.5 rounded-xl font-bold transition-all shrink-0 ${
+                activeTab === 'proposals'
+                  ? 'bg-indigo-50 text-indigo-700 shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+              }`}
+            >
+              Proposals & E-Sign
+            </button>
+
+            {/* UPI Invoicing */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('invoices')}
+              className={`px-3.5 py-1.5 rounded-xl font-bold transition-all shrink-0 ${
+                activeTab === 'invoices'
+                  ? 'bg-indigo-50 text-indigo-700 shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+              }`}
+            >
+              UPI Invoicing
+            </button>
+
+            {/* Delay Simulator */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('simulator')}
+              className={`px-3.5 py-1.5 rounded-xl font-bold transition-all shrink-0 flex items-center gap-1.5 ${
+                activeTab === 'simulator'
+                  ? 'bg-indigo-50 text-indigo-700 shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+              }`}
+            >
+              <span>Delay Simulator</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                Runway
+              </span>
+            </button>
+
+            {/* Concentration Risk */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('concentration')}
+              className={`px-3.5 py-1.5 rounded-xl font-bold transition-all shrink-0 flex items-center gap-1.5 ${
+                activeTab === 'concentration'
+                  ? 'bg-indigo-50 text-indigo-700 shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+              }`}
+            >
+              <span>Concentration Risk</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                66.5% RED
+              </span>
+            </button>
+
+            {/* Trust & Reviews (4.92 ★) */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('trust')}
+              className={`px-3.5 py-1.5 rounded-xl font-bold transition-all shrink-0 flex items-center gap-1.5 ${
+                activeTab === 'trust'
+                  ? 'bg-indigo-50 text-indigo-700 shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+              }`}
+            >
+              <span>Trust & Reviews</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                4.92 ★
+              </span>
+            </button>
+
+            {/* Crew & Roles */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('team')}
+              className={`px-3.5 py-1.5 rounded-xl font-bold transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
+                activeTab === 'team'
+                  ? 'bg-indigo-50 text-indigo-700 shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+              }`}
+            >
+              <span>Crew & Roles</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+            </button>
           </div>
         </div>
       </header>
 
-      {/* MAIN LAYOUT: SIDEBAR + CONTENT AREA */}
-      <div className="flex-1 flex flex-col md:flex-row">
-        {/* Left Sidebar */}
-        <aside className="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-slate-200 p-5 shrink-0 flex flex-col justify-between">
-          <div className="space-y-6">
-            {/* Quick Actions Bar */}
-            {currentRole === 'freelancer' && (
-              <div className="space-y-2">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('invoices')}
-                  className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center justify-center gap-2 transition-all active:scale-[0.99]"
-                >
-                  <Icons.Rupee className="w-3.5 h-3.5" />
-                  <span>+ Quick UPI Invoice</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('proposals')}
-                  className="w-full py-2.5 px-3 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all"
-                >
-                  <Icons.Plus className="w-3.5 h-3.5" />
-                  <span>✎ New Proposal & Scope</span>
-                </button>
-              </div>
-            )}
-
-            {/* Complete Navigation: All 8 Dedicated Pages Accessible Here! */}
-            <nav className="space-y-1">
-              <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase px-3 block mb-2">
-                Workspace Pages
-              </span>
-
-              {/* Page 1: Overview */}
-              <button
-                type="button"
-                onClick={() => setActiveTab('overview')}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
-                  activeTab === 'overview'
-                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Icons.Dashboard className="w-4 h-4" />
-                  <span>Command Center</span>
-                </div>
-                <span className="text-[10px] text-slate-400">Live</span>
-              </button>
-
-              {/* Page 2: Projects & Deadlines */}
-              <button
-                type="button"
-                onClick={() => setActiveTab('projects')}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
-                  activeTab === 'projects'
-                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Icons.Calendar className="w-4 h-4" />
-                  <span>Projects & Deadlines</span>
-                </div>
-                <span className="text-[10px] bg-indigo-100 text-indigo-800 font-mono px-1.5 py-0.2 rounded font-bold">
-                  {safeProjects.length}
-                </span>
-              </button>
-
-              {/* Page 3: Deliverables & Versions */}
-              <button
-                type="button"
-                onClick={() => setActiveTab('deliverables')}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
-                  activeTab === 'deliverables'
-                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Icons.Play className="w-4 h-4" />
-                  <span>Deliverables & Versions</span>
-                </div>
-                <span className="text-[10px] text-slate-400">v1/v2/v3</span>
-              </button>
-
-              {/* Page 4: Advance & Milestone Invoices */}
-              <button
-                type="button"
-                onClick={() => setActiveTab('invoices')}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
-                  activeTab === 'invoices'
-                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Icons.QrCode className="w-4 h-4 text-emerald-600" />
-                  <span>UPI Split Invoicing</span>
-                </div>
-                <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded font-bold">
-                  Tranches
-                </span>
-              </button>
-
-              {/* Page 5: Delay Impact Simulator */}
-              <button
-                type="button"
-                onClick={() => setActiveTab('simulator')}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
-                  activeTab === 'simulator'
-                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-100 font-bold'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Icons.Sliders className="w-4 h-4 text-amber-500" />
-                  <span>Delay Simulator</span>
-                </div>
-                <span className="text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded font-medium">
-                  Runway
-                </span>
-              </button>
-
-              {/* Page 6: Client Concentration Gauge */}
-              <button
-                type="button"
-                onClick={() => setActiveTab('concentration')}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
-                  activeTab === 'concentration'
-                    ? 'bg-rose-50 text-rose-700 border border-rose-200 font-bold'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Icons.AlertTriangle className="w-4 h-4 text-rose-500" />
-                  <span>Concentration Risk</span>
-                </div>
-                <span className="text-[10px] text-rose-700 bg-rose-50 px-1.5 py-0.2 rounded font-bold">
-                  66.5% RED
-                </span>
-              </button>
-
-              {/* Page 7: Verified Client Reviews */}
-              <button
-                type="button"
-                onClick={() => setActiveTab('trust')}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
-                  activeTab === 'trust'
-                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Icons.ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  <span>Trust & Reviews</span>
-                </div>
-                <span className="text-[10px] text-slate-500 font-mono">4.9 ★</span>
-              </button>
-
-              {/* Page 8: Proposals & E-Sign */}
-              <button
-                type="button"
-                onClick={() => setActiveTab('proposals')}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
-                  activeTab === 'proposals'
-                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Icons.FileText className="w-4 h-4 text-indigo-600" />
-                  <span>Proposals & E-Sign</span>
-                </div>
-                <span className="text-[10px] text-slate-400">Canvas</span>
-              </button>
-            </nav>
-          </div>
-
-          {/* User Persona Profile in Sidebar Bottom */}
-          <div className="pt-4 border-t border-slate-100 mt-6 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div
-                className={`w-8 h-8 rounded-full text-white flex items-center justify-center font-bold text-xs ${
-                  currentRole === 'freelancer' ? 'bg-indigo-600' : currentRole === 'team_member' ? 'bg-amber-600' : 'bg-emerald-600'
-                }`}
-              >
-                {currentRole === 'freelancer' ? 'AV' : currentRole === 'team_member' ? 'RM' : 'KS'}
-              </div>
-              <div>
-                <p className="text-xs font-bold text-slate-900 leading-tight">
-                  {currentRole === 'freelancer' ? 'Arjun Verma' : currentRole === 'team_member' ? 'Rohan Mehta' : 'Kunal Shah'}
-                </p>
-                <p className="text-[10px] text-slate-400">
-                  {currentRole === 'freelancer' ? 'Lead Director' : currentRole === 'team_member' ? 'Video Editor' : 'CRED Founder'}
-                </p>
-              </div>
-            </div>
-            <span
-              className={`w-2.5 h-2.5 rounded-full ${
-                currentRole === 'freelancer' ? 'bg-emerald-500' : currentRole === 'team_member' ? 'bg-indigo-500' : 'bg-amber-500'
-              }`}
-              title="Active Role"
-            />
-          </div>
-        </aside>
-
-        {/* Content Section: 8 DEDICATED WORKING PAGES! */}
-        <section className="flex-1 p-4 md:p-8 overflow-y-auto max-w-7xl">
+      {/* ================= CONTENT SECTION: 8 DEDICATED WORKING PAGES ================= */}
+      <main className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 overflow-y-auto">
           {/* ================= PAGE 1: OVERVIEW COMMAND CENTER ================= */}
           {activeTab === 'overview' && (
             <OverviewDashboard
@@ -957,6 +824,12 @@ export default function Home() {
                     </div>
                   );
                 })}
+              </div>
+
+              {/* Client Assets & Real-time Collaboration (Image 1 features) */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
+                <PrerequisiteAssetsCard onToast={showToast} />
+                <ProjectChatCard onToast={showToast} currentUserRole={currentRole} />
               </div>
             </div>
           )}
@@ -1552,8 +1425,16 @@ export default function Home() {
               }}
             />
           )}
-        </section>
-      </div>
+
+          {/* ================= PAGE 9: CREW & DISCORD-STYLE ROLES ================= */}
+          {activeTab === 'team' && (
+            <CrewRolesView
+              onNavigateTab={(tab) => setActiveTab(tab as any)}
+              onShareTrustUrl={() => setActiveTab('trust')}
+              onToast={showToast}
+            />
+          )}
+        </main>
 
       {/* TEAM MEMBERS & TRUST TOGGLE DRAWER (Feature 3) */}
       {showTeamDrawer && (
@@ -1655,6 +1536,16 @@ export default function Home() {
           onAddBillableScope={(amount) => handleAddBillableScope(activeProject.id, amount)}
         />
       )}
+
+      {/* Quick UPI Invoice Modal */}
+      <QuickUPIInvoiceModal
+        isOpen={isQuickInvoiceModalOpen}
+        onClose={() => setIsQuickInvoiceModalOpen(false)}
+        onInvoiceCreated={(data) => {
+          showToast(`UPI invoice ${data.invNumber} for ${formatINR(data.totalAmount)} generated!`);
+          setActiveTab('invoices');
+        }}
+      />
     </div>
   );
 }
