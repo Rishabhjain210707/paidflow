@@ -974,14 +974,27 @@ export default function Home() {
                         </div>
 
                         <div className="flex items-center gap-2">
-                          {currentRole === 'client' ? (
+                          {/* If already Approved by client, hide action buttons and show confirmation */}
+                          {deliv.status === 'Approved' ? (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
+                              <Icons.Check className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
+                              <span>Approved by Client</span>
+                            </span>
+                          ) : deliv.status === 'Changes Requested' ? (
+                            /* If already Rejected / Changes Requested, hide action buttons and show revision badge */
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 shadow-2xs">
+                              <Icons.AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
+                              <span>Changes Requested (Waiting for Next Cut)</span>
+                            </span>
+                          ) : currentRole === 'client' ? (
+                            /* Active Client Approval / Rejection buttons (shown only before client has made decision) */
                             <>
                               <button
                                 type="button"
                                 onClick={() => handleUpdateDeliverableStatus(deliv.projectId, deliv.id, 'Approved')}
-                                className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5"
+                                className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all active:scale-[0.98] cursor-pointer"
                               >
-                                <Icons.Check className="w-3.5 h-3.5" />
+                                <Icons.Check className="w-3.5 h-3.5 stroke-[2.5]" />
                                 <span>Approve Cut</span>
                               </button>
                               <button
@@ -994,24 +1007,25 @@ export default function Home() {
                                     'Need tighter cut at 0:15 and punchier audio.'
                                   )
                                 }
-                                className="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs"
+                                className="px-3.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs transition-all active:scale-[0.98] cursor-pointer"
                               >
                                 <span>Request Revision</span>
                               </button>
                             </>
                           ) : (
+                            /* Freelancer / Editor view before client approval */
                             <>
                               <button
                                 type="button"
                                 onClick={() => handleUpdateDeliverableStatus(deliv.projectId, deliv.id, 'Approved')}
-                                className="px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-semibold"
+                                className="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-semibold transition-colors"
                               >
                                 Mark Approved
                               </button>
                               <button
                                 type="button"
                                 onClick={() => handleUpdateDeliverableStatus(deliv.projectId, deliv.id, 'Sent to Client')}
-                                className="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-semibold"
+                                className="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-semibold transition-colors"
                               >
                                 Send to Client
                               </button>
@@ -1020,27 +1034,29 @@ export default function Home() {
                         </div>
                       </div>
 
-                      {/* Inline Submit New Version Input */}
-                      <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
-                        <input
-                          type="text"
-                          placeholder="Paste new Google Drive / YouTube URL to submit next cut..."
-                          value={newVersionInputs[deliv.id] || ''}
-                          onChange={(e) =>
-                            setNewVersionInputs({ ...newVersionInputs, [deliv.id]: e.target.value })
-                          }
-                          className="flex-1 px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-500"
-                        />
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleUpdateDeliverableLink(deliv.projectId, deliv.id, newVersionInputs[deliv.id] || '')
-                          }
-                          className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-colors"
-                        >
-                          Submit New Version
-                        </button>
-                      </div>
+                      {/* Inline Submit New Version Input (Hidden for Client perspective and when already Approved) */}
+                      {currentRole !== 'client' && deliv.status !== 'Approved' && (
+                        <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
+                          <input
+                            type="text"
+                            placeholder="Paste new Google Drive / YouTube URL to submit next cut..."
+                            value={newVersionInputs[deliv.id] || ''}
+                            onChange={(e) =>
+                              setNewVersionInputs({ ...newVersionInputs, [deliv.id]: e.target.value })
+                            }
+                            className="flex-1 px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-500 text-slate-800"
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleUpdateDeliverableLink(deliv.projectId, deliv.id, newVersionInputs[deliv.id] || '')
+                            }
+                            className="px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-colors shrink-0 cursor-pointer"
+                          >
+                            Submit New Version
+                          </button>
+                        </div>
+                      )}
                     </div>
                   );
                 })}

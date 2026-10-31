@@ -523,87 +523,89 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
                         </div>
                       )}
 
-                      {/* Version Submission Trigger & Form */}
-                      <div>
-                        {!showNewVersionForm[del.id] ? (
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() =>
-                                setShowNewVersionForm({
-                                  ...showNewVersionForm,
-                                  [del.id]: true,
-                                })
-                              }
-                              className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100/80 px-2.5 py-1 rounded-md border border-indigo-100 transition-colors"
-                            >
-                              <Icons.Plus className="w-3.5 h-3.5" />
-                              <span>Submit New Version (v{parseInt(del.currentVersion.replace('v', ''), 10) + 1})</span>
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2 text-xs">
-                            <div className="flex items-center justify-between font-bold text-slate-800">
-                              <span>
-                                Upload Version v{parseInt(del.currentVersion.replace('v', ''), 10) + 1}
-                              </span>
+                      {/* Version Submission Trigger & Form (Hidden for Client or when already Approved) */}
+                      {currentUserRole !== 'client' && del.status !== 'Approved' && (
+                        <div>
+                          {!showNewVersionForm[del.id] ? (
+                            <div className="flex items-center gap-2">
                               <button
                                 onClick={() =>
                                   setShowNewVersionForm({
                                     ...showNewVersionForm,
-                                    [del.id]: false,
+                                    [del.id]: true,
                                   })
                                 }
-                                className="text-slate-400 hover:text-slate-600"
+                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100/80 px-2.5 py-1 rounded-md border border-indigo-100 transition-colors"
                               >
-                                ✕
+                                <Icons.Plus className="w-3.5 h-3.5" />
+                                <span>Submit New Version (v{parseInt(del.currentVersion.replace('v', ''), 10) + 1})</span>
                               </button>
                             </div>
-                            <input
-                              type="url"
-                              placeholder="Paste Google Drive or unlisted YouTube link..."
-                              value={newVersionInput[del.id] || ''}
-                              onChange={(e) =>
-                                setNewVersionInput({
-                                  ...newVersionInput,
-                                  [del.id]: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md focus:outline-none focus:border-indigo-500 font-mono text-xs"
-                            />
-                            <input
-                              type="text"
-                              placeholder="Version notes (e.g., Color graded DaVinci cut with sound sync)..."
-                              value={newVersionNotes[del.id] || ''}
-                              onChange={(e) =>
-                                setNewVersionNotes({
-                                  ...newVersionNotes,
-                                  [del.id]: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md focus:outline-none focus:border-indigo-500 text-xs"
-                            />
-                            <div className="flex justify-end gap-2 pt-1">
-                              <button
-                                onClick={() =>
-                                  setShowNewVersionForm({
-                                    ...showNewVersionForm,
-                                    [del.id]: false,
+                          ) : (
+                            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2 text-xs">
+                              <div className="flex items-center justify-between font-bold text-slate-800">
+                                <span>
+                                  Upload Version v{parseInt(del.currentVersion.replace('v', ''), 10) + 1}
+                                </span>
+                                <button
+                                  onClick={() =>
+                                    setShowNewVersionForm({
+                                      ...showNewVersionForm,
+                                      [del.id]: false,
+                                    })
+                                  }
+                                  className="text-slate-400 hover:text-slate-600"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                              <input
+                                type="url"
+                                placeholder="Paste Google Drive or unlisted YouTube link..."
+                                value={newVersionInput[del.id] || ''}
+                                onChange={(e) =>
+                                  setNewVersionInput({
+                                    ...newVersionInput,
+                                    [del.id]: e.target.value,
                                   })
                                 }
-                                className="px-2.5 py-1 text-slate-500 hover:bg-slate-200 rounded text-xs font-semibold"
-                              >
-                                Cancel
-                              </button>
-                              <button
-                                onClick={() => handleSubmitNewVersion(del.id)}
-                                className="px-3.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-bold shadow-xs"
-                              >
-                                Submit Version
-                              </button>
+                                className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md focus:outline-none focus:border-indigo-500 font-mono text-xs"
+                              />
+                              <input
+                                type="text"
+                                placeholder="Version notes (e.g., Color graded DaVinci cut with sound sync)..."
+                                value={newVersionNotes[del.id] || ''}
+                                onChange={(e) =>
+                                  setNewVersionNotes({
+                                    ...newVersionNotes,
+                                    [del.id]: e.target.value,
+                                  })
+                                }
+                                className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md focus:outline-none focus:border-indigo-500 text-xs"
+                              />
+                              <div className="flex justify-end gap-2 pt-1">
+                                <button
+                                  onClick={() =>
+                                    setShowNewVersionForm({
+                                      ...showNewVersionForm,
+                                      [del.id]: false,
+                                    })
+                                  }
+                                  className="px-2.5 py-1 text-slate-500 hover:bg-slate-200 rounded text-xs font-semibold"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  onClick={() => handleSubmitNewVersion(del.id)}
+                                  className="px-3.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-bold shadow-xs"
+                                >
+                                  Submit Version
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                        )}
-                      </div>
+                          )}
+                        </div>
+                      )}
 
                       {/* Approval Actions by Role */}
                       <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
@@ -629,33 +631,47 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
                             </button>
                           )}
 
-                          {/* Client approval buttons when status is 'Sent to Client' or 'Submitted' */}
+                          {/* Client approval buttons: hidden if already Approved or Changes Requested */}
                           {currentUserRole === 'client' && (
                             <>
-                              <button
-                                onClick={() =>
-                                  handleStatusChange(
-                                    del.id,
-                                    'Changes Requested',
-                                    'Client requested revision cycle.'
-                                  )
-                                }
-                                className="px-3 py-1 text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg transition-colors"
-                              >
-                                Request Changes
-                              </button>
-                              <button
-                                onClick={() =>
-                                  handleStatusChange(
-                                    del.id,
-                                    'Approved',
-                                    'Client signed off on final cut!'
-                                  )
-                                }
-                                className="px-3 py-1 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-xs transition-colors"
-                              >
-                                Approve Deliverable
-                              </button>
+                              {del.status === 'Approved' ? (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg shadow-2xs">
+                                  <Icons.Check className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
+                                  <span>Approved by You</span>
+                                </span>
+                              ) : del.status === 'Changes Requested' ? (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 rounded-lg shadow-2xs">
+                                  <Icons.AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
+                                  <span>Changes Requested (Waiting for Next Cut)</span>
+                                </span>
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={() =>
+                                      handleStatusChange(
+                                        del.id,
+                                        'Changes Requested',
+                                        'Client requested revision cycle.'
+                                      )
+                                    }
+                                    className="px-3 py-1 text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg transition-colors cursor-pointer"
+                                  >
+                                    Request Changes
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      handleStatusChange(
+                                        del.id,
+                                        'Approved',
+                                        'Client signed off on final cut!'
+                                      )
+                                    }
+                                    className="px-3 py-1 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-xs transition-colors cursor-pointer"
+                                  >
+                                    Approve Deliverable
+                                  </button>
+                                </>
+                              )}
                             </>
                           )}
                         </div>
