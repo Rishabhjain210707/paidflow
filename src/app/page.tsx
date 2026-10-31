@@ -501,7 +501,7 @@ export default function Home() {
                   <div className="space-y-1">
                     <button
                       onClick={() => {
-                        setShowTeamDrawer(true);
+                        setActiveTab('team');
                         setIsUserDropdownOpen(false);
                       }}
                       className="w-full text-left p-2 rounded-xl hover:bg-slate-50 font-semibold text-slate-700 flex items-center justify-between"
@@ -510,7 +510,7 @@ export default function Home() {
                         <Icons.Users className="w-3.5 h-3.5 text-indigo-500" />
                         <span>Team & Access (RBAC)</span>
                       </span>
-                      <span className="text-[10px] text-slate-400">Roster →</span>
+                      <span className="text-[10px] text-indigo-600 font-bold">Crew & Roles →</span>
                     </button>
                     <button
                       onClick={() => {
@@ -1452,84 +1452,59 @@ export default function Home() {
           )}
         </main>
 
-      {/* TEAM MEMBERS & TRUST TOGGLE DRAWER (Feature 3) */}
+      {/* TEAM MEMBERS & DISCORD-STYLE PERMISSIONS DRAWER */}
       {showTeamDrawer && (
         <div className="fixed inset-0 z-50 flex items-center justify-end bg-slate-900/40 backdrop-blur-2xs">
-          <div className="w-full max-w-md bg-white h-full shadow-2xl p-6 flex flex-col justify-between overflow-y-auto animate-in slide-in-from-right duration-200">
+          <div className="w-full max-w-2xl bg-white h-full shadow-2xl p-6 flex flex-col justify-between overflow-y-auto animate-in slide-in-from-right duration-200">
             <div className="space-y-6">
               <div className="flex items-center justify-between pb-4 border-b border-slate-100">
                 <div>
-                  <h3 className="font-bold text-slate-900 text-base">Team Members & Trust Modes</h3>
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600 block mb-0.5">
+                    TEAM ARCHITECTURE
+                  </span>
+                  <h3 className="font-bold text-slate-900 text-base">Crew Members & Discord-Style Permissions</h3>
                   <p className="text-xs text-slate-500">
-                    Control whether member submissions need your approval before clients see them.
+                    Assign roles to collaborators. Permissions stack across roles.
                   </p>
                 </div>
-                <button onClick={() => setShowTeamDrawer(false)} className="p-1 rounded-lg text-slate-400 hover:text-slate-700">
+                <button
+                  type="button"
+                  onClick={() => setShowTeamDrawer(false)}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                >
                   <Icons.X className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="space-y-4">
-                {teamMembers.map((member) => {
-                  const isTrusted = member.trustMode === 'trusted';
-                  return (
-                    <div key={member.id} className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={member.avatar}
-                            alt={member.name}
-                            className="w-10 h-10 rounded-full object-cover border border-slate-200"
-                          />
-                          <div>
-                            <p className="font-bold text-slate-900 text-xs">{member.name}</p>
-                            <p className="text-[11px] text-slate-500">{member.role}</p>
-                          </div>
-                        </div>
-
-                        <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                            isTrusted ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                          }`}
-                        >
-                          {isTrusted ? 'Trusted' : 'Needs Approval'}
-                        </span>
-                      </div>
-
-                      {/* Trust Toggle Switch */}
-                      <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between">
-                        <div>
-                          <span className="text-xs font-semibold text-slate-800 block">Direct Client Delivery</span>
-                          <span className="text-[10px] text-slate-400">
-                            {isTrusted ? 'Can push version links directly to Kunal Shah' : 'Submissions held for Freelancer sign-off'}
-                          </span>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => handleToggleTrust(member.id)}
-                          className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${
-                            isTrusted ? 'bg-emerald-600' : 'bg-slate-300'
-                          }`}
-                        >
-                          <div
-                            className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
-                              isTrusted ? 'translate-x-5' : 'translate-x-0'
-                            }`}
-                          />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              {/* Embed Discord-Style Crew Architecture */}
+              <CrewRolesView
+                onNavigateTab={(tab) => {
+                  setShowTeamDrawer(false);
+                  setActiveTab(tab as any);
+                }}
+                onShareTrustUrl={() => {
+                  setShowTeamDrawer(false);
+                  setActiveTab('trust');
+                }}
+                onToast={showToast}
+              />
             </div>
 
-            <div className="pt-6 border-t border-slate-100">
+            <div className="pt-6 border-t border-slate-100 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowTeamDrawer(false);
+                  setActiveTab('team');
+                }}
+                className="flex-1 py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors text-center cursor-pointer"
+              >
+                Expand Full Page View →
+              </button>
               <button
                 type="button"
                 onClick={() => setShowTeamDrawer(false)}
-                className="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors"
+                className="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
               >
                 Close Drawer
               </button>

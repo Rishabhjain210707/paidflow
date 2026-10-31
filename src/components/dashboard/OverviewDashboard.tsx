@@ -633,67 +633,90 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = (props) => {
         </div>
       )}
 
-      {/* Team Members List */}
+      {/* Team Architecture & Discord-Style Permissions Card */}
       {safeRole === 'freelancer' && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
-          <div className="flex items-center justify-between">
+        <div className="bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-6 shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
             <div>
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600 block mb-0.5">
+                TEAM ARCHITECTURE
+              </span>
               <div className="flex items-center gap-2">
                 <Icons.Users className="w-4 h-4 text-indigo-600" />
-                <h3 className="text-sm font-bold text-slate-900">
-                  Team Members & Trust Approvals
+                <h3 className="text-base font-bold text-slate-900">
+                  Crew Members & Discord-Style Permissions
                 </h3>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
-                Manage team delegation. Members marked &apos;Trusted&apos; can push deliverable links directly to the client portal.
+                Assign roles to collaborators. Permissions stack across roles with granular client push access.
               </p>
             </div>
-            <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-bold">
-              {safeTeamMembers.length} Members Active
-            </span>
+            {props.onNavigateTab && (
+              <button
+                type="button"
+                onClick={() => props.onNavigateTab?.('team')}
+                className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3.5 py-2 rounded-xl shadow-xs transition-colors flex items-center gap-1.5 shrink-0 self-start sm:self-auto cursor-pointer"
+              >
+                <span>Crew & Permissions Hub</span>
+                <span>→</span>
+              </button>
+            )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {safeTeamMembers.map((member) => {
-              if (!member) return null;
-              const isTrusted = member.trustMode === 'trusted';
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+            <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-slate-900 text-xs">Riya</span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-50 text-cyan-700 border border-cyan-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
+                  Editor
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-200/60">
+                <span className="text-slate-500 text-[11px]">Payout Owed:</span>
+                <span className="font-bold text-slate-900 font-mono">₹18,000</span>
+              </div>
+              <div className="flex items-center justify-between text-[11px] text-slate-500">
+                <span>Hand in work:</span>
+                <span className="text-emerald-600 font-semibold">✓ Allowed</span>
+              </div>
+            </div>
 
-              return (
-                <div
-                  key={member.id}
-                  className="p-4 rounded-xl border border-slate-200 bg-slate-50/60 flex items-center justify-between gap-3 hover:border-slate-300 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={member.avatar}
-                      alt={member.name}
-                      className="w-10 h-10 rounded-full object-cover ring-1 ring-slate-200"
-                    />
-                    <div>
-                      <h4 className="font-bold text-slate-900 text-xs">{member.name}</h4>
-                      <p className="text-[11px] text-slate-500">{member.role}</p>
-                      <span className="text-[10px] text-indigo-600 font-medium">
-                        {member.activeTasksCount || 1} Active Deliverable Tasks
-                      </span>
-                    </div>
-                  </div>
+            <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-slate-900 text-xs">Karan</span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  Trusted Senior
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-200/60">
+                <span className="text-slate-500 text-[11px]">Payout Owed:</span>
+                <span className="font-bold text-slate-900 font-mono">₹24,000</span>
+              </div>
+              <div className="flex items-center justify-between text-[11px] text-slate-500">
+                <span>Direct client send:</span>
+                <span className="text-emerald-600 font-semibold">✓ Allowed</span>
+              </div>
+            </div>
 
-                  <div className="flex flex-col items-end gap-1">
-                    <button
-                      type="button"
-                      onClick={() => onToggleTrustMode && onToggleTrustMode(member.id)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all shadow-2xs ${isTrusted
-                          ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                          : 'bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300'
-                        }`}
-                    >
-                      <span>{isTrusted ? '✓ Trusted (Direct Push)' : '⏱ Needs My Approval'}</span>
-                    </button>
-                    <span className="text-[10px] text-slate-400">Click to toggle permission</span>
-                  </div>
-                </div>
-              );
-            })}
+            <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-slate-900 text-xs">Meera</span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-pink-50 text-pink-700 border border-pink-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-pink-500" />
+                  Script Writer
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-200/60">
+                <span className="text-slate-500 text-[11px]">Payout Status:</span>
+                <span className="font-bold text-emerald-700 text-xs font-mono">Settled (Paid)</span>
+              </div>
+              <div className="flex items-center justify-between text-[11px] text-slate-500">
+                <span>Client files & chat:</span>
+                <span className="text-emerald-600 font-semibold">✓ Allowed</span>
+              </div>
+            </div>
           </div>
         </div>
       )}
