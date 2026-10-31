@@ -3,11 +3,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Icons } from '../ui/Icons';
 
+export type PerspectiveRole = 'freelancer' | 'team_member' | 'client';
+
 export interface ChatMessage {
   id: string;
-  sender: string;
-  senderRole?: string;
-  isMe: boolean;
+  authorRole: PerspectiveRole;
+  authorName: string;
+  authorTitle: string;
   text: string;
   fileAttachment?: string;
   timestamp: string;
@@ -15,24 +17,24 @@ export interface ChatMessage {
 
 interface ProjectChatCardProps {
   onToast?: (msg: string) => void;
-  currentUserRole?: 'freelancer' | 'team_member' | 'client';
+  currentUserRole?: PerspectiveRole;
 }
 
 const DEFAULT_MESSAGES: ChatMessage[] = [
   {
     id: 'msg_1',
-    sender: 'Kunal Shah',
-    senderRole: 'CRED Founder (Client)',
-    isMe: false,
+    authorRole: 'client',
+    authorName: 'Kunal Shah',
+    authorTitle: 'CRED Founder (Client)',
     text: 'Shared the updated micro-interaction benchmark in the Drive folder.',
     fileAttachment: 'drive.link/tokens.zip',
     timestamp: '10:42 AM',
   },
   {
     id: 'msg_2',
-    sender: 'You (Arjun)',
-    senderRole: 'Lead Director',
-    isMe: true,
+    authorRole: 'freelancer',
+    authorName: 'Arjun Verma',
+    authorTitle: 'Lead Director (Freelancer)',
     text: 'Got them! Riya is finalizing the rough cut animation passes today.',
     timestamp: '10:45 AM',
   },
@@ -45,10 +47,27 @@ export const ProjectChatCard: React.FC<ProjectChatCardProps> = ({
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     if (typeof window !== 'undefined') {
       try {
-        const saved = localStorage.getItem('paidflow_project_chat_v2');
+        const saved = localStorage.getItem('paidflow_project_chat_v3');
         if (saved) {
           const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed.map((m) => {
+              if (m.authorRole) return m;
+              const isKunal =
+                (m.sender || '').toLowerCase().includes('kunal') ||
+                (m.senderRole || '').toLowerCase().includes('client') ||
+                m.isMe === false;
+              return {
+                id: m.id || `msg_${Date.now()}_${Math.random()}`,
+                authorRole: isKunal ? ('client' as const) : ('freelancer' as const),
+                authorName: isKunal ? 'Kunal Shah' : 'Arjun Verma',
+                authorTitle: isKunal ? 'CRED Founder (Client)' : 'Lead Director (Freelancer)',
+                text: m.text || '',
+                fileAttachment: m.fileAttachment,
+                timestamp: m.timestamp || 'Just now',
+              };
+            });
+          }
         }
       } catch (e) {
         console.warn('Failed to load chat from localStorage', e);
@@ -59,6 +78,7 @@ export const ProjectChatCard: React.FC<ProjectChatCardProps> = ({
 
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [typingAuthor, setTypingAuthor] = useState('Kunal Shah');
   const [showAttachMenu, setShowAttachMenu] = useState(false);
   const [attachmentLink, setAttachmentLink] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -68,7 +88,7 @@ export const ProjectChatCard: React.FC<ProjectChatCardProps> = ({
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
-        localStorage.setItem('paidflow_project_chat_v2', JSON.stringify(messages));
+        localStorage.setItem('paidflow_project_chat_v3', JSON.stringify(messages));
       } catch (e) {
         console.warn('Failed to persist chat messages', e);
       }
@@ -80,46 +100,75 @@ export const ProjectChatCard: React.FC<ProjectChatCardProps> = ({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  // Generate intelligent auto-reply from Kunal Shah
-  const triggerClientAutoReply = (userText: string) => {
+  // Generate intelligent perspective-aware auto-reply
+  const triggerAutoReply = (userText: string, sentAsRole: PerspectiveRole) => {
     setIsTyping(true);
 
-    setTimeout(() => {
-      setIsTyping(false);
+    if (sentAsRole === 'client') {
+      // If client sent the message, Arjun (freelancer) auto-replies
+      setTypingAuthor('Arjun Verma');
+      setTimeout(() => {
+        setIsTyping(false);
+        const lower = userText.toLowerCase();
+        let replyText = 'Thanks Kunal! We are incorporating this into the timeline right away.';
 
-      const lower = userText.toLowerCase();
-      let replyText = 'Awesome speed! Reviewing this with our design sprint lead now.';
-      let replyAttachment: string | undefined = undefined;
+        if (lower.includes('approved') || lower.includes('approve') || lower.includes('great') || lower.includes('looks')) {
+          replyText = 'Appreciate the quick sign-off Kunal! Preparing the final delivery exports and master files now.';
+        } else if (lower.includes('payment') || lower.includes('upi') || lower.includes('cleared') || lower.includes('paid')) {
+          replyText = 'Payment received to 9079879010@fam! Receipt generated and Milestone 2 unlocked.';
+        } else if (lower.includes('drive') || lower.includes('stems') || lower.includes('file')) {
+          replyText = 'Received the asset package. Syncing with DaVinci resolve timeline.';
+        }
 
-      if (lower.includes('invoice') || lower.includes('payment') || lower.includes('upi') || lower.includes('tranche')) {
-        replyText = 'Received the UPI tranche link! Approving payment directly to 9079879010@fam from the CRED treasury account.';
-      } else if (lower.includes('figma') || lower.includes('tokens') || lower.includes('color') || lower.includes('spec')) {
-        replyText = 'Tokens are confirmed! We added 3 extra responsive micro-interactions for the mobile viewport.';
-        replyAttachment = 'figma.com/@cred/motion-v2.tokens';
-      } else if (lower.includes('render') || lower.includes('cut') || lower.includes('version') || lower.includes('v1') || lower.includes('v2')) {
-        replyText = 'Just pulled up the preview stream. The ease-in-out pacing on the 30s teaser feels super crisp!';
-      } else if (lower.includes('asset') || lower.includes('guideline') || lower.includes('pdf')) {
-        replyText = 'Here are the finalized high-res SVG brand assets and typography scale.';
-        replyAttachment = 'assets.cred.club/brand-guidelines-2026.pdf';
-      } else if (lower.includes('hi') || lower.includes('hello') || lower.includes('hey')) {
-        replyText = 'Hey Arjun! How is today’s milestone progressing? We are hyped for the final handoff.';
-      }
+        const replyMsg: ChatMessage = {
+          id: `msg_auto_${Date.now()}`,
+          authorRole: 'freelancer',
+          authorName: 'Arjun Verma',
+          authorTitle: 'Lead Director (Freelancer)',
+          text: replyText,
+          timestamp: 'Just now',
+        };
 
-      const clientMsg: ChatMessage = {
-        id: `msg_client_${Date.now()}`,
-        sender: 'Kunal Shah',
-        senderRole: 'CRED Founder (Client)',
-        isMe: false,
-        text: replyText,
-        fileAttachment: replyAttachment,
-        timestamp: 'Just now',
-      };
+        setMessages((prev) => [...prev, replyMsg]);
+        if (onToast) onToast('New reply from Arjun Verma (Freelancer)');
+      }, 1400);
+    } else {
+      // If freelancer or team member sent the message, Kunal (client) auto-replies
+      setTypingAuthor('Kunal Shah');
+      setTimeout(() => {
+        setIsTyping(false);
+        const lower = userText.toLowerCase();
+        let replyText = 'Awesome speed! Reviewing this with our design sprint lead now.';
+        let replyAttachment: string | undefined = undefined;
 
-      setMessages((prev) => [...prev, clientMsg]);
-      if (onToast) {
-        onToast('New reply from Kunal Shah (CRED)');
-      }
-    }, 1400);
+        if (lower.includes('invoice') || lower.includes('payment') || lower.includes('upi') || lower.includes('tranche')) {
+          replyText = 'Received the UPI tranche link! Approving payment directly to 9079879010@fam from CRED accounts.';
+        } else if (lower.includes('figma') || lower.includes('tokens') || lower.includes('color') || lower.includes('spec')) {
+          replyText = 'Tokens are confirmed! We added 3 extra responsive micro-interactions for the mobile viewport.';
+          replyAttachment = 'figma.com/@cred/motion-v2.tokens';
+        } else if (lower.includes('render') || lower.includes('cut') || lower.includes('version') || lower.includes('v1') || lower.includes('v2')) {
+          replyText = 'Just pulled up the preview stream. The ease-in-out pacing on the 30s teaser feels super crisp!';
+        } else if (lower.includes('asset') || lower.includes('guideline') || lower.includes('pdf')) {
+          replyText = 'Here are the finalized high-res SVG brand assets and typography scale.';
+          replyAttachment = 'assets.cred.club/brand-guidelines-2026.pdf';
+        } else if (lower.includes('hi') || lower.includes('hello') || lower.includes('hey')) {
+          replyText = 'Hey Arjun! How is today’s milestone progressing? We are hyped for the final handoff.';
+        }
+
+        const replyMsg: ChatMessage = {
+          id: `msg_auto_${Date.now()}`,
+          authorRole: 'client',
+          authorName: 'Kunal Shah',
+          authorTitle: 'CRED Founder (Client)',
+          text: replyText,
+          fileAttachment: replyAttachment,
+          timestamp: 'Just now',
+        };
+
+        setMessages((prev) => [...prev, replyMsg]);
+        if (onToast) onToast('New reply from Kunal Shah (CRED Client)');
+      }, 1400);
+    }
   };
 
   const handleSendMessage = (e?: React.FormEvent) => {
@@ -131,23 +180,25 @@ export const ProjectChatCard: React.FC<ProjectChatCardProps> = ({
       return;
     }
 
-    const senderLabel =
+    const currentAuthorName =
       currentUserRole === 'freelancer'
-        ? 'You (Arjun)'
+        ? 'Arjun Verma'
         : currentUserRole === 'team_member'
-        ? 'You (Rohan / Riya)'
-        : 'You (Kunal Shah)';
+        ? 'Riya Sharma'
+        : 'Kunal Shah';
+
+    const currentAuthorTitle =
+      currentUserRole === 'freelancer'
+        ? 'Lead Director (Freelancer)'
+        : currentUserRole === 'team_member'
+        ? 'Video Editor'
+        : 'CRED Founder (Client)';
 
     const newMsg: ChatMessage = {
       id: `msg_${Date.now()}`,
-      sender: senderLabel,
-      senderRole:
-        currentUserRole === 'freelancer'
-          ? 'Lead Director'
-          : currentUserRole === 'team_member'
-          ? 'Editor'
-          : 'Client',
-      isMe: true,
+      authorRole: currentUserRole,
+      authorName: currentAuthorName,
+      authorTitle: currentAuthorTitle,
       text: textToSend || 'Shared project attachment asset.',
       fileAttachment: attachmentLink.trim() || undefined,
       timestamp: 'Just now',
@@ -159,13 +210,11 @@ export const ProjectChatCard: React.FC<ProjectChatCardProps> = ({
     setShowAttachMenu(false);
 
     if (onToast) {
-      onToast('Message sent to client thread!');
+      onToast(`Message sent as ${currentAuthorName}!`);
     }
 
-    // Trigger realistic auto-reply from client if sent as freelancer or team
-    if (currentUserRole !== 'client') {
-      triggerClientAutoReply(textToSend);
-    }
+    // Trigger auto-reply from the other perspective
+    triggerAutoReply(textToSend, currentUserRole);
   };
 
   const handleSendQuickPrompt = (promptText: string, attachment?: string) => {
@@ -188,12 +237,20 @@ export const ProjectChatCard: React.FC<ProjectChatCardProps> = ({
   const handleClearHistory = () => {
     setMessages(DEFAULT_MESSAGES);
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('paidflow_project_chat_v2');
+      localStorage.removeItem('paidflow_project_chat_v3');
     }
     if (onToast) {
-      onToast('Reset chat thread to default state');
+      onToast('Reset chat thread to benchmark state');
     }
   };
+
+  // Dynamic role UI themes
+  const perspectiveBadge =
+    currentUserRole === 'freelancer'
+      ? { label: 'Viewing as Freelancer (Arjun)', pillColor: 'bg-indigo-50 text-indigo-700 border-indigo-200', btnColor: 'bg-indigo-600 hover:bg-indigo-700', bubbleBg: 'bg-indigo-600' }
+      : currentUserRole === 'client'
+      ? { label: 'Viewing as Client (Kunal Shah)', pillColor: 'bg-emerald-50 text-emerald-700 border-emerald-200', btnColor: 'bg-emerald-600 hover:bg-emerald-700', bubbleBg: 'bg-emerald-600' }
+      : { label: 'Viewing as Team Member (Riya)', pillColor: 'bg-amber-50 text-amber-800 border-amber-200', btnColor: 'bg-amber-600 hover:bg-amber-700', bubbleBg: 'bg-amber-600' };
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-2xs flex flex-col justify-between">
@@ -202,8 +259,8 @@ export const ProjectChatCard: React.FC<ProjectChatCardProps> = ({
         <div>
           <h3 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
             <span>Project Chat & Files</span>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
-              Live Thread
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${perspectiveBadge.pillColor}`}>
+              {perspectiveBadge.label}
             </span>
           </h3>
           <p className="text-[11px] text-slate-400">CRED Pulse: 30s Brand Video & Teaser</p>
@@ -226,18 +283,24 @@ export const ProjectChatCard: React.FC<ProjectChatCardProps> = ({
         </div>
       </div>
 
-      {/* Messages Thread Container */}
+      {/* Messages Thread Container (Dynamically evaluates 1st-person vs 3rd-person) */}
       <div className="space-y-3.5 mb-3 max-h-80 overflow-y-auto pr-1 scrollbar-thin">
         {messages.map((msg) => {
-          if (msg.isMe) {
+          // Dynamic 1st-person check based on CURRENT ACTIVE PERSPECTIVE!
+          const is1stPerson = msg.authorRole === currentUserRole;
+
+          if (is1stPerson) {
+            // 1st PERSON MESSAGE -> Appears on the RIGHT in current role's theme color!
             return (
               <div key={msg.id} className="flex flex-col items-end">
-                <div className="max-w-[85%] bg-indigo-600 text-white rounded-2xl rounded-tr-xs p-3.5 sm:p-4 shadow-2xs">
+                <div
+                  className={`max-w-[85%] text-white rounded-2xl rounded-tr-xs p-3.5 sm:p-4 shadow-2xs ${perspectiveBadge.bubbleBg}`}
+                >
                   <div className="flex items-center justify-between gap-3 mb-1">
-                    <span className="text-[11px] font-bold text-indigo-200">
-                      {msg.sender}
+                    <span className="text-[11px] font-bold opacity-90">
+                      You ({msg.authorName})
                     </span>
-                    <span className="text-[10px] text-indigo-200 font-mono">
+                    <span className="text-[10px] opacity-75 font-mono">
                       {msg.timestamp}
                     </span>
                   </div>
@@ -250,25 +313,39 @@ export const ProjectChatCard: React.FC<ProjectChatCardProps> = ({
                     <button
                       type="button"
                       onClick={() => handleCopyAttachment(msg.fileAttachment!)}
-                      className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-700/80 hover:bg-indigo-700 text-white font-mono text-[11px] rounded-xl border border-indigo-500/60 transition-colors cursor-pointer"
+                      className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1.5 bg-black/20 hover:bg-black/30 text-white font-mono text-[11px] rounded-xl border border-white/30 transition-colors cursor-pointer"
                       title="Click to copy link"
                     >
-                      <Icons.Link2 className="w-3.5 h-3.5 text-indigo-300" />
+                      <Icons.Link2 className="w-3.5 h-3.5 opacity-80" />
                       <span>{msg.fileAttachment}</span>
-                      <Icons.Copy className="w-3 h-3 text-indigo-300 ml-1" />
+                      <Icons.Copy className="w-3 h-3 opacity-80 ml-1" />
                     </button>
                   )}
                 </div>
               </div>
             );
           } else {
+            // 3rd PERSON MESSAGE -> Appears on the LEFT in light gray card with author details!
             return (
               <div key={msg.id} className="flex flex-col items-start">
                 <div className="max-w-[85%] bg-slate-50 border border-slate-200/90 text-slate-800 rounded-2xl rounded-tl-xs p-3.5 sm:p-4 shadow-2xs">
                   <div className="flex items-center justify-between gap-3 mb-1">
-                    <span className="text-[11px] font-bold text-slate-700">
-                      {msg.sender}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-bold text-slate-800">
+                        {msg.authorName}
+                      </span>
+                      <span
+                        className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded-full ${
+                          msg.authorRole === 'client'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : msg.authorRole === 'team_member'
+                            ? 'bg-amber-100 text-amber-800'
+                            : 'bg-indigo-100 text-indigo-800'
+                        }`}
+                      >
+                        {msg.authorRole === 'client' ? 'Client' : msg.authorRole === 'team_member' ? 'Editor' : 'Freelancer'}
+                      </span>
+                    </div>
                     <span className="text-[10px] text-slate-400 font-mono">
                       {msg.timestamp}
                     </span>
@@ -300,7 +377,7 @@ export const ProjectChatCard: React.FC<ProjectChatCardProps> = ({
         {isTyping && (
           <div className="flex flex-col items-start animate-in fade-in">
             <div className="bg-slate-100 text-slate-600 rounded-2xl rounded-tl-xs px-4 py-2.5 flex items-center gap-2 text-xs">
-              <span className="font-semibold text-slate-700">Kunal Shah</span>
+              <span className="font-semibold text-slate-700">{typingAuthor}</span>
               <span className="text-slate-400">is typing</span>
               <span className="flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-500 animate-bounce" />
@@ -314,44 +391,111 @@ export const ProjectChatCard: React.FC<ProjectChatCardProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Quick Action Suggestion Chips */}
+      {/* Role-Specific Quick Suggestion Chips */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-2 scrollbar-none text-[11px]">
-        <button
-          type="button"
-          onClick={() =>
-            handleSendQuickPrompt(
-              'Rough cut animation pass v2 is uploaded for review!',
-              'drive.link/cred-cut-v2.mp4'
-            )
-          }
-          className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200/80 text-slate-700 font-semibold shrink-0 transition-colors"
-        >
-          🚀 Share Render Pass
-        </button>
+        {currentUserRole === 'freelancer' && (
+          <>
+            <button
+              type="button"
+              onClick={() =>
+                handleSendQuickPrompt(
+                  'Rough cut animation pass v2 is uploaded for review!',
+                  'drive.link/cred-cut-v2.mp4'
+                )
+              }
+              className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200/80 text-slate-700 font-semibold shrink-0 transition-colors"
+            >
+              🚀 Share Render Pass
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                handleSendQuickPrompt(
+                  'Milestone 2 UPI tranche invoice is generated: ₹1,45,000 for final DaVinci master sign-off.'
+                )
+              }
+              className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-semibold shrink-0 border border-emerald-100 transition-colors"
+            >
+              💳 Share UPI Invoice
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                handleSendQuickPrompt(
+                  'Could you please share the brand guidelines PDF so we can lock color space?'
+                )
+              }
+              className="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-semibold shrink-0 border border-amber-100 transition-colors"
+            >
+              📋 Request Assets
+            </button>
+          </>
+        )}
 
-        <button
-          type="button"
-          onClick={() =>
-            handleSendQuickPrompt(
-              'Milestone 2 UPI tranche invoice is generated: ₹1,45,000 for final DaVinci master sign-off.'
-            )
-          }
-          className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-semibold shrink-0 border border-emerald-100 transition-colors"
-        >
-          💳 Share UPI Invoice
-        </button>
+        {currentUserRole === 'client' && (
+          <>
+            <button
+              type="button"
+              onClick={() =>
+                handleSendQuickPrompt(
+                  'Approved the v2 DaVinci color master & audio stems! Looks stunning.'
+                )
+              }
+              className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-semibold shrink-0 border border-emerald-200 transition-colors"
+            >
+              ✅ Approve v2 Motion Teaser
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                handleSendQuickPrompt(
+                  'Cleared ₹1,45,000 UPI tranche payment to 9079879010@fam via CRED Treasury desk.'
+                )
+              }
+              className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-800 font-semibold shrink-0 border border-indigo-200 transition-colors"
+            >
+              💳 Clear Milestone Tranche
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                handleSendQuickPrompt(
+                  'Shared the updated sound stems and 4K assets in Google Drive.',
+                  'drive.link/cred-4k-stems.zip'
+                )
+              }
+              className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold shrink-0 transition-colors"
+            >
+              📁 Share 4K Stems
+            </button>
+          </>
+        )}
 
-        <button
-          type="button"
-          onClick={() =>
-            handleSendQuickPrompt(
-              'Could you please share the brand guidelines PDF so we can lock color space?'
-            )
-          }
-          className="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-semibold shrink-0 border border-amber-100 transition-colors"
-        >
-          📋 Request Assets
-        </button>
+        {currentUserRole === 'team_member' && (
+          <>
+            <button
+              type="button"
+              onClick={() =>
+                handleSendQuickPrompt(
+                  'Color pass export is finished and ready for Arjun’s lead sign-off.',
+                  'drive.link/color-pass-v2.xml'
+                )
+              }
+              className="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-semibold shrink-0 border border-amber-200 transition-colors"
+            >
+              ✂️ Export Complete
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                handleSendQuickPrompt('Ready for lead review before client presentation.')
+              }
+              className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold shrink-0 transition-colors"
+            >
+              👀 Ready for Review
+            </button>
+          </>
+        )}
       </div>
 
       {/* Attachment Form (Toggled via Paperclip) */}
@@ -369,7 +513,7 @@ export const ProjectChatCard: React.FC<ProjectChatCardProps> = ({
           <button
             type="button"
             onClick={() => setShowAttachMenu(false)}
-            className="text-slate-400 hover:text-slate-700 px-1 font-bold"
+            className="text-slate-400 hover:text-slate-700 px-1 font-bold cursor-pointer"
           >
             ✕
           </button>
@@ -394,7 +538,13 @@ export const ProjectChatCard: React.FC<ProjectChatCardProps> = ({
         <input
           ref={inputRef}
           type="text"
-          placeholder="Write a message to client..."
+          placeholder={
+            currentUserRole === 'client'
+              ? 'Write a message to Arjun & team as Kunal Shah...'
+              : currentUserRole === 'team_member'
+              ? 'Write an update as Riya (Editor)...'
+              : 'Write a message to client as Arjun...'
+          }
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
           onKeyDown={(e) => {
@@ -408,9 +558,15 @@ export const ProjectChatCard: React.FC<ProjectChatCardProps> = ({
 
         <button
           type="submit"
-          className="px-5 py-2.5 rounded-xl font-bold text-xs shadow-xs transition-all bg-indigo-600 hover:bg-indigo-700 text-white active:scale-[0.98] cursor-pointer flex items-center gap-1.5"
+          className={`px-4 sm:px-5 py-2.5 rounded-xl font-bold text-xs shadow-xs transition-all text-white active:scale-[0.98] cursor-pointer flex items-center gap-1.5 shrink-0 ${perspectiveBadge.btnColor}`}
         >
-          <span>Send</span>
+          <span>
+            {currentUserRole === 'client'
+              ? 'Send as Kunal'
+              : currentUserRole === 'team_member'
+              ? 'Send as Riya'
+              : 'Send as Arjun'}
+          </span>
           <Icons.Send className="w-3.5 h-3.5" />
         </button>
       </form>
