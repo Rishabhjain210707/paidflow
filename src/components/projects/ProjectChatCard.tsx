@@ -47,7 +47,9 @@ export const ProjectChatCard: React.FC<ProjectChatCardProps> = ({
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     if (typeof window !== 'undefined') {
       try {
-        const saved = localStorage.getItem('paidflow_project_chat_v3');
+        const saved =
+          localStorage.getItem('metron_project_chat_v1') ||
+          localStorage.getItem('paidflow_project_chat_v3');
         if (saved) {
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed) && parsed.length > 0) {
@@ -88,7 +90,7 @@ export const ProjectChatCard: React.FC<ProjectChatCardProps> = ({
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
-        localStorage.setItem('paidflow_project_chat_v3', JSON.stringify(messages));
+        localStorage.setItem('metron_project_chat_v1', JSON.stringify(messages));
       } catch (e) {
         console.warn('Failed to persist chat messages', e);
       }
@@ -237,6 +239,7 @@ export const ProjectChatCard: React.FC<ProjectChatCardProps> = ({
   const handleClearHistory = () => {
     setMessages(DEFAULT_MESSAGES);
     if (typeof window !== 'undefined') {
+      localStorage.removeItem('metron_project_chat_v1');
       localStorage.removeItem('paidflow_project_chat_v3');
     }
     if (onToast) {

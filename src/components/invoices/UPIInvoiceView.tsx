@@ -273,10 +273,13 @@ export const UPIInvoiceView: React.FC<UPIInvoiceViewProps> = (props) => {
 
     if (typeof window !== 'undefined' && window.localStorage) {
       try {
+        localStorage.setItem(`metron_invoice_${invoice.invoiceNumber}`, JSON.stringify(updated));
         localStorage.setItem(`paidflow_invoice_${invoice.invoiceNumber}`, JSON.stringify(updated));
         const invClean = invoice.invoiceNumber.toLowerCase().replace(/[^a-z0-9]/g, '_');
         updatedTranches.forEach((t) => {
+          localStorage.setItem(`metron_tranche_${t.id}`, JSON.stringify(t));
           localStorage.setItem(`paidflow_tranche_${t.id}`, JSON.stringify(t));
+          localStorage.setItem(`metron_tranche_${invClean}_${t.id}`, JSON.stringify(t));
           localStorage.setItem(`paidflow_tranche_${invClean}_${t.id}`, JSON.stringify(t));
         });
       } catch (e) {}

@@ -791,7 +791,7 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
 
         {/* Footer */}
         <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-          <span>Protected by PaidFlow Immutable Scope Audit</span>
+          <span>Protected by Metron Immutable Scope Audit</span>
           <button
             onClick={onClose}
             className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-lg transition-colors"

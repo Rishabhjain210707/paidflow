@@ -94,7 +94,7 @@ export function MainApp() {
             <header className="bg-slate-900 border-b border-slate-800 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs relative z-40">
                 <div className="flex items-center gap-2">
                     <span className="font-bold text-indigo-400 uppercase tracking-wider text-[10px] bg-indigo-950 border border-indigo-800 px-2 py-0.5 rounded">
-                        PaidFlow Pro
+                        Metron Pro
                     </span>
                     <span className="text-slate-300 hidden sm:inline">Active View:</span>
                     <span className="font-semibold text-slate-100">
@@ -262,7 +262,7 @@ export function MainApp() {
                             </div>
                             <div>
                                 <div className="flex items-center gap-1.5">
-                                    <span className="font-extrabold text-slate-900 tracking-tight text-base">PaidFlow</span>
+                                    <span className="font-extrabold text-slate-900 tracking-tight text-base">Metron</span>
                                     <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
                                         {currentRole === 'freelancer' ? 'LEAD' : currentRole === 'team_member' ? 'COLLAB' : 'CLIENT'}
                                     </span>

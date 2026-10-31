@@ -178,7 +178,7 @@ export const CrewRolesView: React.FC<CrewRolesViewProps> = ({
               if (onShareTrustUrl) {
                 onShareTrustUrl();
               } else if (onToast) {
-                onToast('Public Trust URL copied: https://paidflow.me/u/arjun-verma');
+                onToast('Public Trust URL copied: https://metron.me/u/arjun-verma');
               }
             }}
             className="bg-white hover:bg-slate-50 active:scale-[0.98] text-slate-800 font-bold text-xs px-4 py-2.5 rounded-xl border border-slate-200/90 shadow-2xs transition-all"

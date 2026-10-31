@@ -20,7 +20,7 @@ export const ShareReputationModal: React.FC<ShareReputationModalProps> = ({
 
   const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
   const profileUrl = `${origin}/#trust`;
-  const badgeEmbedCode = `<a href="${profileUrl}" target="_blank"><img src="${origin}/favicon.ico" alt="PaidFlow Verified Freelancer 4.9★" /></a>`;
+  const badgeEmbedCode = `<a href="${profileUrl}" target="_blank"><img src="${origin}/favicon.ico" alt="Metron Verified Freelancer 4.9★" /></a>`;
 
   const handleCopyLink = () => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
@@ -80,7 +80,7 @@ export const ShareReputationModal: React.FC<ShareReputationModalProps> = ({
                   <Icons.Star className="w-3.5 h-3.5 fill-amber-400" filled={true} />
                   <span>{mockMetrics.verifiedTrustScore.toFixed(1)} / 5.0</span>
                 </span>
-                <span className="text-[10px] text-slate-400">PaidFlow Top 1%</span>
+                <span className="text-[10px] text-slate-400">Metron Top 1%</span>
               </div>
             </div>
 

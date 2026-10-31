@@ -1,12 +1,12 @@
-# PaidFlow — Freelancer Fintech SaaS Dashboard 🇮🇳
+# Metron — Freelancer Fintech SaaS Dashboard 🇮🇳
 
-**PaidFlow** is a modern, high-converting SaaS dashboard tailored for solo freelancers, design engineers, and independent consultants to manage proposals, milestone deliverables, zero-commission UPI invoicing, and verified double-blind client trust scores.
+**Metron** is a modern, high-converting SaaS dashboard tailored for solo freelancers, design engineers, and independent consultants to manage proposals, milestone deliverables, zero-commission UPI invoicing, and verified double-blind client trust scores.
 
 ---
 
 ## ⚡ Instant "Go Live" Feature (Zero Setup Required)
 
-You can run PaidFlow **directly with the VS Code "Go Live" (Live Server) extension**:
+You can run Metron **directly with the VS Code "Go Live" (Live Server) extension**:
 
 1. In VS Code, look at the bottom right blue status bar and click **`Go Live`** (or right-click [`index.html`](file:///c:/Users/risha/OneDrive/Desktop/vscode/mnit/index.html) and choose **"Open with Live Server"**).
 2. Live Server will instantly launch the full interactive app in your browser at:
@@ -70,7 +70,7 @@ You can run PaidFlow **directly with the VS Code "Go Live" (Live Server) extensi
   - Total Net Payable calculation.
 - **Dynamic UPI Payment Hub**:
   - Dynamic QR Code supporting Google Pay, PhonePe, Paytm, and CRED.
-  - Razorpay / PaidFlow short-link box with clipboard animation.
+  - Razorpay / Metron short-link box with clipboard animation.
   - Direct WhatsApp billing message trigger.
   - Simulation engine: Clears invoice instantly and updates overview revenue.
 

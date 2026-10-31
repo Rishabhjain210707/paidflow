@@ -107,7 +107,7 @@ export default function ClientProjectPortalPage() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-slate-900 tracking-tight text-base">PaidFlow</span>
+                <span className="font-extrabold text-slate-900 tracking-tight text-base">Metron</span>
                 <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
                   Client Portal
                 </span>

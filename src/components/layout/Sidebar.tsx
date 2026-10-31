@@ -35,7 +35,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="font-semibold text-slate-900 tracking-tight text-base">PaidFlow</span>
+              <span className="font-semibold text-slate-900 tracking-tight text-base">Metron</span>
               <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-100">
                 Solo Pro
               </span>

@@ -93,7 +93,9 @@ function ClientUPIPaymentCheckoutContent() {
 
         // Otherwise check localStorage
         const cached =
+          localStorage.getItem(`metron_tranche_${invoiceId}`) ||
           localStorage.getItem(`paidflow_tranche_${invoiceId}`) ||
+          localStorage.getItem(`metron_pay_${invoiceId}`) ||
           localStorage.getItem(`paidflow_pay_${invoiceId}`);
         if (cached) {
           const parsed = JSON.parse(cached);
@@ -151,7 +153,7 @@ function ClientUPIPaymentCheckoutContent() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-white tracking-tight text-base">PaidFlow</span>
+                <span className="font-extrabold text-white tracking-tight text-base">Metron</span>
                 <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.2 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">
                   Instant UPI
                 </span>

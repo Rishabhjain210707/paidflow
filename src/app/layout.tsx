@@ -2,7 +2,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'PaidFlow — Freelancer Proposals, UPI Invoicing & Verified Trust',
+  title: 'Metron — Freelancer Proposals, UPI Invoicing & Verified Trust',
   description: 'Clean modern fintech dashboard for solo freelancers to manage proposals, time tracking, UPI invoicing, and verified client trust scores.',
 };
 

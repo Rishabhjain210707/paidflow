@@ -103,7 +103,7 @@ export const TrustReviewView: React.FC<TrustReviewViewProps> = ({
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-1 max-w-xl leading-relaxed">
-                PaidFlow reviews are tamper-proof and double-blind. Client ratings are only published once both parties have submitted feedback or settled final UPI milestones.
+                Metron reviews are tamper-proof and double-blind. Client ratings are only published once both parties have submitted feedback or settled final UPI milestones.
               </p>
             </div>
           </div>

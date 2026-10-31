@@ -495,7 +495,7 @@ export const ProposalCreator: React.FC<ProposalCreatorProps> = ({
               </span>
               <h3 className="text-lg font-bold text-slate-900 mt-1">{proposal.title}</h3>
               <p className="text-xs text-slate-500 mt-1">
-                Valid until {proposal.validUntil} • Protected by PaidFlow Verified Escrow
+                Valid until {proposal.validUntil} • Protected by Metron Verified Escrow
               </p>
             </div>
 
