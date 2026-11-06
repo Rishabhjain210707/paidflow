@@ -44,6 +44,17 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
     }
   };
 
+  const handleSignOut = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (e) {
+      console.error('Sign out error:', e);
+    }
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
+  };
+
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-2xs">
       {/* Tier 1: Main Control Bar */}
@@ -129,15 +140,16 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
             <span>Proposal</span>
           </button>
 
-          {/* Role Auth Portal Link */}
-          <Link
-            href="/login"
-            className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 active:scale-[0.98] text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 border border-indigo-200 transition-all cursor-pointer"
+          {/* Direct Sign Out Action */}
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 active:scale-[0.98] text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 border border-slate-200 hover:border-rose-200 transition-all cursor-pointer"
+            title="Sign out of your session"
           >
-            <Icons.Shield className="w-3.5 h-3.5 text-indigo-600" />
-            <span className="hidden sm:inline">Role Auth</span>
-            <span>Portal</span>
-          </Link>
+            <Icons.LogOut className="w-3.5 h-3.5 text-slate-500 hover:text-rose-600" />
+            <span className="hidden sm:inline">Sign Out</span>
+          </button>
 
           {/* Profile Dropdown Menu */}
           <div className="relative">
@@ -222,15 +234,15 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
                 {/* Fast Links */}
                 <div className="space-y-1">
                   <Link
-                    href="/login"
+                    href="/freelancer/dashboard"
                     onClick={() => setIsUserDropdownOpen(false)}
                     className="w-full text-left p-2 rounded-xl bg-indigo-50/70 hover:bg-indigo-100/70 font-semibold text-indigo-900 flex items-center justify-between transition-colors"
                   >
                     <span className="flex items-center gap-2">
-                      <Icons.Shield className="w-3.5 h-3.5 text-indigo-600" />
-                      <span>Role Auth & Security</span>
+                      <Icons.ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
+                      <span>Freelancer RBAC Guard</span>
                     </span>
-                    <span className="text-[10px] text-indigo-700 font-bold">/login →</span>
+                    <span className="text-[10px] text-indigo-700 font-bold">Portal →</span>
                   </Link>
 
                   <button
@@ -262,6 +274,20 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
                     </span>
                     <span className="text-[10px] text-slate-400">Runway →</span>
                   </button>
+
+                  <div className="pt-1 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={handleSignOut}
+                      className="w-full text-left p-2 rounded-xl bg-rose-50 hover:bg-rose-100 font-bold text-rose-700 flex items-center justify-between transition-colors cursor-pointer"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Icons.LogOut className="w-3.5 h-3.5 text-rose-600" />
+                        <span>Sign Out of Metron</span>
+                      </span>
+                      <span className="text-[10px] text-rose-600 font-bold">Logout</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -395,3 +421,4 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
     </header>
   );
 };
+

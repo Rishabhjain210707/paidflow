@@ -83,7 +83,10 @@ function LoginForm() {
       // Check if callbackUrl matches the user's role, otherwise use the role dashboard
       let targetPath = result.redirectTo;
       if (callbackUrl) {
-        if (result.user.role === 'freelancer' && callbackUrl.startsWith('/freelancer')) {
+        if (
+          result.user.role === 'freelancer' &&
+          (callbackUrl.startsWith('/freelancer') || callbackUrl === '/' || callbackUrl.startsWith('/dashboard'))
+        ) {
           targetPath = callbackUrl;
         } else if (result.user.role === 'client' && callbackUrl.startsWith('/client')) {
           targetPath = callbackUrl;

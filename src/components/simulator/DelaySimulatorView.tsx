@@ -210,3 +210,4 @@ export const DelaySimulatorView: React.FC<DelaySimulatorViewProps> = ({
     </div>
   );
 };
+

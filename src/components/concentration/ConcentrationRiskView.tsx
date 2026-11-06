@@ -183,3 +183,4 @@ export const ConcentrationRiskView: React.FC<ConcentrationRiskViewProps> = ({
     </div>
   );
 };
+

@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   initialProjects,
   initialTeamMembers,
@@ -28,6 +29,7 @@ import { DelaySimulatorView } from '../components/simulator/DelaySimulatorView';
 import { ConcentrationRiskView } from '../components/concentration/ConcentrationRiskView';
 import { ErrorBoundary } from '../components/ui/ErrorBoundary';
 import { ToastProvider } from '../components/ui/ToastProvider';
+import { Skeleton, MetricCardSkeleton, DeliverableCardSkeleton } from '../components/ui/Skeleton';
 import { OverviewDashboard } from '../components/dashboard/OverviewDashboard';
 import { ProjectDetailModal } from '../components/projects/ProjectDetailModal';
 import { ProposalCreator } from '../components/proposals/ProposalCreator';
@@ -47,8 +49,35 @@ import {
 } from '../utils/formatters';
 
 export default function Home() {
+  const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [currentRole, setCurrentRole] = useState<UserRole>('freelancer');
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((res) => {
+        if (!res.ok) {
+          router.push('/login?error=unauthenticated');
+          return null;
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (data && data.authenticated && data.user) {
+          if (data.user.role === 'client') {
+            router.push('/client/dashboard');
+          } else {
+            setIsAuthenticated(true);
+          }
+        } else {
+          router.push('/login?error=unauthenticated');
+        }
+      })
+      .catch(() => {
+        router.push('/login?error=unauthenticated');
+      });
+  }, [router]);
 
   // Core application state
   const defaultProjects: Project[] = Array.isArray(initialProjects) && initialProjects.length > 0 ? initialProjects : [];
@@ -265,6 +294,42 @@ export default function Home() {
     setActiveProjectId(id);
     setIsDetailModalOpen(true);
   };
+
+  // Loading skeleton state while verifying session token
+  if (isAuthenticated === null) {
+    return (
+      <div className="min-h-screen bg-slate-100 flex flex-col antialiased">
+        <header className="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Skeleton className="w-9 h-9 rounded-xl" />
+            <div>
+              <Skeleton className="w-24 h-4 rounded" />
+              <Skeleton className="w-16 h-2.5 rounded mt-1" />
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="w-28 h-8 rounded-xl" />
+            <Skeleton className="w-24 h-8 rounded-xl" />
+            <Skeleton className="w-8 h-8 rounded-full" />
+          </div>
+        </header>
+        <div className="max-w-7xl mx-auto w-full p-6 space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <MetricCardSkeleton />
+            <MetricCardSkeleton />
+            <MetricCardSkeleton />
+            <MetricCardSkeleton />
+          </div>
+          <DeliverableCardSkeleton />
+        </div>
+      </div>
+    );
+  }
+
+  // If unauthenticated or unauthorized role, router will push to /login or /client/dashboard
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col text-slate-800 antialiased font-sans">

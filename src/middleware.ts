@@ -17,7 +17,22 @@ export async function middleware(request: NextRequest) {
 
   const isApiRoute = pathname.startsWith('/api/');
 
-  // 1. Unauthenticated Check
+  // 1. If user is accessing /login:
+  if (pathname === '/login') {
+    if (token) {
+      const session = await verifyToken(token);
+      if (session) {
+        // User already has an active, valid session -> send directly to their role dashboard
+        const destination =
+          session.role === 'freelancer' ? '/freelancer/dashboard' : '/client/dashboard';
+        return NextResponse.redirect(new URL(destination, request.url));
+      }
+    }
+    // Allow unauthenticated users to view the login screen
+    return NextResponse.next();
+  }
+
+  // 2. Unauthenticated Check for Protected Routes (/, /dashboard, /freelancer/*, /client/*)
   if (!token) {
     if (isApiRoute) {
       return NextResponse.json(
@@ -29,13 +44,16 @@ export async function middleware(request: NextRequest) {
       );
     }
 
+    // Default Landing Route: unauthenticated visits to root or dashboards go to /login
     const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('callbackUrl', pathname);
-    loginUrl.searchParams.set('error', 'unauthenticated');
+    if (pathname !== '/') {
+      loginUrl.searchParams.set('callbackUrl', pathname);
+      loginUrl.searchParams.set('error', 'unauthenticated');
+    }
     return NextResponse.redirect(loginUrl);
   }
 
-  // 2. Cryptographic Token Verification (HMAC-SHA256 signature & expiration)
+  // 3. Cryptographic Token Verification (HMAC-SHA256 signature & expiration)
   const session = await verifyToken(token);
 
   if (!session) {
@@ -50,7 +68,9 @@ export async function middleware(request: NextRequest) {
     }
 
     const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('callbackUrl', pathname);
+    if (pathname !== '/') {
+      loginUrl.searchParams.set('callbackUrl', pathname);
+    }
     loginUrl.searchParams.set('error', 'session_expired');
 
     const response = NextResponse.redirect(loginUrl);
@@ -59,7 +79,22 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // 3. Strict Role-Based Content Access Control & 403 Forbidden Interception
+  // 4. Role-based routing for generic /dashboard and root /
+  if (pathname === '/dashboard') {
+    const destination =
+      session.role === 'freelancer' ? '/freelancer/dashboard' : '/client/dashboard';
+    return NextResponse.redirect(new URL(destination, request.url));
+  }
+
+  if (pathname === '/') {
+    // If a Client visits root, redirect to Client Dashboard (Clients cannot access Freelancer suite)
+    if (session.role === 'client') {
+      return NextResponse.redirect(new URL('/client/dashboard', request.url));
+    }
+    // Freelancers continue to root
+  }
+
+  // 5. Strict Role-Based Content Access Control & 403 Forbidden Interception
 
   // A. FREELANCER ZONE: Freelancer role strictly required
   const isFreelancerTarget =
@@ -131,7 +166,7 @@ export async function middleware(request: NextRequest) {
     });
   }
 
-  // 4. Authorized Access -> Propagate verified user identity in request headers
+  // 6. Authorized Access -> Propagate verified user identity in request headers
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-user-id', session.id);
   requestHeaders.set('x-user-role', session.role);
@@ -145,13 +180,16 @@ export async function middleware(request: NextRequest) {
   });
 }
 
-// Protect all freelancer, client routes and their corresponding APIs
+// Intercept entry points, dashboards, role-specific zones, and auth endpoints
 export const config = {
   matcher: [
+    '/',
+    '/dashboard',
+    '/dashboard/:path*',
     '/freelancer/:path*',
     '/client/:path*',
     '/api/freelancer/:path*',
     '/api/client/:path*',
+    '/login',
   ],
 };
-

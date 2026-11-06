@@ -75,3 +75,4 @@ export const TableRowSkeleton: React.FC<{ columns?: number }> = ({ columns = 5 }
     </tr>
   );
 };
+
