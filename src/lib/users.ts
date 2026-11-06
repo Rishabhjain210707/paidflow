@@ -82,3 +82,4 @@ export async function authenticateCredentials(
   const { passwordHash, ...safeUser } = user;
   return { user: safeUser };
 }
+

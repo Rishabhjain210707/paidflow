@@ -3,7 +3,10 @@
 import React, { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Icons } from '../../components/ui/Icons';
+import { loginSchema, LoginFormData } from '../../lib/validations/schemas';
 import { AuthRole } from '../../types';
 
 function LoginForm() {
@@ -13,12 +16,8 @@ function LoginForm() {
   const callbackUrl = searchParams.get('callbackUrl');
   const errorParam = searchParams.get('error');
 
-  const [selectedRole, setSelectedRole] = useState<AuthRole>('freelancer');
-  const [email, setEmail] = useState('freelancer@metron.io');
-  const [password, setPassword] = useState('password123');
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(
+  const [serverError, setServerError] = useState<string | null>(
     errorParam === 'unauthenticated'
       ? 'Please sign in to access that protected dashboard.'
       : errorParam === 'session_expired'
@@ -26,59 +25,76 @@ function LoginForm() {
       : null
   );
 
-  // Quick fill demo helpers
-  const handleSelectRole = (role: AuthRole) => {
-    setSelectedRole(role);
-    setErrorMessage(null);
+  // React Hook Form integrated with Zod validation schema
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors, isSubmitting, isValid },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    mode: 'onChange',
+    defaultValues: {
+      email: 'freelancer@metron.io',
+      password: 'password123',
+      role: 'freelancer',
+      rememberMe: true,
+    },
+  });
+
+  const selectedRole = watch('role');
+
+  // Quick 1-click demo preset helper
+  const handleSelectRolePreset = (role: AuthRole) => {
+    setValue('role', role, { shouldValidate: true });
+    setServerError(null);
+
     if (role === 'freelancer') {
-      setEmail('freelancer@metron.io');
-      setPassword('password123');
+      setValue('email', 'freelancer@metron.io', { shouldValidate: true });
+      setValue('password', 'password123', { shouldValidate: true });
     } else {
-      setEmail('client@cred.club');
-      setPassword('password123');
+      setValue('email', 'client@cred.club', { shouldValidate: true });
+      setValue('password', 'password123', { shouldValidate: true });
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMessage(null);
-    setIsLoading(true);
+  const onSubmit = async (data: LoginFormData) => {
+    setServerError(null);
 
     try {
-      const res = await fetch('/api/auth/login', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: email.trim(),
-          password,
-          role: selectedRole,
+          email: data.email,
+          password: data.password,
+          role: data.role,
         }),
       });
 
-      const data = await res.json();
+      const result = await response.json();
 
-      if (!res.ok || !data.success) {
-        setErrorMessage(data.error || 'Authentication failed. Please check credentials.');
-        setIsLoading(false);
+      if (!response.ok || !result.success) {
+        setServerError(result.error || 'Authentication failed. Please check credentials.');
         return;
       }
 
       // Check if callbackUrl matches the user's role, otherwise use the role dashboard
-      let targetPath = data.redirectTo;
+      let targetPath = result.redirectTo;
       if (callbackUrl) {
-        if (data.user.role === 'freelancer' && callbackUrl.startsWith('/freelancer')) {
+        if (result.user.role === 'freelancer' && callbackUrl.startsWith('/freelancer')) {
           targetPath = callbackUrl;
-        } else if (data.user.role === 'client' && callbackUrl.startsWith('/client')) {
+        } else if (result.user.role === 'client' && callbackUrl.startsWith('/client')) {
           targetPath = callbackUrl;
         }
       }
 
       router.push(targetPath);
       router.refresh();
-    } catch (err: any) {
-      console.error(err);
-      setErrorMessage('Network error during authentication. Please retry.');
-      setIsLoading(false);
+    } catch (err: unknown) {
+      console.error('Login submit error:', err);
+      setServerError('A network error occurred. Please verify your connection.');
     }
   };
 
@@ -113,7 +129,7 @@ function LoginForm() {
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 px-4 sm:px-0">
         <div className="bg-slate-950/80 backdrop-blur-xl py-8 px-6 sm:px-10 shadow-2xl rounded-3xl border border-slate-800">
-          {/* Role Selector Tabs */}
+          {/* Role Selector Tabs (Controlled via React Hook Form) */}
           <div className="mb-6">
             <label className="block text-xs font-semibold text-slate-300 mb-2">
               Select Your Platform Role
@@ -121,7 +137,7 @@ function LoginForm() {
             <div className="grid grid-cols-2 gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-800">
               <button
                 type="button"
-                onClick={() => handleSelectRole('freelancer')}
+                onClick={() => handleSelectRolePreset('freelancer')}
                 className={`py-2.5 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
                   selectedRole === 'freelancer'
                     ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
@@ -134,7 +150,7 @@ function LoginForm() {
 
               <button
                 type="button"
-                onClick={() => handleSelectRole('client')}
+                onClick={() => handleSelectRolePreset('client')}
                 className={`py-2.5 px-3 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
                   selectedRole === 'client'
                     ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
@@ -145,6 +161,9 @@ function LoginForm() {
                 <span>Client</span>
               </button>
             </div>
+            {errors.role && (
+              <p className="text-[11px] text-rose-400 mt-1 font-medium">{errors.role.message}</p>
+            )}
             <p className="text-[11px] text-slate-500 mt-1.5 text-center">
               {selectedRole === 'freelancer'
                 ? 'Redirects to /freelancer/dashboard upon authentication'
@@ -163,14 +182,14 @@ function LoginForm() {
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
-                onClick={() => handleSelectRole('freelancer')}
+                onClick={() => handleSelectRolePreset('freelancer')}
                 className="text-[11px] py-1.5 px-2 bg-indigo-950/60 hover:bg-indigo-900/80 text-indigo-200 rounded-lg border border-indigo-800/50 transition-colors text-left font-medium truncate cursor-pointer"
               >
                 🚀 Freelancer (Arjun)
               </button>
               <button
                 type="button"
-                onClick={() => handleSelectRole('client')}
+                onClick={() => handleSelectRolePreset('client')}
                 className="text-[11px] py-1.5 px-2 bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-200 rounded-lg border border-emerald-800/50 transition-colors text-left font-medium truncate cursor-pointer"
               >
                 🏢 Client (Kunal Shah)
@@ -178,16 +197,16 @@ function LoginForm() {
             </div>
           </div>
 
-          {/* Error Alert */}
-          {errorMessage && (
+          {/* Server Error Alert */}
+          {serverError && (
             <div className="mb-5 p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-2xl flex items-start gap-2.5 text-rose-300 text-xs animate-in fade-in">
               <Icons.AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-              <div className="leading-relaxed font-medium">{errorMessage}</div>
+              <div className="leading-relaxed font-medium">{serverError}</div>
             </div>
           )}
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Form with React Hook Form + Zod */}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-xs font-semibold text-slate-300 mb-1.5">
                 Work Email Address
@@ -198,16 +217,23 @@ function LoginForm() {
                 </div>
                 <input
                   id="email"
-                  name="email"
                   type="email"
                   autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white placeholder-slate-500 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-mono"
+                  {...register('email')}
+                  className={`block w-full pl-10 pr-3 py-2.5 bg-slate-900 border rounded-xl text-white placeholder-slate-500 text-xs sm:text-sm focus:outline-none transition-all font-mono ${
+                    errors.email
+                      ? 'border-rose-500 focus:ring-2 focus:ring-rose-500'
+                      : 'border-slate-800 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500'
+                  }`}
                   placeholder="name@company.com"
                 />
               </div>
+              {errors.email && (
+                <p className="text-[11px] text-rose-400 mt-1 font-medium flex items-center gap-1">
+                  <Icons.AlertCircle className="w-3 h-3 shrink-0" />
+                  <span>{errors.email.message}</span>
+                </p>
+              )}
             </div>
 
             <div>
@@ -220,13 +246,14 @@ function LoginForm() {
                 </div>
                 <input
                   id="password"
-                  name="password"
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 pr-10 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white placeholder-slate-500 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-mono"
+                  {...register('password')}
+                  className={`block w-full pl-10 pr-10 py-2.5 bg-slate-900 border rounded-xl text-white placeholder-slate-500 text-xs sm:text-sm focus:outline-none transition-all font-mono ${
+                    errors.password
+                      ? 'border-rose-500 focus:ring-2 focus:ring-rose-500'
+                      : 'border-slate-800 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500'
+                  }`}
                   placeholder="••••••••••••"
                 />
                 <button
@@ -241,13 +268,19 @@ function LoginForm() {
                   )}
                 </button>
               </div>
+              {errors.password && (
+                <p className="text-[11px] text-rose-400 mt-1 font-medium flex items-center gap-1">
+                  <Icons.AlertCircle className="w-3 h-3 shrink-0" />
+                  <span>{errors.password.message}</span>
+                </p>
+              )}
             </div>
 
             <div className="flex items-center justify-between pt-1">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  defaultChecked
+                  {...register('rememberMe')}
                   className="w-4 h-4 rounded text-indigo-600 bg-slate-900 border-slate-800 focus:ring-indigo-500"
                 />
                 <span className="text-xs text-slate-400">Remember session (7 days)</span>
@@ -257,17 +290,17 @@ function LoginForm() {
 
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isSubmitting}
               className={`w-full py-3 px-4 rounded-xl text-white font-bold text-xs sm:text-sm shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer mt-2 ${
                 selectedRole === 'freelancer'
                   ? 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-600/30'
                   : 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/30'
-              } ${isLoading ? 'opacity-70 cursor-not-allowed' : 'active:scale-[0.99]'}`}
+              } ${isSubmitting ? 'opacity-70 cursor-not-allowed' : 'active:scale-[0.99]'}`}
             >
-              {isLoading ? (
+              {isSubmitting ? (
                 <>
                   <Icons.RotateCw className="w-4 h-4 animate-spin" />
-                  <span>Verifying role credentials...</span>
+                  <span>Validating Zod schema & credentials...</span>
                 </>
               ) : (
                 <>
@@ -285,7 +318,7 @@ function LoginForm() {
           <div className="mt-6 pt-5 border-t border-slate-800/80 text-center space-y-2">
             <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
               <Icons.ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              <span>HMAC-SHA256 Signed JWT & Next.js Route Guards Active</span>
+              <span>Zod Schema Validation + HMAC-SHA256 Token Protection Active</span>
             </div>
             <p className="text-[10px] text-slate-500">
               Clients cannot access /freelancer/*; Freelancers cannot access /client/*

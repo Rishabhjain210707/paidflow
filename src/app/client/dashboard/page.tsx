@@ -14,11 +14,19 @@ interface UserData {
   company?: string;
 }
 
+interface ApiTestResult {
+  endpoint: string;
+  status: number | string;
+  statusText?: string;
+  body: Record<string, unknown>;
+  isBlockedAsExpected?: boolean;
+}
+
 export default function ClientDashboard() {
   const router = useRouter();
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [apiTestResult, setApiTestResult] = useState<any | null>(null);
+  const [apiTestResult, setApiTestResult] = useState<ApiTestResult | null>(null);
   const [isTestingApi, setIsTestingApi] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -70,11 +78,11 @@ export default function ClientDashboard() {
         body: json,
         isBlockedAsExpected: res.status === 403,
       });
-    } catch (e: any) {
+    } catch (e: unknown) {
       setApiTestResult({
         endpoint: '/api/freelancer/data',
         status: 'Network Error',
-        body: { error: e.message },
+        body: { error: e instanceof Error ? e.message : 'Unknown network error' },
       });
     } finally {
       setIsTestingApi(false);
@@ -95,11 +103,11 @@ export default function ClientDashboard() {
         body: json,
         isBlockedAsExpected: false,
       });
-    } catch (e: any) {
+    } catch (e: unknown) {
       setApiTestResult({
         endpoint: '/api/client/data',
         status: 'Network Error',
-        body: { error: e.message },
+        body: { error: e instanceof Error ? e.message : 'Unknown network error' },
       });
     } finally {
       setIsTestingApi(false);
@@ -373,3 +381,4 @@ export default function ClientDashboard() {
     </div>
   );
 }
+

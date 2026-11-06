@@ -1,5 +1,6 @@
 import './globals.css';
 import type { Metadata } from 'next';
+import { ToastProvider } from '../components/ui/ToastProvider';
 
 export const metadata: Metadata = {
   title: 'Metron — Freelancer Proposals, UPI Invoicing & Verified Trust',
@@ -22,7 +23,7 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased bg-[#f8fafc] text-[#0f172a] selection:bg-indigo-500 selection:text-white">
-        {children}
+        <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
   );
