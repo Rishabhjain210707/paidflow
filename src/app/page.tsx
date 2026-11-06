@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import {
   initialProjects,
   initialTeamMembers,
@@ -419,6 +420,16 @@ export default function Home() {
               <span>Proposal</span>
             </button>
 
+            {/* Role Auth Portal Link */}
+            <Link
+              href="/login"
+              className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 active:scale-[0.98] text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 border border-indigo-200 transition-all cursor-pointer"
+            >
+              <Icons.Shield className="w-3.5 h-3.5 text-indigo-600" />
+              <span className="hidden sm:inline">Role Auth</span>
+              <span>Portal</span>
+            </Link>
+
             {/* Profile Dropdown Button */}
             <div className="relative">
               <button
@@ -499,6 +510,17 @@ export default function Home() {
 
                   {/* Fast Links */}
                   <div className="space-y-1">
+                    <Link
+                      href="/login"
+                      onClick={() => setIsUserDropdownOpen(false)}
+                      className="w-full text-left p-2 rounded-xl bg-indigo-50/70 hover:bg-indigo-100/70 font-semibold text-indigo-900 flex items-center justify-between transition-colors"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Icons.Shield className="w-3.5 h-3.5 text-indigo-600" />
+                        <span>Role Auth & Security</span>
+                      </span>
+                      <span className="text-[10px] text-indigo-700 font-bold">/login →</span>
+                    </Link>
                     <button
                       onClick={() => {
                         setActiveTab('team');

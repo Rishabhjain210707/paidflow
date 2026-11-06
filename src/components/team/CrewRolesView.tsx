@@ -349,14 +349,12 @@ export const CrewRolesView: React.FC<CrewRolesViewProps> = ({
                       <button
                         type="button"
                         onClick={() => handleTogglePermission(perm.id)}
-                        className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors shrink-0 ${
-                          isEnabled ? 'bg-indigo-600' : 'bg-slate-200'
-                        }`}
+                        className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors shrink-0 ${isEnabled ? 'bg-indigo-600' : 'bg-slate-200'
+                          }`}
                       >
                         <div
-                          className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
-                            isEnabled ? 'translate-x-5' : 'translate-x-0'
-                          }`}
+                          className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${isEnabled ? 'translate-x-5' : 'translate-x-0'
+                            }`}
                         />
                       </button>
                     </div>

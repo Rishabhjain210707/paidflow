@@ -11,6 +11,27 @@ export type TabType =
 
 export type UserRole = 'freelancer' | 'team_member' | 'client';
 export type Role = UserRole;
+export type AuthRole = 'freelancer' | 'client';
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  role: AuthRole;
+  title?: string;
+  company?: string;
+  avatar?: string;
+  upiId?: string;
+}
+
+export interface AuthTokenPayload {
+  id: string;
+  email: string;
+  name: string;
+  role: AuthRole;
+  iat: number;
+  exp: number;
+}
 
 export type TransactionStatus = 'Paid' | 'Pending' | 'Review Window Open';
 

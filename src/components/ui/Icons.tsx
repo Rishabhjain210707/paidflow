@@ -254,6 +254,82 @@ export const Icons = {
       <polyline points="6 9 12 15 18 9" />
     </DefaultSvg>
   ),
+  Shield: ({ className = 'w-4 h-4', ...props }: IconProps) => (
+    <DefaultSvg className={className} {...props}>
+      <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+    </DefaultSvg>
+  ),
+  ShieldAlert: ({ className = 'w-4 h-4', ...props }: IconProps) => (
+    <DefaultSvg className={className} {...props}>
+      <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+      <line x1="12" y1="8" x2="12" y2="12" />
+      <line x1="12" y1="16" x2="12.01" y2="16" />
+    </DefaultSvg>
+  ),
+  Briefcase: ({ className = 'w-4 h-4', ...props }: IconProps) => (
+    <DefaultSvg className={className} {...props}>
+      <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+    </DefaultSvg>
+  ),
+  Building2: ({ className = 'w-4 h-4', ...props }: IconProps) => (
+    <DefaultSvg className={className} {...props}>
+      <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" />
+      <path d="M6 12H4a2 2 0 0 0-2 2v8h4" />
+      <path d="M18 9h2a2 2 0 0 1 2 2v11h-4" />
+      <path d="M10 6h4" />
+      <path d="M10 10h4" />
+      <path d="M10 14h4" />
+      <path d="M10 18h4" />
+    </DefaultSvg>
+  ),
+  Mail: ({ className = 'w-4 h-4', ...props }: IconProps) => (
+    <DefaultSvg className={className} {...props}>
+      <rect width="20" height="16" x="2" y="4" rx="2" />
+      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+    </DefaultSvg>
+  ),
+  Eye: ({ className = 'w-4 h-4', ...props }: IconProps) => (
+    <DefaultSvg className={className} {...props}>
+      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+      <circle cx="12" cy="12" r="3" />
+    </DefaultSvg>
+  ),
+  EyeOff: ({ className = 'w-4 h-4', ...props }: IconProps) => (
+    <DefaultSvg className={className} {...props}>
+      <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+      <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+      <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+      <line x1="2" x2="22" y1="2" y2="22" />
+    </DefaultSvg>
+  ),
+  RotateCw: ({ className = 'w-4 h-4', ...props }: IconProps) => (
+    <DefaultSvg className={className} {...props}>
+      <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+      <path d="M21 3v5h-5" />
+    </DefaultSvg>
+  ),
+  LogOut: ({ className = 'w-4 h-4', ...props }: IconProps) => (
+    <DefaultSvg className={className} {...props}>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" x2="9" y1="12" y2="12" />
+    </DefaultSvg>
+  ),
+  ExternalLink: ({ className = 'w-4 h-4', ...props }: IconProps) => (
+    <DefaultSvg className={className} {...props}>
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+      <polyline points="15 3 21 3 21 9" />
+      <line x1="10" x2="21" y1="14" y2="3" />
+    </DefaultSvg>
+  ),
+  AlertCircle: ({ className = 'w-4 h-4', ...props }: IconProps) => (
+    <DefaultSvg className={className} {...props}>
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" x2="12" y1="8" y2="12" />
+      <line x1="12" x2="12.01" y1="16" y2="16" />
+    </DefaultSvg>
+  ),
 };
 
 export const {
@@ -290,6 +366,17 @@ export const {
   Dashboard,
   QrCode,
   ChevronDown,
+  Shield,
+  ShieldAlert,
+  Briefcase,
+  Building2,
+  Mail,
+  Eye,
+  EyeOff,
+  RotateCw,
+  LogOut,
+  ExternalLink,
+  AlertCircle,
 } = Icons;
 
 export default Icons;
